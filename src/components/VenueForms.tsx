@@ -40,7 +40,7 @@ export function VenueForm({ venue, onSave, onClose }: { venue?: Venue; onSave: (
   }
 
   return (
-    <Sheet title={venue ? 'Datos de tu sala' : 'Publicar mi sala'} onClose={onClose} onSubmit={submit}>
+    <Sheet title={venue ? 'Datos de tu ensayadero' : 'Publicar mi ensayadero'} onClose={onClose} onSubmit={submit}>
       <div className="tabs" role="group" aria-label="Tipo de lugar">
         {(Object.keys(kindLabel) as VenueKind[]).map((k) => (
           <button key={k} type="button" aria-pressed={d.kind === k} className={d.kind === k ? 'active' : ''} onClick={() => patch({ kind: k })}>{kindLabel[k]}</button>
@@ -72,17 +72,17 @@ export function VenueForm({ venue, onSave, onClose }: { venue?: Venue; onSave: (
         </div>
       </fieldset>
       <label className="field">Instagram
-        <input value={d.links.instagram ?? ''} onChange={(e) => patch({ links: { ...d.links, instagram: e.target.value } })} placeholder="@tusala" autoCapitalize="none" />
+        <input value={d.links.instagram ?? ''} onChange={(e) => patch({ links: { ...d.links, instagram: e.target.value } })} placeholder="@tuensayadero" autoCapitalize="none" />
       </label>
       <label className="field">Sitio web
-        <input value={d.links.web ?? ''} onChange={(e) => patch({ links: { ...d.links, web: e.target.value } })} placeholder="tusala.com" inputMode="url" autoCapitalize="none" />
+        <input value={d.links.web ?? ''} onChange={(e) => patch({ links: { ...d.links, web: e.target.value } })} placeholder="tuensayadero.com" inputMode="url" autoCapitalize="none" />
       </label>
       <label className="field">Enlace para reservar en otro sistema (opcional)
         <input value={d.bookingUrl} onChange={(e) => setD({ ...d, bookingUrl: e.target.value })} placeholder="https://…" inputMode="url" autoCapitalize="none" />
       </label>
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : venue ? 'Guardar' : 'Crear mi sala'}</button>
+        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : venue ? 'Guardar' : 'Crear mi ensayadero'}</button>
       </div>
     </Sheet>
   )
@@ -110,13 +110,13 @@ export function RoomForm({ room, onSave, onDelete, onClose }: {
       await onSave({ id: room?.id ?? crypto.randomUUID(), name, capacity: cap, pricePerHour: p, description })
       onClose()
     } catch {
-      setError('No pudimos guardar la salita. Intenta de nuevo.')
+      setError('No pudimos guardar la sala. Intenta de nuevo.')
       setBusy(false)
     }
   }
 
   return (
-    <Sheet title={room ? 'Editar salita' : 'Nueva salita'} onClose={onClose} onSubmit={submit}>
+    <Sheet title={room ? 'Editar sala' : 'Nueva sala'} onClose={onClose} onSubmit={submit}>
       <label className="field">Nombre
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="Sala A" />
       </label>

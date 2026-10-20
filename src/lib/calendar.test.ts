@@ -19,3 +19,20 @@ describe('googleCalendarUrl', () => {
     expect(url.searchParams.has('details')).toBe(false)
   })
 })
+
+import { cleanIcalUrl } from './calendar'
+
+describe('cleanIcalUrl', () => {
+  const ok = 'https://calendar.google.com/calendar/ical/dueno%40gmail.com/private-abc123XYZ/basic.ics'
+  it('acepta la dirección secreta de Google (con espacios alrededor)', () => {
+    expect(cleanIcalUrl(`  ${ok}\n`)).toBe(ok)
+    expect(cleanIcalUrl('https://calendar.google.com/calendar/ical/x%40group.calendar.google.com/public/basic.ics')).toBeDefined()
+  })
+  it('rechaza otros dominios, http y rutas que no son iCal', () => {
+    expect(cleanIcalUrl('https://evil.example/calendar/ical/x/private-abc/basic.ics')).toBeUndefined()
+    expect(cleanIcalUrl('http://calendar.google.com/calendar/ical/x/private-abc/basic.ics')).toBeUndefined()
+    expect(cleanIcalUrl('https://calendar.google.com/calendar/u/0/embed?src=x')).toBeUndefined()
+    expect(cleanIcalUrl('https://calendar.google.com.evil.com/calendar/ical/x/private-abc/basic.ics')).toBeUndefined()
+    expect(cleanIcalUrl('')).toBeUndefined()
+  })
+})

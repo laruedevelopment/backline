@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { waLink } from '../lib/identity'
 import { bogotaDate, buildSlots, formatDay, formatTime, money, todayBogota, weekdayOf, type Slot } from '../lib/slots'
-import { bookingError, requestBooking, roomBusy, type Hours, type Room, type Venue } from '../lib/venues'
+import { bookingError, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
 import { useBands } from '../store/useBandSession'
 import { useAuth } from '../store/useAuth'
 import Sheet from './Sheet'
@@ -18,7 +18,7 @@ const addDays = (date: string, n: number) => {
 
 type Props = { venue: Venue; rooms: Room[]; hours: Hours[]; initialRoomId?: string; onClose: () => void }
 
-/** Pedir una franja: sala → día → duración → hora libre. El dueño confirma o rechaza. */
+/** Pedir una franja: sala → día → duración → hora libre. El ensayadero confirma o rechaza (o se confirma sola). */
 export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClose }: Props) {
   const qc = useQueryClient()
   const { bands } = useBands()
@@ -37,6 +37,11 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   const [error, setError] = useState('')
 
   const room = rooms.find((r) => r.id === roomId)
+
+  // Al abrir, se actualiza lo que el ensayadero tiene en su calendario (si lleva más de 5 minutos sin leerse).
+  useEffect(() => {
+    void syncCalendars(venue.id).then((n) => { if (n > 0) void qc.invalidateQueries({ queryKey: ['busy'] }) })
+  }, [venue.id, qc])
   const day = hours.find((h) => h.weekday === weekdayOf(date))
 
   const { data: busy = [], isLoading } = useQuery({
@@ -59,7 +64,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
   const total = room && slot ? Math.round((room.pricePerHour * minutes) / 60) : 0
   const wa = venue.whatsapp && slot
-    ? waLink(venue.whatsapp, `Hola, acabo de pedir ${room?.name} para el ${formatDay(slot.start)}, de ${formatTime(slot.start)} a ${formatTime(slot.end)}. Puedes confirmarla en Backline: ${APP_URL}mi-sala`)
+    ? waLink(venue.whatsapp, `Hola, acabo de pedir ${room?.name} para el ${formatDay(slot.start)}, de ${formatTime(slot.start)} a ${formatTime(slot.end)}. Puedes confirmarla en Backline: ${APP_URL}mi-negocio`)
     : undefined
 
   function submit(e: React.FormEvent) {
@@ -76,8 +81,8 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
         <p>{formatDay(slot.start)}, de {formatTime(slot.start)} a {formatTime(slot.end)}</p>
         <p className="li-sub wrap">
           {venue.autoConfirm
-            ? `Tu franja ya está confirmada${bandId ? ' y el ensayo quedó en la agenda de tu banda' : ''}. La sala fue avisada.`
-            : `La sala responderá la solicitud. Verás el estado en «Mis reservas»${bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.`}
+            ? `Tu franja ya está confirmada${bandId ? ' y el ensayo quedó en la agenda de tu banda' : ''}. El ensayadero fue avisado.`
+            : `El ensayadero responderá la solicitud. Verás el estado en «Mis reservas»${bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.`}
         </p>
         {!venue.autoConfirm && wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
         {!venue.autoConfirm && wa && <p className="li-sub wrap">Escríbeles para que sepan que hay una solicitud nueva: así la ven rápido.</p>}
@@ -91,7 +96,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
       <p className="li-sub wrap">{venue.name}</p>
 
       {rooms.length > 1 && (
-        <label className="field">Salita
+        <label className="field">Sala
           <select value={roomId} onChange={(e) => { setRoomId(e.target.value); setSlot(null) }}>
             {rooms.map((r) => <option key={r.id} value={r.id}>{r.name} · hasta {r.capacity} personas · {money(r.pricePerHour)}{r.pricePerHour ? '/h' : ''}</option>)}
           </select>
@@ -110,7 +115,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
       <div>
         <div className="eyebrow" style={{ marginBottom: 8 }}>Horas disponibles</div>
-        {!day && <p className="li-sub wrap">La sala está cerrada ese día. Prueba con otro.</p>}
+        {!day && <p className="li-sub wrap">El ensayadero está cerrado ese día. Prueba con otro.</p>}
         {day && isLoading && <p className="li-sub">Buscando franjas…</p>}
         {day && !isLoading && slots.length === 0 && <p className="li-sub wrap">No hay franjas de esa duración en el horario de ese día.</p>}
         {day && !isLoading && slots.length > 0 && free === 0 && <p className="li-sub wrap">Todo está ocupado ese día. Prueba con otro.</p>}
@@ -137,10 +142,10 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
       <label className="field">Tu WhatsApp (opcional)
         <input type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={20} placeholder="300 123 4567" autoComplete="tel" />
       </label>
-      <label className="field">Nota para la sala (opcional)
+      <label className="field">Nota para el ensayadero (opcional)
         <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="Somos 4. Llevamos nuestra batería." />
       </label>
-      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con la sala para que pueda confirmarte. No se hace ningún cobro en Backline.{venue.autoConfirm ? ' Esta sala confirma al instante.' : ''}</p>
+      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con el ensayadero para que pueda confirmarte. No se hace ningún cobro en Backline.{venue.autoConfirm ? ' Este ensayadero confirma al instante.' : ''}</p>
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}

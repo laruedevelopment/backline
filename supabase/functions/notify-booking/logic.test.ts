@@ -14,14 +14,14 @@ describe('buildNotice', () => {
     expect(n.title).toBe('Nueva solicitud de reserva')
     expect(n.body).toContain('Sebas Gómez')
     expect(n.body).toMatch(/7:00/) // 00:00 UTC = 7:00 pm en Colombia
-    expect(n.url).toBe('mi-sala')
+    expect(n.url).toBe('mi-negocio')
   })
 
   it('cuando el dueño confirma, avisa a quien pidió', () => {
     const n = buildNotice({ ...base, status: 'confirmed' }, 'dueno')!
     expect(n.to).toBe('banda-user')
     expect(n.title).toBe('¡Tu reserva fue confirmada!')
-    expect(n.url).toBe('salas')
+    expect(n.url).toBe('ensayaderos')
   })
 
   it('una reserva confirmada al instante avisa al dueño', () => {

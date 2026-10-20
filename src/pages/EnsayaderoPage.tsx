@@ -18,7 +18,7 @@ const hm = (t: string) => {
   return d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })
 }
 
-export default function SalaPage() {
+export default function EnsayaderoPage() {
   const { id } = useParams()
   const userId = useAuth((s) => s.session?.user.id)
   const [booking, setBooking] = useState<string | null>(null)
@@ -30,7 +30,7 @@ export default function SalaPage() {
   if (venueQ.isLoading) return <ListSkeleton rows={4} />
   const venue = venueQ.data
   if (!venue) {
-    return <p className="empty">Esa sala no está disponible. <Link to="/salas" style={{ color: 'var(--amber)' }}>Volver a salas</Link></p>
+    return <p className="empty">Ese ensayadero no está disponible. <Link to="/ensayaderos" style={{ color: 'var(--amber)' }}>Volver a ensayaderos</Link></p>
   }
 
   const isOwner = venue.ownerId === userId
@@ -41,7 +41,7 @@ export default function SalaPage() {
 
   return (
     <>
-      <Link to="/salas" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Salas</Link>
+      <Link to="/ensayaderos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Ensayaderos</Link>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
         <BandMark name={venue.name} logoUrl={venue.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
@@ -53,8 +53,8 @@ export default function SalaPage() {
 
       {isOwner && (
         <p className="notice" style={{ marginTop: 12 }}>
-          {venue.isPublished ? 'Así ven tu sala las bandas.' : 'Tu sala aún no está publicada: solo tú la ves.'}{' '}
-          <Link to="/mi-sala" style={{ color: 'var(--amber)', fontWeight: 600 }}>Administrar</Link>
+          {venue.isPublished ? 'Así ven tu ensayadero las bandas.' : 'Tu ensayadero aún no está publicado: solo tú lo ves.'}{' '}
+          <Link to="/mi-negocio/perfil" style={{ color: 'var(--amber)', fontWeight: 600 }}>Administrar</Link>
         </p>
       )}
       {venue.description && <p style={{ marginTop: 14, maxWidth: '60ch', whiteSpace: 'pre-line' }}>{venue.description}</p>}
@@ -66,8 +66,8 @@ export default function SalaPage() {
         {socials.map(([k, url]) => <a key={k} href={url} target="_blank" rel="noopener noreferrer">{socialLabels[k]}</a>)}
       </div>
 
-      <div className="section-title">Salitas y precios</div>
-      {rooms.length === 0 && <p className="li-sub wrap">Esta sala aún no ha cargado sus salitas.</p>}
+      <div className="section-title">Salas y precios</div>
+      {rooms.length === 0 && <p className="li-sub wrap">Este ensayadero aún no ha cargado sus salas.</p>}
       <div className="list">
         {rooms.map((r) => (
           <div key={r.id} className="li" style={{ alignItems: 'flex-start' }}>
@@ -81,7 +81,7 @@ export default function SalaPage() {
           </div>
         ))}
       </div>
-      {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>La sala aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
+      {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>El ensayadero aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
 
       <div className="section-title">Horario</div>
       <div className="kv" style={{ maxWidth: 360 }}>

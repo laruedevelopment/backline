@@ -68,8 +68,8 @@ export default function HomePage() {
       <div className="home-grid">
       <div className="home-col">
       {pendingRequests > 0 && (
-        <Link to="/mi-sala" className="notice" style={{ display: 'block', marginTop: 8 }}>
-          <b>{pendingRequests === 1 ? 'Tienes 1 solicitud de reserva' : `Tienes ${pendingRequests} solicitudes de reserva`}</b> por responder en {myVenue?.name ?? 'tu sala'}.
+        <Link to="/mi-negocio" className="notice" style={{ display: 'block', marginTop: 8 }}>
+          <b>{pendingRequests === 1 ? 'Tienes 1 solicitud de reserva' : `Tienes ${pendingRequests} solicitudes de reserva`}</b> por responder en {myVenue?.name ?? 'tu ensayadero'}.
         </Link>
       )}
 

@@ -13,6 +13,9 @@ export const weekdayOf = (date: string) => new Date(`${date}T12:00:00${OFFSET}`)
 /** Hoy en Colombia como "YYYY-MM-DD". */
 export const todayBogota = (now = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(now)
 
+/** Día calendario en Colombia como "YYYY-MM-DD". */
+export const dayKey = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: TZ }).format(d)
+
 export const formatTime = (d: Date) => d.toLocaleTimeString('es-CO', { timeZone: TZ, hour: 'numeric', minute: '2-digit' })
 const cap = (t: string) => t.charAt(0).toUpperCase() + t.slice(1)
 export const formatDay = (d: Date) => cap(d.toLocaleDateString('es-CO', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' }))

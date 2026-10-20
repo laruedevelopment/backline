@@ -16,7 +16,7 @@ import { useAuth } from '../store/useAuth'
 
 const statusText = { requested: 'Pendiente', confirmed: 'Confirmada', rejected: 'Rechazada', cancelled: 'Cancelada' } as const
 
-export default function SalasPage() {
+export default function EnsayaderosPage() {
   const userId = useAuth((s) => s.session?.user.id)
   const qc = useQueryClient()
   const [q, setQ] = useState('')
@@ -51,8 +51,8 @@ export default function SalasPage() {
   if (!supabase) {
     return (
       <>
-        <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Salas</h1></div>
-        <p className="notice">Ingresa con tu cuenta para ver las salas de ensayo y reservar.</p>
+        <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Ensayaderos</h1></div>
+        <p className="notice">Ingresa con tu cuenta para ver los ensayaderos y reservar.</p>
       </>
     )
   }
@@ -61,11 +61,11 @@ export default function SalasPage() {
     <>
       <div className="page-head">
         <span className="eyebrow">Ensayos</span>
-        <h1 className="page-title">Salas de ensayo</h1>
-        <p className="page-sub">Encuentra una sala, mira sus horarios y pide tu franja. Si la reservas a nombre de la banda, el ensayo aparece solo en la agenda.</p>
+        <h1 className="page-title">Ensayaderos</h1>
+        <p className="page-sub">Encuentra un ensayadero, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda.</p>
       </div>
       <AgendaNav />
-      {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando la sala responda tu solicitud." />}
+      {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando el ensayadero responda tu solicitud." />}
 
       {upcoming.length > 0 && (
         <>
@@ -76,7 +76,7 @@ export default function SalasPage() {
               return (
                 <div key={b.id} className="li" style={{ alignItems: 'flex-start' }}>
                   <div className="li-main">
-                    <Link to={`/salas/${b.venueId}`} className="li-title" style={{ display: 'block' }}>{b.venueName} · {b.roomName}</Link>
+                    <Link to={`/ensayaderos/${b.venueId}`} className="li-title" style={{ display: 'block' }}>{b.venueName} · {b.roomName}</Link>
                     <div className="li-sub">{formatDay(s)}</div>
                     <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span><span className={`tag ${b.status === 'confirmed' ? 'ok' : ''}`}>{statusText[b.status]}</span></div>
                   </div>
@@ -92,25 +92,25 @@ export default function SalasPage() {
       )}
       {msg && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{msg}</p>}
 
-      <div className="section-title">Salas</div>
+      <div className="section-title">Ensayaderos</div>
       <label className="search">
         <Search size={18} aria-hidden />
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o ciudad" aria-label="Buscar salas" />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o ciudad" aria-label="Buscar ensayaderos" />
       </label>
 
       {venuesQ.isLoading && <ListSkeleton rows={3} />}
-      {venuesQ.error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>No pudimos cargar las salas. Revisa tu conexión.</p>}
+      {venuesQ.error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>No pudimos cargar los ensayaderos. Revisa tu conexión.</p>}
       {!venuesQ.isLoading && !venuesQ.error && (venues?.length ?? 0) === 0 && (
         <div className="empty">
-          <h3>Aún no hay salas publicadas</h3>
-          <p>Las salas de ensayo que se publiquen en Backline aparecen aquí con sus horarios y precios. ¿Tienes o conoces una? Pídele que la publique.</p>
+          <h3>Aún no hay ensayaderos publicados</h3>
+          <p>Los ensayaderos que se publiquen en Backline aparecen aquí con sus salas, horarios y precios. ¿Tienes o conoces uno? Pídele que lo publique.</p>
         </div>
       )}
-      {(venues?.length ?? 0) > 0 && shown.length === 0 && <p className="empty">Ninguna sala coincide con esa búsqueda.</p>}
+      {(venues?.length ?? 0) > 0 && shown.length === 0 && <p className="empty">Ningún ensayadero coincide con esa búsqueda.</p>}
 
       <div className="list" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
         {shown.map((v) => (
-          <Link key={v.id} to={`/salas/${v.id}`} className="li" style={{ minHeight: 76 }}>
+          <Link key={v.id} to={`/ensayaderos/${v.id}`} className="li" style={{ minHeight: 76 }}>
             <BandMark name={v.name} logoUrl={v.logoUrl} />
             <div className="li-main">
               <div className="li-title">{v.name}</div>
@@ -122,11 +122,11 @@ export default function SalasPage() {
         ))}
       </div>
 
-      <div className="section-title">¿Tienes una sala?</div>
+      <div className="section-title">¿Tienes un ensayadero?</div>
       <div className="notice">
         {mine.length > 0
-          ? <>Administra tu sala, tus horarios y las solicitudes. <Link to="/mi-sala" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi sala</Link></>
-          : <>Publica tu sala de ensayo en Backline: tus salitas, horarios y precios, y recibe solicitudes de las bandas. <Link to="/mi-sala" style={{ color: 'var(--amber)', fontWeight: 600 }}>Publicar mi sala</Link></>}
+          ? <>Administra tus salas, tus horarios y las reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></>
+          : <>Publica tu ensayadero en Backline: tus salas, horarios y precios, y recibe reservas de las bandas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Publicar mi ensayadero</Link></>}
       </div>
     </>
   )

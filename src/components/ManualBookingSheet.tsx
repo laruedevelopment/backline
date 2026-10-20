@@ -38,7 +38,7 @@ export default function ManualBookingSheet({ rooms, onSaved, onClose }: { rooms:
     <Sheet title="Anotar una reserva" onClose={onClose} onSubmit={submit}>
       <p className="li-sub wrap">Para las reservas que te llegan por WhatsApp o por llamada. Queda confirmada y esa franja deja de aparecer libre para las bandas.</p>
       {rooms.length > 1 && (
-        <label className="field">Salita
+        <label className="field">Sala
           <select value={roomId} onChange={(e) => setRoomId(e.target.value)}>{rooms.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
         </label>
       )}

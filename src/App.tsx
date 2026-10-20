@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarDays, GraduationCap, Home, Music2, Users } from 'lucide-react'
+import { CalendarClock, CalendarDays, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { persistOptions, queryClient } from './lib/queryClient'
@@ -21,9 +21,9 @@ import RepertoirePage from './pages/RepertoirePage'
 import SetlistsPage from './pages/SetlistsPage'
 import SetlistDetailPage from './pages/SetlistDetailPage'
 import AgendaPage from './pages/AgendaPage'
-import SalasPage from './pages/SalasPage'
-import SalaPage from './pages/SalaPage'
-import MiSalaPage from './pages/MiSalaPage'
+import EnsayaderosPage from './pages/EnsayaderosPage'
+import EnsayaderoPage from './pages/EnsayaderoPage'
+import BusinessLayout from './pages/business/BusinessLayout'
 import LearnPage from './pages/LearnPage'
 import LessonPage from './pages/LessonPage'
 import BandPage from './pages/BandPage'
@@ -32,9 +32,18 @@ import ProfilePage from './pages/ProfilePage'
 const tabs = [
   { to: '/', label: 'Inicio', icon: Home, match: (p: string) => p === '/' },
   { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') },
-  { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/salas') || p.startsWith('/mi-sala') },
+  { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/ensayaderos') },
   { to: '/aprender', label: 'Aprender', icon: GraduationCap, match: (p: string) => p.startsWith('/aprender') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
+]
+
+/** El otro sombrero: cuando el usuario administra su negocio (ensayadero), la navegación cambia. */
+const businessTabs = [
+  { to: '/mi-negocio', label: 'Hoy', icon: CalendarClock, match: (p: string) => p === '/mi-negocio' },
+  { to: '/mi-negocio/reservas', label: 'Reservas', icon: CalendarDays, match: (p: string) => p.startsWith('/mi-negocio/reservas') },
+  { to: '/mi-negocio/salas', label: 'Salas', icon: DoorOpen, match: (p: string) => p.startsWith('/mi-negocio/salas') },
+  { to: '/mi-negocio/perfil', label: 'Ensayadero', icon: Store, match: (p: string) => p.startsWith('/mi-negocio/perfil') },
+  { to: '/', label: 'Mis bandas', icon: Users, match: () => false },
 ]
 
 const ACTIVE_KEY = 'backline-active-band'
@@ -99,14 +108,15 @@ function Splash() {
 function Nav() {
   const { pathname } = useLocation()
   const { count: pending } = usePendingRequests()
+  const inBusiness = pathname.startsWith('/mi-negocio')
   return (
-    <nav className="nav" aria-label="Principal">
+    <nav className="nav" aria-label={inBusiness ? 'Mi negocio' : 'Principal'}>
       <div className="wordmark">back<span>line</span></div>
-      {tabs.map(({ to, label, icon: Icon, match }) => (
+      {(inBusiness ? businessTabs : tabs).map(({ to, label, icon: Icon, match }) => (
         <NavLink key={to} to={to} className={match(pathname) ? 'active' : ''} aria-current={match(pathname) ? 'page' : undefined}>
           <span className="icon-wrap">
             <Icon size={22} strokeWidth={1.7} aria-hidden />
-            {to === '/agenda' && pending > 0 && <span className="badge" aria-label={`${pending} solicitudes de reserva por responder`}>{pending}</span>}
+            {inBusiness && to === '/mi-negocio' && pending > 0 && <span className="badge" aria-label={`${pending} solicitudes de reserva por responder`}>{pending}</span>}
           </span>
           {label}
         </NavLink>
@@ -135,9 +145,9 @@ function Shell() {
               <Route path="/setlists" element={<SetlistsPage />} />
               <Route path="/setlists/:id" element={<SetlistDetailPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
-              <Route path="/salas" element={<SalasPage />} />
-              <Route path="/salas/:id" element={<SalaPage />} />
-              <Route path="/mi-sala" element={<MiSalaPage />} />
+              <Route path="/ensayaderos" element={<EnsayaderosPage />} />
+              <Route path="/ensayaderos/:id" element={<EnsayaderoPage />} />
+              <Route path="/mi-negocio/*" element={<BusinessLayout />} />
               <Route path="/aprender" element={<LearnPage />} />
               <Route path="/aprender/:id" element={<LessonPage />} />
               <Route path="/banda" element={<BandPage />} />

@@ -42,11 +42,11 @@ export function buildNotice(b: BookingFacts, callerId: string): Notice | null {
     const who = b.contactName || 'Una banda'
     switch (b.status) {
       case 'requested':
-        return { to: b.ownerId, tag, url: 'mi-sala', title: 'Nueva solicitud de reserva', body: `${who} pide ${b.roomName}: ${when(b)}.` }
+        return { to: b.ownerId, tag, url: 'mi-negocio', title: 'Nueva solicitud de reserva', body: `${who} pide ${b.roomName}: ${when(b)}.` }
       case 'confirmed':
-        return { to: b.ownerId, tag, url: 'mi-sala', title: 'Nueva reserva confirmada', body: `${who} reservó ${b.roomName}: ${when(b)}.` }
+        return { to: b.ownerId, tag, url: 'mi-negocio', title: 'Nueva reserva confirmada', body: `${who} reservó ${b.roomName}: ${when(b)}.` }
       case 'cancelled':
-        return { to: b.ownerId, tag, url: 'mi-sala', title: 'Reserva cancelada', body: `${who} canceló ${b.roomName}: ${when(b)}.` }
+        return { to: b.ownerId, tag, url: 'mi-negocio', title: 'Reserva cancelada', body: `${who} canceló ${b.roomName}: ${when(b)}.` }
       default:
         return null
     }
@@ -55,11 +55,11 @@ export function buildNotice(b: BookingFacts, callerId: string): Notice | null {
   if (fromOwner && b.requestedBy) {
     switch (b.status) {
       case 'confirmed':
-        return { to: b.requestedBy, tag, url: 'salas', title: '¡Tu reserva fue confirmada!', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
+        return { to: b.requestedBy, tag, url: 'ensayaderos', title: '¡Tu reserva fue confirmada!', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
       case 'rejected':
-        return { to: b.requestedBy, tag, url: 'salas', title: 'Tu solicitud no fue aceptada', body: `${b.venueName} no puede el ${when(b)}. Mira el motivo y prueba otra franja.` }
+        return { to: b.requestedBy, tag, url: 'ensayaderos', title: 'Tu solicitud no fue aceptada', body: `${b.venueName} no puede el ${when(b)}. Mira el motivo y prueba otra franja.` }
       case 'cancelled':
-        return { to: b.requestedBy, tag, url: 'salas', title: 'La sala canceló tu reserva', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
+        return { to: b.requestedBy, tag, url: 'ensayaderos', title: 'El ensayadero canceló tu reserva', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
       default:
         return null
     }

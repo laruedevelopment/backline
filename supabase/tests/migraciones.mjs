@@ -227,6 +227,62 @@ await ok('cada quien puede borrar la suya, no la ajena', async () => {
 })
 await rejects('máximo 10 dispositivos por persona', async () => { for (let i = 0; i < 11; i++) await as('member', `select public.save_push_subscription($1,'p','a')`, [`https://push.example/m${i}`]) }, /demasiados/)
 
+
+console.log('\nCalendario de Google (horas ocupadas leídas)')
+const GOOD = 'https://calendar.google.com/calendar/ical/dueno%40gmail.com/private-abc123XYZ/basic.ics'
+await ok('el dueño conecta el calendario de una salita', async () => {
+  await as('owner', `insert into public.room_calendar_sources (room_id, venue_id, url) values ($1,$2,$3)`, [room, venue, GOOD])
+})
+await rejects('solo se aceptan direcciones iCal de Google Calendar (protección contra pedir otras URL)', () => as('owner', `update public.room_calendar_sources set url='https://evil.example/x.ics' where room_id=$1`, [room]), /check/)
+await rejects('ni siquiera Google con otra ruta', () => as('owner', `update public.room_calendar_sources set url='https://calendar.google.com/calendar/u/0/embed' where room_id=$1`, [room]), /check/)
+await ok('la dirección secreta solo la ve el dueño (ni la banda ni otros usuarios)', async () => {
+  eq((await as('owner', `select url from public.room_calendar_sources`)).length, 1, 'dueño')
+  eq((await as('leader', `select url from public.room_calendar_sources`)).length, 0, 'banda')
+  eq((await as('member', `select url from public.room_calendar_sources`)).length, 0, 'otro')
+})
+await rejects('otro usuario no puede conectar un calendario a la sala ajena', () => as('leader', `insert into public.room_calendar_sources (room_id, venue_id, url) values ($1,$2,$3)`, [room, venue, GOOD]), /row-level|duplicate|permission/)
+await rejects('el estado de la sincronización no lo escribe el usuario', () => as('owner', `update public.room_calendar_sources set last_status='ok', blocks_count=99 where room_id=$1`, [room]), /permission denied/)
+await rejects('las horas ocupadas no se pueden leer ni escribir directamente', () => as('owner', `select * from public.room_external_busy`), /permission denied/)
+await rejects('replace_external_busy solo la puede llamar la llave de servicio, no un usuario', () => as('owner', `select public.replace_external_busy($1,'[]'::jsonb)`, [room]), /permission denied/)
+await ok('la función de sincronización (servicio) guarda las horas ocupadas', async () => {
+  await pg.query(`select public.replace_external_busy($1, $2::jsonb)`, [room, JSON.stringify([{ starts_at: t(20, '18:00'), ends_at: t(20, '20:00') }])])
+})
+await ok('las bandas ven esa franja ocupada, sin detalles', async () => {
+  const rows = await as('leader', `select * from public.room_busy($1,$2,$3)`, [room, t(20, '00:00'), t(20, '23:59')])
+  eq(rows.length, 1, 'franjas'); eq(Object.keys(rows[0]).sort(), ['ends_at', 'starts_at'], 'columnas')
+})
+await rejects('no se puede pedir una franja que el calendario de la sala tiene ocupada', () => as('leader', `select public.request_booking($1,$2,$3)`, [room, t(20, '19:00'), t(20, '21:00')]), /ocupada/)
+await ok('una franja libre alrededor sí se puede pedir', async () => {
+  await as('leader', `select public.request_booking($1,$2,$3)`, [room, t(20, '20:00'), t(20, '21:00')])
+})
+await ok('cambiar la dirección reinicia el estado de la sincronización', async () => {
+  await pg.query(`update public.room_calendar_sources set last_synced_at = now(), last_status='ok', blocks_count=1 where room_id=$1`, [room])
+  await as('owner', `update public.room_calendar_sources set url=$2 where room_id=$1`, [room, GOOD.replace('abc123XYZ', 'nuevo999')])
+  const [r] = await pg.query(`select last_synced_at, last_status, blocks_count from public.room_calendar_sources where room_id=$1`, [room]).then((x) => x.rows)
+  eq([r.last_synced_at, r.last_status, r.blocks_count], [null, null, 0], 'estado')
+})
+await ok('desconectar el calendario es posible para el dueño', async () => {
+  await as('owner', `delete from public.room_calendar_sources where room_id=$1`, [room])
+})
+
+
+console.log('\nLlave de servicio (Edge Functions)')
+async function asService(sql, params = []) {
+  return pg.transaction(async (tx) => { await tx.query(`select set_config('role','service_role',true)`); return (await tx.query(sql, params)).rows })
+}
+await ok('notify-booking puede leer reservas, salas y suscripciones y marcar el aviso', async () => {
+  const [b] = await asService(`select id from public.bookings limit 1`)
+  await asService(`select id, owner_id from public.venues limit 1`)
+  await asService(`select id, name from public.venue_rooms limit 1`)
+  await asService(`select id, endpoint from public.push_subscriptions limit 1`)
+  await asService(`update public.bookings set last_notified_status = status where id=$1`, [b.id])
+})
+await ok('sync-calendars puede leer las direcciones y anotar el estado', async () => {
+  await asService(`select room_id, url from public.room_calendar_sources limit 1`)
+  await asService(`update public.room_calendar_sources set last_status = 'ok' where false`)
+  await asService(`select public.replace_external_busy($1, '[]'::jsonb)`, [room])
+})
+
 console.log('\nFotos y límites')
 await rejects('una foto no puede apuntar a la carpeta de otra sala', () => as('owner', `insert into public.venue_photos (venue_id, path) values ($1,'otra/photos/x.webp')`, [venue]), /check/)
 await ok('el dueño sube hasta 12 fotos y la 13 se rechaza', async () => {

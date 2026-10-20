@@ -22,7 +22,7 @@ export function useLiveBookings() {
   }, [qc])
 }
 
-/** Solicitudes de reserva por responder en la sala del usuario (0 si no tiene sala). */
+/** Solicitudes de reserva por responder en el negocio del usuario (0 si no tiene uno). */
 export function usePendingRequests() {
   const userId = useAuth((s) => s.session?.user.id)
   const [now] = useState(() => new Date())

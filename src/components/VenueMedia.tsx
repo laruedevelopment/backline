@@ -4,7 +4,7 @@ import {
 } from '../lib/venues'
 import MediaManager, { type MediaApi } from './MediaManager'
 
-/** Logo y fotos de la sala. Solo su dueño sube o borra; el resto mira. */
+/** Logo y fotos del ensayadero. Solo su dueño sube o borra; el resto mira. */
 export default function VenueMedia({ venue, canEdit }: { venue: Venue; canEdit: boolean }) {
   const qc = useQueryClient()
   const api: MediaApi<VenuePhoto> = {
