@@ -95,19 +95,26 @@ export function RoomForm({ room, onSave, onDelete, onClose }: {
   const [capacity, setCapacity] = useState(String(room?.capacity ?? 6))
   const [price, setPrice] = useState(room ? String(room.pricePerHour) : '')
   const [description, setDescription] = useState(room?.description ?? '')
+  const [width, setWidth] = useState(room?.widthM != null ? String(room.widthM) : '')
+  const [length, setLength] = useState(room?.lengthM != null ? String(room.lengthM) : '')
+  const [height, setHeight] = useState(room?.heightM != null ? String(room.heightM) : '')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const num = (t: string) => { const v = Number(t.replace(',', '.')); return t.trim() && Number.isFinite(v) && v > 0 ? v : null }
+  const area = num(width) && num(length) ? Math.round(num(width)! * num(length)! * 10) / 10 : null
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (busy) return
+    if ((width.trim() && !num(width)) || (length.trim() && !num(length)) || (height.trim() && !num(height))) return setError('Las medidas deben ser números mayores que cero (en metros).')
+    if (!!num(width) !== !!num(length)) return setError('Si das las medidas, escribe el ancho y el largo.')
     const cap = Number(capacity)
     const p = Number(price.replace(/\D/g, '')) || 0
     if (!(cap >= 1 && cap <= 60)) return setError('La capacidad debe estar entre 1 y 60 personas.')
     setBusy(true)
     setError('')
     try {
-      await onSave({ id: room?.id ?? crypto.randomUUID(), name, capacity: cap, pricePerHour: p, description })
+      await onSave({ id: room?.id ?? crypto.randomUUID(), name, capacity: cap, pricePerHour: p, description, widthM: num(width), lengthM: num(length), heightM: num(height) })
       onClose()
     } catch {
       setError('No pudimos guardar la sala. Intenta de nuevo.')
@@ -128,6 +135,21 @@ export function RoomForm({ room, onSave, onDelete, onClose }: {
           <input inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="35000" />
         </label>
       </div>
+      <fieldset style={{ border: 0, padding: 0 }}>
+        <legend className="field" style={{ marginBottom: 6 }}>Tamaño de la sala (metros, opcional)</legend>
+        <div className="grid3">
+          <label className="field">Ancho
+            <input inputMode="decimal" value={width} onChange={(e) => setWidth(e.target.value)} placeholder="4,5" />
+          </label>
+          <label className="field">Largo
+            <input inputMode="decimal" value={length} onChange={(e) => setLength(e.target.value)} placeholder="6" />
+          </label>
+          <label className="field">Alto
+            <input inputMode="decimal" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="2,8" />
+          </label>
+        </div>
+        {area !== null && <p className="li-sub" style={{ marginTop: 6 }}>Área: {String(area).replace('.', ',')} m²</p>}
+      </fieldset>
       <label className="field">Descripción (opcional)
         <textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={300} placeholder="Batería Pearl, 2 amplificadores de guitarra, bajo Ampeg, PA con 3 micrófonos." />
       </label>

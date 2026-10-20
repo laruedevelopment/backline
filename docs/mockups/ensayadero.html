@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backline · Interfaz del ensayadero</title>
+<style>
+  :root { --bg:#0d0c0a; --raise:#171512; --line:#2a2620; --text:#f1ece2; --muted:#a1998b; --amber:#f2a33a; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 16px/1.55 system-ui, "Segoe UI", sans-serif; padding: 28px 18px 80px; }
+  main { max-width: 1180px; margin: 0 auto; }
+  h1 { font: 900 clamp(2rem, 6vw, 3.4rem)/1 "Arial Narrow", Arial, sans-serif; text-transform: uppercase; letter-spacing: .01em; }
+  h1 span { color: var(--amber); }
+  h2 { font: 800 1.6rem/1.1 "Arial Narrow", Arial, sans-serif; text-transform: uppercase; margin: 56px 0 6px; }
+  .eyebrow { font: 12px ui-monospace, Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  p.lede { color: var(--muted); max-width: 70ch; margin-top: 12px; }
+  .note { border-left: 3px solid var(--amber); background: var(--raise); padding: 12px 16px; border-radius: 0 10px 10px 0; margin-top: 18px; max-width: 76ch; }
+  .row { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 22px; align-items: flex-start; }
+  figure { width: 300px; }
+  .phone { width: 300px; height: 590px; border: 8px solid #2b2824; border-radius: 34px; background: #000; overflow: hidden; box-shadow: 0 18px 40px rgb(0 0 0 / .5); }
+  .phone .scroll { height: 100%; overflow-y: auto; scrollbar-width: thin; }
+  .phone img { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 12px; font-size: .92rem; color: var(--muted); }
+  figcaption b { display: block; color: var(--text); font-size: 1rem; margin-bottom: 2px; }
+  .desk { width: min(820px, 100%); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .desk img { display: block; width: 100%; }
+  .hint { font-size: .85rem; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <span class="eyebrow">Mockup · capturas reales de la app</span>
+  <h1>Backline para el <span>ensayadero</span></h1>
+  <p class="lede">Así se ve la app para el dueño de un ensayadero y para las bandas que le reservan. Son capturas de la interfaz funcionando con datos de ejemplo («Sala Resonancia», «Kabaret»). Cada pantalla es desplazable: arrastra dentro del teléfono para ver el resto.</p>
+  <p class="note"><b>Dos sombreros.</b> El dueño también toca en una banda. Desde la barra de arriba cambia entre «Mis bandas» y «Mi negocio»: en cada uno la navegación de abajo es distinta, y un aviso rojo le recuerda si tiene solicitudes por responder mientras está en su banda.</p>
+
+  <h2>1 · Cambiar de sombrero</h2>
+  <p class="lede">Una sola cuenta, dos mundos. El negocio puede ser un ensayadero hoy y, más adelante, un estudio, un luthier o una tienda.</p>
+  <div class="row">
+    <figure><div class="phone"><div class="scroll"><img src="img/own-home-m.png" alt="Inicio de la banda con aviso de solicitudes del negocio"></div></div>
+      <figcaption><b>Como músico</b>Inicio de su banda. La tarjeta avisa que hay una solicitud de reserva esperando en su ensayadero, y la insignia roja está sobre el logo.</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/own-switch-m.png" alt="Selector de bandas y negocio"></div></div>
+      <figcaption><b>El selector</b>Sus bandas arriba, su negocio abajo. Un toque en «Sala Resonancia» cambia de sombrero.</figcaption></figure>
+  </div>
+
+  <h2>2 · Mi negocio: el día a día</h2>
+  <p class="lede">Navegación propia: <b>Hoy · Reservas · Salas · Ensayadero · Mis bandas</b>. Lo primero que ve es qué tiene que responder y qué pasa hoy.</p>
+  <div class="row">
+    <figure><div class="phone"><div class="scroll"><img src="img/own-hoy-m.png" alt="Pantalla Hoy del dueño"></div></div>
+      <figcaption><b>Hoy</b>Por responder, ensayos de hoy y los próximos. Confirma o rechaza con un toque, escribe por WhatsApp a quien pidió, o agrega el ensayo a su Google Calendar.</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/own-reservas-m.png" alt="Reservas agrupadas por día"></div></div>
+      <figcaption><b>Reservas</b>Todo lo que viene, día por día. Desde aquí también anota las reservas que le llegan por WhatsApp o llamada, para que las bandas vean la disponibilidad real.</figcaption></figure>
+  </div>
+  <div class="desk" style="margin-top:22px"><img src="img/own-hoy-d.png" alt="Hoy en escritorio"></div>
+  <p class="hint">En el computador la navegación pasa a la barra lateral.</p>
+
+  <h2>3 · Salas, equipo y horario</h2>
+  <p class="lede">Cada ensayadero tiene <b>salas</b> (un estudio tendría salas de grabación). Cada sala tiene su tamaño, su equipo y su precio.</p>
+  <div class="row">
+    <figure><div class="phone"><div class="scroll"><img src="img/eq-salas-m.png" alt="Lista de salas con equipo y calendario"></div></div>
+      <figcaption><b>Salas</b>Medidas, equipo incluido y alquiler aparte de un vistazo. Abajo: calendario de Google por sala y horario de atención.</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/eq-equipo-m.png" alt="Equipo de una sala"></div></div>
+      <figcaption><b>Equipo de una sala</b>Separado en «Incluido en el precio» y «Alquiler aparte» con su precio por hora o por sesión.</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/eq-item-m.png" alt="Formulario de un equipo"></div></div>
+      <figcaption><b>Agregar un equipo</b>Lo básico es el tipo y la cantidad. La marca, la referencia exacta, el formato (combo, cabezote y cabina; consola análoga o digital), los canales y los detalles son opcionales.</figcaption></figure>
+  </div>
+
+  <h2>4 · Perfil, mapa y publicación</h2>
+  <div class="row">
+    <figure><div class="phone"><div class="scroll"><img src="img/eq-perfil-m.png" alt="Perfil del ensayadero, ubicación y publicación"></div></div>
+      <figcaption><b>Ensayadero</b>Lista de pendientes para publicar, confirmación automática de reservas (opcional), ubicación en el mapa (por la ubicación del celular, por la dirección o pegando un enlace de Google Maps), logo y fotos.</figcaption></figure>
+  </div>
+
+  <h2>5 · Lo que ven las bandas</h2>
+  <p class="lede">La ficha pública del ensayadero: dónde está, qué incluye cada sala, qué se alquila aparte y cuánto cuesta, y el horario. Desde ahí reservan.</p>
+  <div class="row">
+    <figure><div class="phone"><div class="scroll"><img src="img/ens-dir-m.png" alt="Directorio de ensayaderos"></div></div>
+      <figcaption><b>Ensayaderos</b>El directorio dentro de Agenda, con búsqueda y precio «desde».</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/eq-ficha-m.png" alt="Ficha del ensayadero con mapa y equipo"></div></div>
+      <figcaption><b>La ficha</b>Mapa, «Cómo llegar», medidas de cada sala, equipo incluido, alquiler aparte con precio y el detalle exacto del equipo si el dueño lo dio.</figcaption></figure>
+    <figure><div class="phone"><div class="scroll"><img src="img/ens-reservar-m.png" alt="Reservar una franja"></div></div>
+      <figcaption><b>Reservar</b>La banda elige sala, día y duración, y ve las horas libres (las ocupadas, tachadas). Si el ensayadero confirma solo, queda reservada al instante.</figcaption></figure>
+  </div>
+
+  <h2>Lo que sigue (a decidir contigo)</h2>
+  <p class="lede">Mapa con todos los ensayaderos y «cerca de mí» · filtros por equipo («tiene bajo y 2 amplificadores») · fotos y plano de cada sala · estudios de grabación, luthiers y tiendas como otros tipos de negocio · marketplace de instrumentos para cualquier usuario (con revisión legal antes de abrirlo).</p>
+</main>
+</body>
+</html>

@@ -283,6 +283,51 @@ await ok('sync-calendars puede leer las direcciones y anotar el estado', async (
   await asService(`select public.replace_external_busy($1, '[]'::jsonb)`, [room])
 })
 
+
+console.log('\nFicha técnica: equipo, medidas y ubicación')
+let eq1
+await ok('el dueño agrega equipo incluido (con referencia opcional) y de alquiler aparte', async () => {
+  const [a] = await as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity, format, brand, model) values ($1,$2,'guitar_amp',2,'combo','Fender','Hot Rod Deluxe') returning id`, [room, venue]); eq1 = a.id
+  await as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity) values ($1,$2,'drums',1)`, [room, venue])
+  await as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity, included, extra_price, extra_unit, details) values ($1,$2,'guitar',3,false,15000,'session','Stratocaster y Les Paul')`, [room, venue])
+  await as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity, included, extra_price) values ($1,$2,'keyboard',1,false,null)`, [room, venue])
+  await as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity, channels, format, brand, model) values ($1,$2,'mixer',1,16,'digital','Behringer','X32 Compact')`, [room, venue])
+})
+await ok('las bandas ven el equipo de un ensayadero publicado', async () => {
+  eq((await as('leader', `select id from public.room_equipment where room_id=$1`, [room])).length, 5, 'equipo')
+})
+await rejects('otro usuario no puede agregar ni cambiar equipo ajeno', () => as('leader', `insert into public.room_equipment (room_id, venue_id, kind) values ($1,$2,'drums')`, [room, venue]), /row-level|permission/)
+await ok('ni editarlo ni borrarlo', async () => {
+  eq((await as('leader', `update public.room_equipment set quantity = 9 where id=$1 returning id`, [eq1])).length, 0, 'editó')
+  eq((await as('leader', `delete from public.room_equipment where id=$1 returning id`, [eq1])).length, 0, 'borró')
+})
+await rejects('un tipo de equipo inválido se rechaza', () => as('owner', `insert into public.room_equipment (room_id, venue_id, kind) values ($1,$2,'laser')`, [room, venue]), /check/)
+await rejects('la cantidad debe estar entre 1 y 99', () => as('owner', `insert into public.room_equipment (room_id, venue_id, kind, quantity) values ($1,$2,'mics',0)`, [room, venue]), /check/)
+await rejects('no se puede apuntar el equipo a una sala de otro ensayadero', () => as('owner', `insert into public.room_equipment (room_id, venue_id, kind) values ($1,'00000000-0000-4000-8000-000000000000','drums')`, [room]), /foreign key|row-level/)
+await ok('máximo 40 equipos por sala', async () => {
+  const [{ n }] = await as('owner', `select public.room_equipment_count($1) as n`, [room])
+  for (let i = Number(n); i < 40; i++) await as('owner', `insert into public.room_equipment (room_id, venue_id, kind) values ($1,$2,'other')`, [room, venue])
+  let failed = false
+  try { await as('owner', `insert into public.room_equipment (room_id, venue_id, kind) values ($1,$2,'other')`, [room, venue]) } catch { failed = true }
+  if (!failed) throw new Error('permitió el equipo 41')
+})
+await ok('el dueño pone las medidas de la sala; valores absurdos se rechazan', async () => {
+  await as('owner', `update public.venue_rooms set width_m = 4.5, length_m = 6, height_m = 2.8 where id=$1`, [room])
+  let failed = false
+  try { await as('owner', `update public.venue_rooms set width_m = 900 where id=$1`, [room]) } catch { failed = true }
+  if (!failed) throw new Error('permitió 900 m')
+})
+await ok('el dueño guarda la ubicación en el mapa (latitud y longitud juntas)', async () => {
+  await as('owner', `update public.venues set lat = 7.119349, lng = -73.122742 where id=$1`, [venue])
+  let failed = false
+  try { await as('owner', `update public.venues set lat = null where id=$1`, [venue]) } catch { failed = true }
+  if (!failed) throw new Error('permitió lat sin lng')
+  failed = false
+  try { await as('owner', `update public.venues set lat = 200, lng = 1 where id=$1`, [venue]) } catch { failed = true }
+  if (!failed) throw new Error('permitió latitud 200')
+})
+await rejects('otro no puede cambiar la ubicación', async () => { const r = await as('leader', `update public.venues set lat = 1, lng = 1 where id=$1 returning id`, [venue]); if (r.length) throw new Error('cambió'); throw new Error('0 filas (RLS)') }, /RLS|permission/)
+
 console.log('\nFotos y límites')
 await rejects('una foto no puede apuntar a la carpeta de otra sala', () => as('owner', `insert into public.venue_photos (venue_id, path) values ($1,'otra/photos/x.webp')`, [venue]), /check/)
 await ok('el dueño sube hasta 12 fotos y la 13 se rechaza', async () => {

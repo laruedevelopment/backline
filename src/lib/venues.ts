@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { BandLinks } from './api'
+import type { Equipment } from './equipment'
 import { notifyBooking } from './push'
 import type { Busy } from './slots'
 
@@ -17,8 +18,12 @@ export type Venue = {
   id: string; ownerId: string; kind: VenueKind; name: string; city: string; address: string; description: string
   amenities: string[]; whatsapp: string; links: BandLinks; bookingUrl: string
   logoPath: string | null; logoUrl: string | null; isPublished: boolean; autoConfirm: boolean
+  lat: number | null; lng: number | null
 }
-export type Room = { id: string; venueId: string; name: string; capacity: number; pricePerHour: number; description: string }
+export type Room = {
+  id: string; venueId: string; name: string; capacity: number; pricePerHour: number; description: string
+  widthM: number | null; lengthM: number | null; heightM: number | null
+}
 export type Hours = { weekday: number; opens: string; closes: string }
 export type VenuePhoto = { id: string; path: string; url: string }
 export type BookingStatus = 'requested' | 'confirmed' | 'rejected' | 'cancelled'
@@ -32,13 +37,14 @@ export type Booking = {
 type VenueRow = {
   id: string; owner_id: string; kind: VenueKind; name: string; city: string; address: string; description: string | null
   amenities: string[]; whatsapp: string | null; links: BandLinks; booking_url: string | null; logo_path: string | null; is_published: boolean; auto_confirm: boolean
+  lat: number | null; lng: number | null
 }
 const toVenue = (r: VenueRow): Venue => ({
   id: r.id, ownerId: r.owner_id, kind: r.kind, name: r.name, city: r.city, address: r.address, description: r.description ?? '',
   amenities: r.amenities, whatsapp: r.whatsapp ?? '', links: r.links, bookingUrl: r.booking_url ?? '',
-  logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published, autoConfirm: r.auto_confirm,
+  logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published, autoConfirm: r.auto_confirm, lat: r.lat, lng: r.lng,
 })
-const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm'
+const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm, lat, lng'
 
 export async function listVenues(): Promise<Venue[]> {
   const { data, error } = await db().from('venues').select(VENUE_COLS).eq('is_published', true).order('name')
@@ -92,16 +98,18 @@ export async function deleteVenue(id: string) {
 
 // ───────── Salas y horarios ─────────
 export async function listRooms(venueId: string): Promise<Room[]> {
-  const { data, error } = await db().from('venue_rooms').select('id, venue_id, name, capacity, price_per_hour, description').eq('venue_id', venueId).order('created_at')
+  const { data, error } = await db().from('venue_rooms').select('id, venue_id, name, capacity, price_per_hour, description, width_m, length_m, height_m').eq('venue_id', venueId).order('created_at')
   if (error) throw error
-  return (data as { id: string; venue_id: string; name: string; capacity: number; price_per_hour: number; description: string | null }[]).map((r) => ({
+  return (data as { id: string; venue_id: string; name: string; capacity: number; price_per_hour: number; description: string | null; width_m: number | null; length_m: number | null; height_m: number | null }[]).map((r) => ({
     id: r.id, venueId: r.venue_id, name: r.name, capacity: r.capacity, pricePerHour: r.price_per_hour, description: r.description ?? '',
+    widthM: r.width_m, lengthM: r.length_m, heightM: r.height_m,
   }))
 }
 
 export async function saveRoom(venueId: string, r: Omit<Room, 'venueId'>) {
   const { error } = await db().from('venue_rooms').upsert({
     id: r.id, venue_id: venueId, name: r.name.trim(), capacity: r.capacity, price_per_hour: r.pricePerHour, description: r.description.trim() || null,
+    width_m: r.widthM, length_m: r.lengthM, height_m: r.heightM,
   })
   if (error) throw error
 }
@@ -316,4 +324,46 @@ export async function syncCalendars(venueId: string, force = false): Promise<num
     const { data } = await db().functions.invoke('sync-calendars', { body: { venue_id: venueId, force } })
     return (data as { synced?: number } | null)?.synced ?? 0
   } catch { return 0 }
+}
+
+// ───────── Equipo de cada sala ─────────
+type EquipRow = {
+  id: string; room_id: string; kind: Equipment['kind']; title: string | null; quantity: number; format: Equipment['format']
+  brand: string | null; model: string | null; channels: number | null; details: string | null
+  included: boolean; extra_price: number | null; extra_unit: Equipment['extraUnit']
+}
+const EQUIP_COLS = 'id, room_id, kind, title, quantity, format, brand, model, channels, details, included, extra_price, extra_unit'
+
+/** Todo el equipo de todas las salas de un ensayadero, en una sola consulta. */
+export async function listEquipment(venueId: string): Promise<Equipment[]> {
+  const { data, error } = await db().from('room_equipment').select(EQUIP_COLS).eq('venue_id', venueId).order('created_at')
+  if (error) throw error
+  return (data as EquipRow[]).map((r) => ({
+    id: r.id, roomId: r.room_id, kind: r.kind, title: r.title ?? '', quantity: r.quantity, format: r.format,
+    brand: r.brand ?? '', model: r.model ?? '', channels: r.channels, details: r.details ?? '',
+    included: r.included, extraPrice: r.extra_price, extraUnit: r.extra_unit,
+  }))
+}
+
+export async function saveEquipment(venueId: string, e: Equipment, isNew: boolean) {
+  const body = {
+    kind: e.kind, title: e.kind === 'other' ? e.title.trim() || null : null, quantity: e.quantity, format: e.format,
+    brand: e.brand.trim() || null, model: e.model.trim() || null, channels: e.channels, details: e.details.trim() || null,
+    included: e.included, extra_price: e.included ? null : e.extraPrice, extra_unit: e.extraUnit,
+  }
+  const res = isNew
+    ? await db().from('room_equipment').insert({ room_id: e.roomId, venue_id: venueId, ...body })
+    : await db().from('room_equipment').update(body).eq('id', e.id)
+  if (res.error) throw res.error
+}
+
+export async function deleteEquipment(id: string) {
+  const { error } = await db().from('room_equipment').delete().eq('id', id)
+  if (error) throw error
+}
+
+// ───────── Ubicación ─────────
+export async function setLocation(venueId: string, lat: number | null, lng: number | null) {
+  const { error } = await db().from('venues').update({ lat, lng }).eq('id', venueId)
+  if (error) throw error
 }

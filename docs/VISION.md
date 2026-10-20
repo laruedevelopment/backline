@@ -47,9 +47,16 @@ Cuadrar canciones con la banda es un caos: toca buscar en el chat de WhatsApp d�
 - Primera versión: reserva sin pago en línea (pago en sitio). Pagos (Wompi/Mercado Pago/Stripe) después.
 - Para venues: solicitudes de toque (la banda propone fecha y setlist/EPK).
 
+### E2. Negocios musicales (ensayaderos, estudios, luthiers, tiendas)
+- Un usuario puede tener **dos sombreros**: sus bandas y su negocio. Se cambia desde la barra superior; cada uno tiene su navegación.
+- **Ensayadero** (hecho): salas con medidas, equipo (incluido o de alquiler aparte, con marca/referencia opcional), horario, precios, fotos y ubicación; reservas con confirmación manual o automática; lectura de su Google Calendar.
+- Mismo molde para otros negocios: **estudio de grabación** (salas de grabación, consola, microfonía), **luthier/taller** (servicios con precio y cita), **tienda** (productos), **profes**. Cada tipo define qué «artículos» lo componen.
+- Directorio con mapa en vivo de todos los negocios, «cerca de mí» y filtros por equipo.
+
 ### F. Marketplace (Fase tardía, pagos y legal)
 - Compra/venta de instrumentos, pedales, accesorios (guitarras, bajos, baterías, vientos…), con fotos, estado, ciudad, precio, chat.
-- Empezar como **clasificados** (contacto directo, sin pagos ni envíos) → luego escrow/pagos con comisión.
+- Cualquier usuario puede publicar instrumentos, equipo y productos. Empezar como **clasificados** (contacto directo, sin pagos ni envíos) → luego escrow/pagos con comisión.
+- Antes de abrirlo: política de contenido y de artículos prohibidos, reportes, moderación y revisión de `lucia-cumplimiento` (Estatuto del Consumidor, garantías, retracto).
 - Requiere términos, reputación, reportes y revisión legal (Estatuto del Consumidor).
 
 ### G. Aprender (Fase 1b)

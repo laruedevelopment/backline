@@ -32,14 +32,18 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Pruebas de seguridad de las migraciones y RLS en CI (`npm run test:db`).
 - [ ] Piloto real con una sala; medir fricción antes de generalizar.
 - [x] Confirmación automática (opcional por sala), reservas anotadas a mano por el dueño, botón Agregar a Google Calendar, actualización en vivo, insignia de pendientes y avisos push (migraciones 0010-0012; función `notify-booking`).
-- [ ] Leer el Google Calendar de la sala (iCal), recordatorios automáticos, página pública de disponibilidad.
+- [x] Leer el Google Calendar de cada sala por su dirección iCal (migración 0013, función `sync-calendars`).
+- [x] Ficha técnica: medidas de cada sala, equipo incluido o de alquiler aparte (marca/referencia opcional) y ubicación en el mapa (migración 0014).
+- [x] Área «Mi negocio» con dos sombreros (Hoy, Reservas, Salas, Ensayadero).
+- [ ] Recordatorios automáticos, página pública de disponibilidad, plano y fotos por sala, mapa con todos los ensayaderos («cerca de mí») y filtros por equipo.
+- [ ] Más tipos de negocio: estudio de grabación, luthier, tienda, profes.
 - [ ] Mapa OSM y mensajes dentro de la app.
 - [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.
 
 ## Fase 4 — Comunidad
 - Feed, seguir, subir demos/videos, buscar/ofrecer miembros, cartelera de la ciudad, notificaciones push (web push).
 
-## Fase 5 — Marketplace
+## Fase 5 — Marketplace (cualquier usuario puede publicar instrumentos y productos; con revisión legal previa)
 - Clasificados de equipo → reputación → pagos/escrow (revisión legal previa).
 
 ## Fase 6 — Escala

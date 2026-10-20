@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import LocationEditor from '../../components/LocationEditor'
 import { VenueForm } from '../../components/VenueForms'
 import VenueMedia from '../../components/VenueMedia'
 import { ask } from '../../lib/confirm'
@@ -82,6 +83,8 @@ export default function BusinessProfile() {
         <span>WhatsApp</span><span className="readout">{venue.whatsapp || '—'}</span>
       </div>
       <button className="btn" style={{ marginTop: 12 }} onClick={() => setEditing(true)}>Editar datos</button>
+
+      <LocationEditor venue={venue} />
 
       <VenueMedia venue={venue} canEdit />
 

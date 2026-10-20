@@ -33,7 +33,7 @@ Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas d
 6. Antes de subir logos y fotos: política de contenido, reporte de abuso y borrado de archivos al borrar la cuenta.
 
 ## Salas de ensayo: piloto con tu amigo
-1. **Aplicar las migraciones** en el SQL Editor, en orden: `…0010_reserva_manual.sql`, `…0011_confirmacion_automatica.sql` y `…0012_notificaciones_push.sql` (la 0009 ya está). No publicar la app antes.
+1. **Migraciones** en el SQL Editor, en orden: `…0010`, `…0011` y `…0012` (ya aplicadas) y, nuevas, **`…0013_calendario_google.sql`** y **`…0014_equipo_y_ubicacion.sql`**. No publicar la app antes de aplicarlas.
 2. Pedirle a tu amigo lo que necesita cargar: nombre, dirección, WhatsApp, cuántas salitas tiene y qué equipo hay en cada una, precio por hora, horario de atención y 3-5 fotos.
 3. Que cree su cuenta, entre a **Agenda → Salas de ensayo → Publicar mi sala** y la deje lista. Tú reservas con tu banda para probar el flujo completo (pedir, confirmar, ver el ensayo en la agenda).
 4. Ver cómo reserva hoy (WhatsApp, cuaderno, llamadas) para medir si Backline le quita trabajo. Esa fricción decide qué sigue (avisos, pagos, Slothy).

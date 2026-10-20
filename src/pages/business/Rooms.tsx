@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import CalendarSheet from '../../components/CalendarSheet'
+import EquipmentSheet from '../../components/EquipmentSheet'
 import ListSkeleton from '../../components/Skeleton'
 import { RoomForm } from '../../components/VenueForms'
 import { ask } from '../../lib/confirm'
+import { byRoom, dimensionsLabel, includedChips, rentals } from '../../lib/equipment'
 import { money, weekOrder, weekdayNames } from '../../lib/slots'
-import { deleteRoom, listCalendarSources, listHours, listRooms, saveHours, saveRoom, syncCalendars, type Hours, type Room } from '../../lib/venues'
+import { deleteRoom, listCalendarSources, listEquipment, listHours, listRooms, saveHours, saveRoom, syncCalendars, type Hours, type Room } from '../../lib/venues'
 import { useVenue } from './BusinessContext'
 
 // Salas del ensayadero: precios, horario de atención y calendarios de Google.
@@ -15,6 +17,9 @@ export default function BusinessRooms() {
   const { data: rooms = [], isLoading } = useQuery({ queryKey: ['venue-rooms', venue.id], queryFn: () => listRooms(venue.id) })
   const { data: hours = [] } = useQuery({ queryKey: ['venue-hours', venue.id], queryFn: () => listHours(venue.id) })
   const { data: sources = [] } = useQuery({ queryKey: ['calendar-sources', venue.id], queryFn: () => listCalendarSources(venue.id) })
+  const { data: equipment = [] } = useQuery({ queryKey: ['equipment', venue.id], queryFn: () => listEquipment(venue.id) })
+  const equipByRoom = byRoom(equipment)
+  const [equipRoom, setEquipRoom] = useState<Room | null>(null)
   const [calRoom, setCalRoom] = useState<Room | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [editing, setEditing] = useState<Room | 'new' | null>(null)
@@ -34,15 +39,27 @@ export default function BusinessRooms() {
       {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && rooms.length === 0 && <p className="li-sub wrap">Agrega al menos una sala para poder publicar tu ensayadero: cada una se reserva por separado.</p>}
       <div className="list" style={{ borderTop: rooms.length ? undefined : 0 }}>
-        {rooms.map((r) => (
-          <button key={r.id} className="li" onClick={() => setEditing(r)} aria-label={`Editar ${r.name}`}>
-            <div className="li-main">
-              <div className="li-title">{r.name}</div>
-              <div className="li-sub">Hasta {r.capacity} personas{r.description ? ` · ${r.description}` : ''}</div>
+        {rooms.map((r) => {
+          const items = equipByRoom.get(r.id) ?? []
+          const dims = dimensionsLabel(r)
+          const included = includedChips(items)
+          const extra = rentals(items)
+          return (
+            <div key={r.id} className="li" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <button className="li-main main-btn" onClick={() => setEditing(r)} aria-label={`Editar ${r.name}`}>
+                <div className="li-title">{r.name}</div>
+                <div className="li-sub">Hasta {r.capacity} personas{dims ? ` · ${dims}` : ''}</div>
+                {r.description && <div className="li-sub wrap">{r.description}</div>}
+                {included.length > 0 && <div className="chips">{included.map((c) => <span key={c} className="tag">{c}</span>)}</div>}
+                {extra.length > 0 && <div className="li-sub" style={{ marginTop: 6 }}>Alquiler aparte: {extra.map((x) => x.label).join(', ')}</div>}
+              </button>
+              <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
+              <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
+                <button className="btn" onClick={() => setEquipRoom(r)}>Equipo{items.length ? ` · ${items.length}` : ''}</button>
+              </div>
             </div>
-            <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
-          </button>
-        ))}
+          )
+        })}
       </div>
       <button className="btn" style={{ marginTop: 12 }} onClick={() => setEditing('new')}>Agregar sala</button>
 
@@ -77,6 +94,7 @@ export default function BusinessRooms() {
       <div className="section-title">Horario de atención</div>
       <HoursEditor venueId={venue.id} initial={hours} />
 
+      {equipRoom && <EquipmentSheet venueId={venue.id} room={equipRoom} onClose={() => setEquipRoom(null)} />}
       {calRoom && <CalendarSheet venueId={venue.id} room={calRoom} otherRooms={rooms.filter((r) => r.id !== calRoom.id)} source={sources.find((x) => x.roomId === calRoom.id)} onChanged={refreshCalendars} onClose={() => setCalRoom(null)} />}
       {editing && (
         <RoomForm

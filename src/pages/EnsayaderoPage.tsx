@@ -6,10 +6,12 @@ import BandMark from '../components/BandMark'
 import BookingSheet from '../components/BookingSheet'
 import ListSkeleton from '../components/Skeleton'
 import VenueMedia from '../components/VenueMedia'
+import { byRoom, detailLine, dimensionsLabel, includedChips, quantityLabel, rentals, unitLabel } from '../lib/equipment'
+import { mapLinks, osmEmbedUrl } from '../lib/geo'
 import { waLink } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
 import { money, weekOrder, weekdayNames } from '../lib/slots'
-import { getVenue, kindLabel, listHours, listRooms } from '../lib/venues'
+import { getVenue, kindLabel, listEquipment, listHours, listRooms } from '../lib/venues'
 import { useAuth } from '../store/useAuth'
 
 const hm = (t: string) => {
@@ -22,10 +24,14 @@ export default function EnsayaderoPage() {
   const { id } = useParams()
   const userId = useAuth((s) => s.session?.user.id)
   const [booking, setBooking] = useState<string | null>(null)
+  const [map, setMap] = useState(false)
+  const [open, setOpen] = useState<string | null>(null)
 
   const venueQ = useQuery({ queryKey: ['venue', id], queryFn: () => getVenue(id!), enabled: !!id })
   const { data: rooms = [] } = useQuery({ queryKey: ['venue-rooms', id], queryFn: () => listRooms(id!), enabled: !!id })
   const { data: hours = [] } = useQuery({ queryKey: ['venue-hours', id], queryFn: () => listHours(id!), enabled: !!id })
+  const { data: equipment = [] } = useQuery({ queryKey: ['equipment', id], queryFn: () => listEquipment(id!), enabled: !!id })
+  const equipByRoom = byRoom(equipment)
 
   if (venueQ.isLoading) return <ListSkeleton rows={4} />
   const venue = venueQ.data
@@ -50,6 +56,23 @@ export default function EnsayaderoPage() {
         </div>
       </div>
       <p className="page-sub">{[venue.address, venue.city].filter(Boolean).join(' · ')}</p>
+      {venue.lat != null && venue.lng != null && (
+        <div className="links-row" style={{ marginTop: 10 }}>
+          {(() => { const l = mapLinks({ lat: venue.lat!, lng: venue.lng! }, venue.name); return (
+            <>
+              <button className="btn" onClick={() => setMap(!map)} aria-expanded={map}>{map ? 'Ocultar el mapa' : 'Ver en el mapa'}</button>
+              <a href={l.google} target="_blank" rel="noopener noreferrer">Cómo llegar</a>
+              <a href={l.waze} target="_blank" rel="noopener noreferrer">Waze</a>
+            </>
+          ) })()}
+        </div>
+      )}
+      {map && venue.lat != null && venue.lng != null && (
+        <div className="player" style={{ marginTop: 10 }}>
+          <iframe title={`Mapa de ${venue.name}`} src={osmEmbedUrl({ lat: venue.lat, lng: venue.lng })} height={260} loading="lazy" referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin" />
+          <a className="player-link" href={mapLinks({ lat: venue.lat, lng: venue.lng }, venue.name).osm} target="_blank" rel="noopener noreferrer">Abrir en OpenStreetMap</a>
+        </div>
+      )}
 
       {isOwner && (
         <p className="notice" style={{ marginTop: 12 }}>
@@ -69,17 +92,49 @@ export default function EnsayaderoPage() {
       <div className="section-title">Salas y precios</div>
       {rooms.length === 0 && <p className="li-sub wrap">Este ensayadero aún no ha cargado sus salas.</p>}
       <div className="list">
-        {rooms.map((r) => (
-          <div key={r.id} className="li" style={{ alignItems: 'flex-start' }}>
-            <div className="li-main">
-              <div className="li-title">{r.name}</div>
-              <div className="li-sub">Hasta {r.capacity} personas</div>
-              {r.description && <div className="li-sub wrap">{r.description}</div>}
+        {rooms.map((r) => {
+          const items = equipByRoom.get(r.id) ?? []
+          const dims = dimensionsLabel(r)
+          const extra = rentals(items)
+          return (
+            <div key={r.id} className="li" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
+              <div className="li-main" style={{ minWidth: 180 }}>
+                <div className="li-title">{r.name}</div>
+                <div className="li-sub">Hasta {r.capacity} personas{dims ? ` · ${dims}` : ''}</div>
+                {r.description && <div className="li-sub wrap">{r.description}</div>}
+                {includedChips(items).length > 0 && (
+                  <>
+                    <div className="eyebrow" style={{ marginTop: 10 }}>Incluye</div>
+                    <div className="chips" style={{ marginTop: 4 }}>{includedChips(items).map((c) => <span key={c} className="tag">{c}</span>)}</div>
+                  </>
+                )}
+                {extra.length > 0 && (
+                  <>
+                    <div className="eyebrow" style={{ marginTop: 10 }}>Alquiler aparte</div>
+                    <div className="li-sub wrap">{extra.map((x) => `${x.label}${x.price != null ? ` (${money(x.price)} ${unitLabel[x.unit]})` : ' (consultar)'}`).join(' · ')}</div>
+                  </>
+                )}
+                {items.length > 0 && (
+                  <button className="link-btn" style={{ minHeight: 36, padding: 0, justifySelf: 'start' }} onClick={() => setOpen(open === r.id ? null : r.id)} aria-expanded={open === r.id}>
+                    {open === r.id ? 'Ocultar el detalle del equipo' : 'Ver el equipo en detalle'}
+                  </button>
+                )}
+                {open === r.id && (
+                  <ul className="equip-detail">
+                    {items.map((e) => (
+                      <li key={e.id}>
+                        <b>{quantityLabel(e)}</b>{detailLine(e) ? ` · ${detailLine(e)}` : ''}
+                        {!e.included && <span className="tag" style={{ marginLeft: 6 }}>{e.extraPrice != null ? `${money(e.extraPrice)} ${unitLabel[e.extraUnit]}` : 'Alquiler: consultar'}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
+              {canBook && <button className="btn primary" onClick={() => setBooking(r.id)}>Reservar</button>}
             </div>
-            <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
-            {canBook && <button className="btn primary" onClick={() => setBooking(r.id)}>Reservar</button>}
-          </div>
-        ))}
+          )
+        })}
       </div>
       {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>El ensayadero aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
 

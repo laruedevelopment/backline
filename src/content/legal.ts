@@ -53,6 +53,7 @@ export const privacy: LegalDoc = {
         'YouTube (Google) y Spotify: si pulsas reproducir en una canción, el reproductor se carga desde sus servidores y ellos pueden recibir tu dirección IP y datos del dispositivo, según sus propias políticas. No se carga nada de ellos hasta que pulses reproducir. Si importas una lista de YouTube, el identificador de esa lista se consulta a la API de Google.',
         'Alojamiento del sitio: GitHub Pages (GitHub, Inc.).',
         'La lectura de texto de fotos (OCR) se ejecuta en tu dispositivo: la imagen no se envía a nuestros servidores. Para funcionar, el lector descarga sus componentes desde un servicio de distribución de archivos de terceros.',
+        'Mapas: si publicas un negocio con ubicación, el mapa que ven las bandas y la búsqueda de la dirección los provee OpenStreetMap (Nominatim); reciben las coordenadas o la dirección consultadas, no tus datos personales. Tu ubicación actual solo se lee cuando pulsas «Usar mi ubicación actual».',
         'Las tipografías se sirven desde nuestro propio sitio.',
       ],
     },
