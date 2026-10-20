@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -47,7 +48,8 @@ export default function Sheet({ title, onClose, children, onSubmit, dismissOnBac
   }, [])
 
   const Tag = (onSubmit ? 'form' : 'div') as 'div'
-  return (
+  // Portal al <body>: si un ancestro tiene backdrop-filter/transform, un `fixed` quedaría atrapado dentro de él.
+  return createPortal(
     <div className="sheet-backdrop" onMouseDown={(e) => dismissOnBackdrop && e.target === e.currentTarget && onClose()}>
       <Tag ref={ref} className="sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onSubmit={onSubmit as never}>
         <div className="row">
@@ -56,6 +58,7 @@ export default function Sheet({ title, onClose, children, onSubmit, dismissOnBac
         </div>
         {children}
       </Tag>
-    </div>
+    </div>,
+    document.body,
   )
 }
