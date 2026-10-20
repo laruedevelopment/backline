@@ -59,3 +59,8 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
 - **Recordatorios** el día anterior al ensayo (tarea programada + push).
 - **Página pública sin cuenta** para compartir la disponibilidad por WhatsApp.
 - **Bot de WhatsApp** con Slothy (tiene costo de WhatsApp Business).
+
+## App en tiendas (cuando la PWA esté validada)
+- **Google Play:** cuenta de desarrollador, pago único (~US$25).
+- **App Store:** Apple Developer Program, pago anual (~US$99) y un Mac o servicio de compilación para iOS.
+- Se publica la misma web envuelta con Capacitor; no hace falta reescribirla. Hasta entonces la PWA instalable cubre el celular sin costo.

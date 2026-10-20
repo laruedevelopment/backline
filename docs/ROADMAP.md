@@ -41,7 +41,12 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.
 
 ## Fase 4 — Comunidad
+- [x] Directorio de bandas y músicos con perfil público opcional (migración 0015): explorar, filtrar por ciudad/género/instrumento, WhatsApp opcional, solo para personas con cuenta.
 - Feed, seguir, subir demos/videos, buscar/ofrecer miembros, cartelera de la ciudad, notificaciones push (web push).
+
+## App móvil (después de validar la PWA)
+- La PWA ya se instala en el celular y recibe avisos push. Luego: envolver la misma web con Capacitor y publicar en Play Store y App Store, sin reescribir.
+- Regla desde ya: la lógica va en `src/lib`, separada de las pantallas, y sin depender de cosas solo web (enlaces de reserva, `window`, etc.). El backend (Supabase) ya sirve igual a web y app.
 
 ## Fase 5 — Marketplace (cualquier usuario puede publicar instrumentos y productos; con revisión legal previa)
 - Clasificados de equipo → reputación → pagos/escrow (revisión legal previa).
