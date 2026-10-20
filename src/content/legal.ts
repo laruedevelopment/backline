@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.1'
+export const TERMS_VERSION = '0.2'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -20,6 +20,7 @@ export const privacy: LegalDoc = {
         'Al registrarte: nombre (como te dicen en la banda), correo electrónico y contraseña (se guarda cifrada; nosotros no la vemos).',
         'En tu perfil, de forma opcional: instrumentos que tocas, ciudad y una descripción corta.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
+        'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
         'Enlaces de YouTube o Spotify que agregues a canciones.',
         'Al registrarte guardamos la fecha y la versión de los términos que aceptaste, y tu declaración de edad.',
         'Tu progreso de práctica, la banda activa y una copia de lo último que viste (para que la app funcione sin señal) se guardan en tu propio dispositivo.',
@@ -42,7 +43,7 @@ export const privacy: LegalDoc = {
     },
     {
       title: '4. Quién ve tus datos',
-      paragraphs: ['Tu nombre, instrumentos, ciudad y descripción los ven las personas que integran las bandas de las que haces parte. Tus datos no son visibles para personas que no comparten banda contigo.'],
+      paragraphs: ['Tu nombre, instrumentos, ciudad y descripción los ven las personas que integran las bandas de las que haces parte. Tus datos no son visibles para personas que no comparten banda contigo. El logo y las fotos de una banda se guardan en un espacio público de solo lectura: cualquier persona que tenga el enlace de la imagen puede verla.'],
     },
     {
       title: '5. Terceros y transferencia internacional',
@@ -97,7 +98,7 @@ export const terms: LegalDoc = {
     },
     {
       title: '3. Tu contenido',
-      paragraphs: ['Lo que escribes (nombres, notas, descripciones, setlists) sigue siendo tuyo. Nos autorizas a guardarlo y mostrarlo a los integrantes de tu banda para que el servicio funcione. Garantizas que tienes derecho a publicarlo y que no subes contenido de otras personas sin permiso.'],
+      paragraphs: ['Lo que escribes (nombres, notas, descripciones, setlists) sigue siendo tuyo. Nos autorizas a guardarlo y mostrarlo a los integrantes de tu banda para que el servicio funcione. Garantizas que tienes derecho a publicarlo, que las fotos y el logo que subas son tuyos o tienes permiso de quienes aparecen en ellos, y que no subes contenido de otras personas sin permiso. Podemos retirar imágenes que incumplan estos términos.'],
     },
     {
       title: '4. Música de terceros',

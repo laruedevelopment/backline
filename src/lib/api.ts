@@ -2,7 +2,12 @@ import { supabase } from './supabase'
 import type { Song } from './song'
 
 export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
-export type Band = { id: string; name: string; city: string | null; role: string; genres: string[]; bio: string | null; links: BandLinks }
+export type Band = {
+  id: string; name: string; city: string | null; role: string; genres: string[]; bio: string | null; links: BandLinks
+  logoPath: string | null; logoUrl: string | null
+}
+
+const BUCKET = 'band-media'
 
 const db = () => {
   if (!supabase) throw new Error('Supabase no configurado')
@@ -26,10 +31,16 @@ const toRow = (bandId: string, s: Song) => ({
   updated_at: new Date().toISOString(),
 })
 
+const publicUrl = (path: string) => db().storage.from(BUCKET).getPublicUrl(path).data.publicUrl
+
 export async function myBands(userId: string): Promise<Band[]> {
-  const { data, error } = await db().from('band_members').select('role, bands(id, name, city, genres, bio, links)').eq('profile_id', userId)
+  const { data, error } = await db().from('band_members').select('role, bands(id, name, city, genres, bio, links, logo_path)').eq('profile_id', userId)
   if (error) throw error
-  return (data as unknown as { role: string; bands: Omit<Band, 'role'> }[]).map((m) => ({ ...m.bands, role: m.role }))
+  type Row = { role: string; bands: { id: string; name: string; city: string | null; genres: string[]; bio: string | null; links: BandLinks; logo_path: string | null } }
+  return (data as unknown as Row[]).map(({ role, bands: b }) => ({
+    id: b.id, name: b.name, city: b.city, role, genres: b.genres, bio: b.bio, links: b.links,
+    logoPath: b.logo_path, logoUrl: b.logo_path ? publicUrl(b.logo_path) : null,
+  }))
 }
 
 export async function createBand(name: string, city: string) {
@@ -182,4 +193,69 @@ export async function deleteAccount() {
 export async function setMyInstrument(bandId: string, instrument: string) {
   const { error } = await db().rpc('set_my_instrument', { p_band: bandId, p_instrument: instrument })
   if (error) throw error
+}
+
+// ───────── Logo y fotos de la banda (Storage) ─────────
+export type BandPhoto = { id: string; path: string; url: string }
+
+async function upload(path: string, blob: Blob) {
+  const { error } = await db().storage.from(BUCKET).upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false })
+  if (error) throw error
+}
+
+const removeFiles = async (paths: string[]) => {
+  if (!paths.length) return
+  const { error } = await db().storage.from(BUCKET).remove(paths)
+  if (error) throw error
+}
+
+/** Ruta nueva en cada subida: el enlace anterior no queda en caché y no hace falta invalidar nada. */
+export async function setBandLogo(bandId: string, blob: Blob, ext: string, previous: string | null) {
+  const path = `${bandId}/logo-${Date.now()}.${ext}`
+  await upload(path, blob)
+  const { error } = await db().from('bands').update({ logo_path: path }).eq('id', bandId)
+  if (error) {
+    await removeFiles([path]).catch(() => {})
+    throw error
+  }
+  if (previous) await removeFiles([previous]).catch(() => {})
+}
+
+export async function clearBandLogo(bandId: string, previous: string | null) {
+  const { error } = await db().from('bands').update({ logo_path: null }).eq('id', bandId)
+  if (error) throw error
+  if (previous) await removeFiles([previous]).catch(() => {})
+}
+
+export async function listPhotos(bandId: string): Promise<BandPhoto[]> {
+  const { data, error } = await db().from('band_photos').select('id, path').eq('band_id', bandId).order('created_at', { ascending: false })
+  if (error) throw error
+  return (data as { id: string; path: string }[]).map((p) => ({ ...p, url: publicUrl(p.path) }))
+}
+
+export async function addPhoto(bandId: string, blob: Blob, ext: string) {
+  const path = `${bandId}/photos/${crypto.randomUUID()}.${ext}`
+  await upload(path, blob)
+  const { error } = await db().from('band_photos').insert({ band_id: bandId, path })
+  if (error) {
+    await removeFiles([path]).catch(() => {})
+    throw error
+  }
+}
+
+export async function deletePhoto(photo: BandPhoto) {
+  const { error } = await db().from('band_photos').delete().eq('id', photo.id)
+  if (error) throw error
+  await removeFiles([photo.path]).catch(() => {})
+}
+
+/** Borra todos los archivos de una banda (antes de borrar la banda o la cuenta de su único integrante). */
+export async function purgeBandMedia(bandId: string) {
+  const store = db().storage.from(BUCKET)
+  const [root, photos] = await Promise.all([store.list(bandId, { limit: 100 }), store.list(`${bandId}/photos`, { limit: 100 })])
+  const paths = [
+    ...(root.data ?? []).filter((f) => f.id).map((f) => `${bandId}/${f.name}`),
+    ...(photos.data ?? []).filter((f) => f.id).map((f) => `${bandId}/photos/${f.name}`),
+  ]
+  await removeFiles(paths)
 }

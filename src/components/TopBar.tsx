@@ -5,6 +5,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { band as demoBand } from '../data/demo'
 import { getProfile } from '../lib/api'
 import { initials } from '../lib/identity'
+import BandMark from './BandMark'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
@@ -26,7 +27,7 @@ export default function TopBar() {
   return (
     <header className="topbar">
       <button className="bandbtn" onClick={() => setOpen(true)} disabled={!band} aria-haspopup="dialog" aria-label={`Banda activa: ${name}. Cambiar de banda`}>
-        <span className="mono-mark">{initials(name)}</span>
+        <BandMark name={name} logoUrl={band?.logoUrl} />
         <span className="name">{name}</span>
         {band && <ChevronDown size={16} className="chev" aria-hidden />}
       </button>
@@ -41,7 +42,7 @@ export default function TopBar() {
               <div className="list">
                 {bands.map((b) => (
                   <button key={b.id} className="li" onClick={() => { setActive(b.id); setOpen(false) }} aria-pressed={b.id === band?.id}>
-                    <span className="mono-mark">{initials(b.name)}</span>
+                    <BandMark name={b.name} logoUrl={b.logoUrl} />
                     <span className="li-main">
                       <span className="li-title" style={{ display: 'block' }}>{b.name}</span>
                       <span className="li-sub" style={{ display: 'block' }}>{b.city || 'Sin ciudad'}</span>

@@ -24,7 +24,7 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [ ] Más lecciones por nivel, afinador, racha de práctica, progreso en Supabase.
 
 ## Fase 2 — Perfiles y rig
-- Perfil de músico, rig con pedalboard, fotos (Storage con límites), perfil público de banda (logo, portada, galería, redes) + EPK, **banda verificada**.
+- Perfil de músico, rig con pedalboard, perfil público de banda + EPK, **banda verificada**. (Hecho: logo y galería de fotos de banda con Storage, migración 0008; redes y bio en Banda.)
 
 ## Fase 3 — Salas de ensayo (piloto con el amigo)
 - Integración con Slothy (reservas del ensayadero + chatbot de horarios). Perfil de sala, disponibilidad, reservas con confirmación del dueño, mensajes, mapa OSM.

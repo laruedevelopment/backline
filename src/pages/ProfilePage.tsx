@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteAccount, getProfile, updateProfile, type Profile } from '../lib/api'
+import { deleteAccount, getProfile, listMembers, purgeBandMedia, updateProfile, type Profile } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
 import { lessons } from '../lib/learn'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
+import { useBands } from '../store/useBandSession'
 import { useProgress } from '../store/useProgress'
 import { ask } from '../lib/confirm'
 import ListSkeleton from '../components/Skeleton'
@@ -37,6 +38,7 @@ export default function ProfilePage() {
 }
 
 function ProfileView({ initial, userId, email }: { initial: Profile; userId: string; email: string }) {
+  const { bands } = useBands()
   const qc = useQueryClient()
   const done = useProgress((s) => s.done)
   const [name, setName] = useState(initial.displayName)
@@ -66,6 +68,10 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
     if (!(await ask({ title: '¿Borrar tu cuenta?', body: 'Se eliminan tu perfil, tus respuestas de asistencia y las bandas en las que seas el único integrante. No se puede deshacer.', confirmLabel: 'Borrar mi cuenta', typeToConfirm: 'BORRAR' }))) return
     setDanger('')
     try {
+      // Las bandas donde eres el único integrante se borran con la cuenta: se limpian antes sus archivos.
+      for (const b of bands.filter((x) => x.role === 'owner')) {
+        if ((await listMembers(b.id)).length === 1) await purgeBandMedia(b.id).catch(() => {})
+      }
       await deleteAccount()
       clearDeviceData()
       await supabase!.auth.signOut()

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  createInvite, deleteBand, listMembers, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
+  createInvite, deleteBand, listMembers, purgeBandMedia, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
   type Member,
 } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
@@ -10,6 +10,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
 import BandForm from '../components/BandForm'
+import BandMark from '../components/BandMark'
+import BandMedia from '../components/BandMedia'
 import { ask } from '../lib/confirm'
 import Sheet from '../components/Sheet'
 import ListSkeleton from '../components/Skeleton'
@@ -68,6 +70,7 @@ export default function BandPage() {
     const typed = prompt(`Esto borra la banda, su repertorio, setlists y agenda para todos.\nEscribe el nombre de la banda para confirmar:`)
     if (typed?.trim() !== band!.name) return
     try {
+      await purgeBandMedia(band!.id).catch(() => {})
       await deleteBand(band!.id)
       await qc.invalidateQueries({ queryKey: ['bands'] })
       if (others[0]) setActive(others[0].id)
@@ -77,7 +80,7 @@ export default function BandPage() {
   return (
     <>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
-        <span className="mono-mark lg" aria-hidden>{initials(band.name)}</span>
+        <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
           <span className="eyebrow">{roleLabel[band.role]}</span>
           <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)' }}>{band.name}</h1>
@@ -95,6 +98,8 @@ export default function BandPage() {
       {isAdmin && !band.bio && socials.length === 0 && (
         <p className="notice" style={{ marginTop: 14 }}>Completa la banda con una descripción y sus redes: es lo que verá la gente cuando haya perfil público.</p>
       )}
+
+      <BandMedia band={band} canEdit={isAdmin} />
 
       <div className="section-title">Integrantes · {members.length}</div>
       {isLoading ? <ListSkeleton rows={3} /> : (
