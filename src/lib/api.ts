@@ -64,3 +64,21 @@ export async function deleteSong(id: string) {
   const { error } = await db().from('songs').delete().eq('id', id)
   if (error) throw error
 }
+
+export type Setlist = { id: string; name: string; songIds: string[] }
+
+export async function listSetlists(bandId: string): Promise<Setlist[]> {
+  const { data, error } = await db().from('setlists').select('id, name, song_ids').eq('band_id', bandId).order('created_at')
+  if (error) throw error
+  return (data as { id: string; name: string; song_ids: string[] }[]).map((r) => ({ id: r.id, name: r.name, songIds: r.song_ids }))
+}
+
+export async function upsertSetlist(bandId: string, s: Setlist) {
+  const { error } = await db().from('setlists').upsert({ id: s.id, band_id: bandId, name: s.name, song_ids: s.songIds, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+export async function deleteSetlist(id: string) {
+  const { error } = await db().from('setlists').delete().eq('id', id)
+  if (error) throw error
+}

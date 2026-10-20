@@ -130,3 +130,24 @@ textarea { resize: vertical; }
 .btn:disabled { opacity: 0.6; cursor: progress; }
 
 .invite-code { font-family: ui-monospace, monospace; font-size: 1.2rem; letter-spacing: 0.1em; color: var(--amber); }
+
+/* Setlist y modo escenario */
+.reorder { display: flex; gap: 6px; align-items: stretch; }
+.reorder-btns { display: grid; gap: 4px; }
+.reorder-btns .btn { min-height: 32px; min-width: 44px; padding: 0 8px; }
+.btn:disabled { opacity: 0.4; }
+.pick { width: 100%; text-align: left; }
+.stage { position: fixed; inset: 0; z-index: 50; background: #000; color: #fff; display: grid; grid-template-rows: auto 1fr auto auto; padding: 16px; gap: 12px; }
+.stage-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stage-main { display: grid; align-content: center; gap: 14px; text-align: center; }
+.stage-title { font-size: clamp(2.2rem, 9vw, 4.5rem); font-weight: 800; line-height: 1.05; }
+.stage-artist { font-size: 1.3rem; color: var(--muted); }
+.stage-chips { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.stage-chip { font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 700; padding: 6px 16px; border-radius: 12px; border: 2px solid var(--line); font-variant-numeric: tabular-nums; }
+.stage-chip.key { color: var(--amber); border-color: var(--amber); }
+.stage-warn { color: var(--ember); font-size: 1.4rem; font-weight: 700; }
+.stage-notes { font-size: 1.2rem; color: var(--text); max-width: 40ch; margin: 0 auto; }
+.stage-next { text-align: center; font-size: 1.15rem; color: var(--muted); display: grid; gap: 4px; }
+.stage-next b { color: var(--text); }
+.stage-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+.stage-nav .btn { min-height: 72px; font-size: 1.2rem; }

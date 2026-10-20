@@ -7,6 +7,7 @@ import OnboardingPage from './pages/OnboardingPage'
 import LoginPage from './pages/LoginPage'
 import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
+import SetlistDetailPage from './pages/SetlistDetailPage'
 import LearnPage from './pages/LearnPage'
 import LessonPage from './pages/LessonPage'
 import HomePage from './pages/HomePage'
@@ -41,13 +42,8 @@ function WithBand() {
 export default function App() {
   const { session, ready } = useAuth()
   if (!ready) return <p className="empty">Cargando…</p>
-  if (!supabase) return <Shell />
-  if (!session) return <LoginPage />
-  return (
-    <QueryClientProvider client={queryClient}>
-      <WithBand />
-    </QueryClientProvider>
-  )
+  if (supabase && !session) return <LoginPage />
+  return <QueryClientProvider client={queryClient}>{supabase ? <WithBand /> : <Shell />}</QueryClientProvider>
 }
 
 function Shell() {
@@ -70,6 +66,7 @@ function Shell() {
             <Route path="/" element={<HomePage />} />
             <Route path="/repertorio" element={<RepertoirePage />} />
             <Route path="/setlists" element={<SetlistsPage />} />
+            <Route path="/setlists/:id" element={<SetlistDetailPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/aprender" element={<LearnPage />} />
             <Route path="/aprender/:id" element={<LessonPage />} />

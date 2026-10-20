@@ -13,7 +13,7 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [ ] Crear banda, invitar miembros por link/código.
 - [x] Repertorio completo (tono, BPM, afinación por instrumento, cambios de tono, links, notas) — local (`src/store/useBand.ts`, localStorage); falta conectarlo a Supabase.
 - [ ] Importar setlist pegando texto.
-- [ ] Setlists con arrastrar, duración, avisos de cambio de afinación, modo escenario, compartir.
+- [x] Setlists con orden (subir/bajar), duración, avisos de cambio de afinación y modo escenario (migración 0002, sin aplicar). Falta: compartir, arrastrar.
 - [ ] Agenda: ensayos/toques + confirmación de asistencia.
 - [ ] Reproductor embebido YouTube/Spotify.
 - [ ] Offline básico (PWA).
