@@ -26,6 +26,8 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
   const [minutes, setMinutes] = useState(String(song?.minutes ?? 4))
   const [error, setError] = useState('')
+  const [noteRows, setNoteRows] = useState<{ instrument: string; text: string }[]>(() => Object.entries(song?.instrumentNotes ?? {}).map(([instrument, text]) => ({ instrument, text })))
+  const setNote = (i: number, p: Partial<{ instrument: string; text: string }>) => setNoteRows((r) => r.map((x, j) => (j === i ? { ...x, ...p } : x)))
   const [busy, setBusy] = useState(false)
   const patch = (p: Partial<Song>) => setS((v) => ({ ...v, ...p }))
   const setTuning = (i: number, p: Partial<Song['tunings'][number]>) =>
@@ -53,6 +55,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         tunings: s.tunings.filter((t) => t.tuning.trim()),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
+        instrumentNotes: noteRows.reduce<Record<string, string>>((acc, r) => { if (r.instrument.trim() && r.text.trim()) acc[r.instrument.trim()] = r.text.trim(); return acc }, {}),
       })
     } catch {
       setError('No pudimos guardar la canción. Revisa tu conexión e intenta de nuevo.')
@@ -135,6 +138,30 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       ))}
       <button type="button" className="btn" onClick={() => patch({ keyChanges: [...s.keyChanges, { section: '', from: s.key, to: '' }] })}>
         <Plus size={16} aria-hidden /> Agregar cambio de tono
+      </button>
+
+      <h3 className="section-title">Notas por instrumento</h3>
+      <p className="li-sub wrap">Lo que cada integrante necesita saber de esta canción. En el modo escenario cada quien ve la nota de su instrumento.</p>
+      {noteRows.map((r, i) => (
+        <div className="subform" key={i}>
+          <div className="grid-row">
+            <label className="field grow">Instrumento
+              <select value={r.instrument} onChange={(e) => setNote(i, { instrument: e.target.value })}>
+                {!instrumentOptions.includes(r.instrument) && <option value={r.instrument}>{r.instrument || 'Elige…'}</option>}
+                {instrumentOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </label>
+            <button type="button" className="btn ghost icon" style={{ alignSelf: 'end' }} aria-label={`Quitar nota ${i + 1}`} onClick={() => setNoteRows((x) => x.filter((_, j) => j !== i))}>
+              <Trash2 size={18} aria-hidden />
+            </button>
+          </div>
+          <label className="field">Nota
+            <textarea rows={2} value={r.text} maxLength={400} placeholder="Entra con el hi-hat en el coro" onChange={(e) => setNote(i, { text: e.target.value })} />
+          </label>
+        </div>
+      ))}
+      <button type="button" className="btn" onClick={() => setNoteRows((r) => [...r, { instrument: instrumentOptions.find((o) => !r.some((x) => x.instrument === o)) ?? 'Otro', text: '' }])}>
+        <Plus size={16} aria-hidden /> Agregar nota por instrumento
       </button>
 
       <h3 className="section-title">Escuchar y notas</h3>

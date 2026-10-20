@@ -1,21 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCw, X } from 'lucide-react'
 import { parseChart, transposeChordLine, transposeLabel } from '../lib/chart'
+import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
 import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, type Song } from '../lib/song'
 
 const SIZE_KEY = 'backline-stage-size'
 const readSize = () => { try { const n = Number(localStorage.getItem(SIZE_KEY)); return n >= 12 && n <= 40 ? n : 22 } catch { return 22 } }
 
 /** Pantalla limpia para el toque: canción actual en grande, tono, afinación y la siguiente. */
-export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: () => void }) {
+/** `instrument`: lo que toca quien lo abre. Con eso ve primero lo suyo: su afinación, su nota y, según el instrumento, la letra o los acordes. */
+export default function StageMode({ songs, instrument, onClose }: { songs: Song[]; instrument?: string | null; onClose: () => void }) {
   const [i, setI] = useState(0)
+  const [mine, setMine] = useState(!!instrument)
   const [shift, setShift] = useState(0)
   const [size, setSize] = useState(readSize)
   const [forced, setForced] = useState(false) // giro por CSS cuando el navegador no deja bloquear la orientación
   const [locked, setLocked] = useState(false)
   const cur = songs[i]
   const next = songs[i + 1]
-  const chart = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics) : []), [cur.lyrics])
+  const view = mine && instrument ? instrument : null
+  const kind = view ? instrumentKind(view) : 'melodic'
+  // La batería no lee acordes ni letra; la voz lee la letra sin acordes.
+  const chart = useMemo(() => {
+    const all = cur.lyrics ? parseChart(cur.lyrics) : []
+    return kind === 'rhythm' ? [] : kind === 'voice' ? all.filter((l) => l.kind !== 'chords') : all
+  }, [cur.lyrics, kind])
+  const forView = (s: Song): Song => (view ? { ...s, tunings: tuningsFor(s, view) } : s)
+  const myNote = view ? noteFor(cur, view) : ''
+  const others = otherNotes(cur, view)
   const hasChords = chart.some((l) => l.kind === 'chords')
 
   // Cada canción empieza en su tono original.
@@ -65,31 +77,42 @@ export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: 
     return () => window.removeEventListener('keydown', onKey)
   }, [songs.length, onClose])
 
-  const retune = next && tuningSignature(next) !== tuningSignature(cur)
+  const retune = next && tuningSignature(forView(next)) !== tuningSignature(forView(cur))
 
   return (
     <div className={`stage ${forced ? 'rotated' : ''}`} role="dialog" aria-modal="true" aria-label="Modo escenario">
       <div className="stage-top">
         <span>{i + 1} / {songs.length}</span>
         <div className="row" style={{ gap: 8 }}>
+          {instrument && (
+            <button className="btn" onClick={() => { setMine((v) => !v); setShift(0) }} aria-pressed={mine} aria-label={mine ? `Vista de ${instrument}: cambiar a ver todo` : 'Ver solo lo de mi instrumento'}>
+              {mine ? instrument : 'Todo'}
+            </button>
+          )}
           <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>
           <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
         </div>
       </div>
       <div className={`stage-main ${chart.length ? 'has-chart' : ''}`}>
         {retune && next && (
-          <div className="stage-banner" role="alert">{isStandard(next) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(next)}`}</div>
+          <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
         )}
         <h1 className={`stage-title ${chart.length ? 'compact' : ''}`}>{cur.title}</h1>
         <div className="stage-artist">{cur.artist}</div>
         <div className="stage-chips">
           {cur.key && <span className="stage-chip key">{cur.key}</span>}
           <span className="stage-chip">{cur.bpm} bpm</span>
-          <span className="stage-chip">{tuningSummary(cur)}</span>
+          <span className="stage-chip">{tuningSummary(forView(cur))}</span>
         </div>
         {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
         {cur.guest && <div className="stage-artist">{cur.guest}</div>}
+        {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
         {cur.notes && <p className="stage-notes">{cur.notes}</p>}
+        {others.length > 0 && (
+          <ul className="stage-others" aria-label="Notas de los demás instrumentos">
+            {others.map(([k, v]) => <li key={k}><b>{k}</b> {v}</li>)}
+          </ul>
+        )}
         {chart.length > 0 && (
           <>
             <div className="stage-tools" role="group" aria-label="Letra y acordes">

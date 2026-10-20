@@ -5,6 +5,9 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, 
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useActiveBand } from '../store/useBandSession'
+import { useQuery } from '@tanstack/react-query'
+import { listMembers } from '../lib/api'
+import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { isStandard, tuningSignature, tuningSummary, type Song } from '../lib/song'
@@ -46,6 +49,11 @@ export default function SetlistDetailPage() {
   const [picked, setPicked] = useState<string[]>([])
   const [q, setQ] = useState('')
   const canEdit = band ? band.role !== 'guest' : true
+  const userId = useAuth((s) => s.session?.user.id)
+  const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band && !!userId })
+  // Lo que toca quien abre el modo escenario: el instrumento que eligió en esta banda o, si no, el primero de su perfil.
+  const me = members.find((m) => m.profileId === userId)
+  const myInstrument = me?.instrument || me?.instruments[0] || null
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } }),
@@ -185,7 +193,7 @@ export default function SetlistDetailPage() {
           onSave={async (s) => { await saveSong(s); setEditingSong(null) }}
           onDelete={async () => { await removeSong(editingSong.id); setEditingSong(null) }} />
       )}
-      {stage && <StageMode songs={items} onClose={() => setStage(false)} />}
+      {stage && <StageMode songs={items} instrument={myInstrument} onClose={() => setStage(false)} />}
     </>
   )
 }

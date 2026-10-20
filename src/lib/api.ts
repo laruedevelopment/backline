@@ -17,17 +17,18 @@ const db = () => {
 type SongRow = {
   id: string; band_id: string; title: string; artist: string; key: string; bpm: number; minutes: number
   status: Song['status']; tunings: Song['tunings']; key_changes: Song['keyChanges']
-  guest: string | null; links: Song['links']; notes: string | null; lyrics: string | null
+  guest: string | null; links: Song['links']; notes: string | null; lyrics: string | null; instrument_notes: Record<string, string> | null
 }
 
 const fromRow = (r: SongRow): Song => ({
   id: r.id, title: r.title, artist: r.artist, key: r.key, bpm: r.bpm, minutes: r.minutes, status: r.status,
   tunings: r.tunings, keyChanges: r.key_changes, guest: r.guest ?? undefined, links: r.links, notes: r.notes ?? undefined, lyrics: r.lyrics ?? undefined,
+  instrumentNotes: r.instrument_notes && Object.keys(r.instrument_notes).length ? r.instrument_notes : undefined,
 })
 
 const toRow = (bandId: string, s: Song) => ({
   id: s.id, band_id: bandId, title: s.title, artist: s.artist, key: s.key, bpm: s.bpm, minutes: s.minutes, status: s.status,
-  tunings: s.tunings, key_changes: s.keyChanges, guest: s.guest ?? null, links: s.links, notes: s.notes ?? null, lyrics: s.lyrics ?? null,
+  tunings: s.tunings, key_changes: s.keyChanges, guest: s.guest ?? null, links: s.links, notes: s.notes ?? null, lyrics: s.lyrics ?? null, instrument_notes: s.instrumentNotes ?? {},
   updated_at: new Date().toISOString(),
 })
 

@@ -17,6 +17,8 @@ export type Song = {
   notes?: string
   /** Letra y acordes que se muestran en el modo escenario. */
   lyrics?: string
+  /** Notas por instrumento: { Batería: 'entra con el hi-hat' }. */
+  instrumentNotes?: Record<string, string>
 }
 
 export const statusLabel: Record<SongStatus, string> = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }

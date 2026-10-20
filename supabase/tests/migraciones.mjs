@@ -350,6 +350,13 @@ await ok('lo privado sigue privado aunque la banda sea pública (canciones, setl
   eq((await as('member', `select profile_id from public.band_members where band_id=$1`, [band])).length, 0, 'integrantes directos')
   eq((await as('member', `select code from public.band_invites`)).length, 0, 'invitaciones')
 })
+await ok('notas por instrumento: la banda las guarda y otras personas no las ven', async () => {
+  await as('leader', `update public.songs set instrument_notes = $2::jsonb where band_id=$1`, [band, JSON.stringify({ 'Batería': 'entra con el hi-hat' })])
+  eq((await as('member', `select instrument_notes from public.songs where band_id=$1`, [band])).length, 0, 'notas visibles a ajenos')
+})
+await rejects('las notas por instrumento deben ser un objeto', async () => {
+  await as('leader', `update public.songs set instrument_notes = '[1,2]'::jsonb where band_id=$1`, [band])
+}, /check|instrument_notes/)
 await rejects('la letra no puede pasar de 12000 caracteres', async () => {
   await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, 'a'.repeat(12001)])
 }, /check|lyrics/)
