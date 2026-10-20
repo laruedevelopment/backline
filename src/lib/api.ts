@@ -268,6 +268,12 @@ export async function setBandPublic(bandId: string, isPublic: boolean) {
 }
 
 /** Solo las personas mayores de edad pueden activarlo (lo exige la base de datos). */
+/** Para cuentas anteriores al registro de edad: la persona declara una vez que es mayor de edad. */
+export async function confirmAdult() {
+  const { error } = await db().rpc('confirm_adult')
+  if (error) throw error
+}
+
 export async function setProfilePublic(isPublic: boolean) {
   const { error } = await db().rpc('set_profile_public', { p_public: isPublic })
   if (error) throw error

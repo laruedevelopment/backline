@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteAccount, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
+import { confirmAdult, deleteAccount, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
 import { lessons } from '../lib/learn'
 import { supabase } from '../lib/supabase'
@@ -50,6 +50,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   const [whatsapp, setWhatsapp] = useState(initial.whatsapp)
   const [isPublic, setIsPublic] = useState(initial.isPublic)
   const [pubMsg, setPubMsg] = useState('')
+  const [needAdult, setNeedAdult] = useState(false)
   const [status, setStatus] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const [danger, setDanger] = useState('')
 
@@ -73,13 +74,26 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
 
   async function togglePublic(next: boolean) {
     setPubMsg('')
+    setNeedAdult(false)
     setIsPublic(next)
     try {
       await setProfilePublic(next)
       await qc.invalidateQueries({ queryKey: ['profile', userId] })
     } catch (e) {
       setIsPublic(!next)
-      setPubMsg(/mayores de edad/i.test(String((e as Error).message)) ? 'Solo las personas mayores de edad pueden tener perfil público.' : 'No pudimos cambiar la visibilidad. Intenta de nuevo.')
+      const why = String((e as Error).message)
+      if (/declarar la mayor/i.test(why)) { setNeedAdult(true); return }
+      setPubMsg(/mayores de edad/i.test(why) ? 'Solo las personas mayores de edad pueden tener perfil público.' : 'No pudimos cambiar la visibilidad. Intenta de nuevo.')
+    }
+  }
+
+  async function declareAdult() {
+    try {
+      await confirmAdult()
+      setNeedAdult(false)
+      await togglePublic(true)
+    } catch {
+      setPubMsg('No pudimos guardar tu confirmación. Intenta de nuevo.')
     }
   }
 
@@ -150,6 +164,12 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
           {isMinor && ' Solo las personas mayores de edad pueden activarlo.'}
         </span>
       </label>
+      {needAdult && (
+        <div className="notice" role="alert">
+          Tu cuenta es anterior al registro de edad. Para tener perfil público confirma que eres mayor de edad.
+          <div style={{ marginTop: 8 }}><button type="button" className="btn primary" onClick={() => void declareAdult()}>Soy mayor de edad</button></div>
+        </div>
+      )}
       {pubMsg && <p className="form-error" role="alert">{pubMsg}</p>}
       {isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/musicos/${userId}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo me ven los demás</Link></p>}
 

@@ -367,6 +367,22 @@ await rejects('setlist: el link debe ser de Spotify y https', async () => {
 await rejects('setlist: un link http o de otro sitio se rechaza', async () => {
   await as('leader', `insert into public.setlists (band_id, name, spotify_url) values ($1,'Malo2',$2)`, [band, 'http://open.spotify.com/x'])
 }, /check|spotify/)
+await rejects('perfil público: sin declaración de edad se pide declararla', async () => {
+  await pg.query(`update public.profiles set age_declaration = null where id = $1`, [U.member])
+  await as('member', `select public.set_profile_public(true)`)
+}, /declarar la mayor/)
+await ok('cuenta antigua: declara que es mayor de edad y entonces puede ser pública', async () => {
+  await as('member', `select public.confirm_adult()`)
+  await as('member', `select public.set_profile_public(true)`)
+  await as('member', `select public.set_profile_public(false)`)
+})
+await ok('una declaración de menor no se puede cambiar con confirm_adult', async () => {
+  await pg.query(`update public.profiles set age_declaration = 'minor_with_consent' where id = $1`, [U.member])
+  await as('member', `select public.confirm_adult()`)
+  const r = await pg.query(`select age_declaration from public.profiles where id = $1`, [U.member])
+  eq(r.rows[0].age_declaration, 'minor_with_consent', 'declaración cambiada')
+  await pg.query(`update public.profiles set age_declaration = 'adult' where id = $1`, [U.member])
+})
 await rejects('la letra no puede pasar de 12000 caracteres', async () => {
   await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, 'a'.repeat(12001)])
 }, /check|lyrics/)
