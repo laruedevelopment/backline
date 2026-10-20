@@ -1,9 +1,28 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import DayTimeline from '../../components/DayTimeline'
 import ListSkeleton from '../../components/Skeleton'
-import { dayKey, formatDay, todayBogota } from '../../lib/slots'
+import { bogotaDate, dayKey, formatDay, todayBogota, weekdayOf } from '../../lib/slots'
+import { listHours, roomBusy, type Booking, type Room, type Venue } from '../../lib/venues'
 import { useVenue } from './BusinessContext'
 import BookingRow from './BookingRow'
 import { useBookingBoard } from './useBookingBoard'
+
+/** Una sala en el día de hoy: de un vistazo qué está ocupado, qué falta por confirmar y qué sigue libre. */
+function RoomToday({ venue, room, today, pending }: { venue: Venue; room: Room; today: string; pending: Booking[] }) {
+  const { data: hours = [] } = useQuery({ queryKey: ['venue-hours', venue.id], queryFn: () => listHours(venue.id) })
+  const { data: taken = [] } = useQuery({ queryKey: ['busy', room.id, today], queryFn: () => roomBusy(room.id, bogotaDate(today, '00:00'), bogotaDate(today, '23:59')) })
+  const day = hours.find((h) => h.weekday === weekdayOf(today))
+  const busy = useMemo(() => taken.map((b) => ({ start: new Date(b.starts_at), end: new Date(b.ends_at) })), [taken])
+  const waiting = pending.filter((b) => b.roomId === room.id && dayKey(new Date(b.startsAt)) === today).map((b) => ({ start: new Date(b.startsAt), end: new Date(b.endsAt) }))
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div className="li-title">{room.name}</div>
+      {day ? <DayTimeline date={today} opens={day.opens} closes={day.closes} busy={busy} pending={waiting} /> : <p className="li-sub">Cerrado hoy.</p>}
+    </div>
+  )
+}
 
 /** Lo primero que ve el dueño: qué tiene que responder y qué pasa hoy en su ensayadero. */
 export default function BusinessToday() {
@@ -49,6 +68,13 @@ export default function BusinessToday() {
       <div className="list" style={{ borderTop: board.pending.length ? undefined : 0 }}>
         {board.pending.map((b) => <BookingRow key={b.id} b={b} venue={venue} board={board} />)}
       </div>
+
+      {board.rooms.length > 0 && (
+        <>
+          <div className="section-title">Salas hoy</div>
+          {board.rooms.map((r) => <RoomToday key={r.id} venue={venue} room={r} today={today} pending={board.pending} />)}
+        </>
+      )}
 
       <div className="section-title">Hoy</div>
       {todays.length === 0 && !board.isLoading && <p className="li-sub wrap">No hay ensayos hoy.</p>}
