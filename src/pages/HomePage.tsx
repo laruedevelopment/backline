@@ -63,6 +63,8 @@ export default function HomePage() {
         {band && <p className="page-sub">{[band.city, band.genres.join(' · ')].filter(Boolean).join(' · ')}</p>}
       </div>
 
+      <div className="home-grid">
+      <div className="home-col">
       <div className="section-title" style={{ marginTop: 8 }}>Lo próximo</div>
       {next && parts ? (
         <article>
@@ -106,7 +108,9 @@ export default function HomePage() {
         </>
       )}
 
-      <div className="section-title">Repertorio</div>
+      </div>
+      <div className="home-col">
+      <div className="section-title" style={{ marginTop: 8 }}>Repertorio</div>
       {loading ? <ListSkeleton rows={1} /> : songs.length === 0 ? (
         <div className="empty" style={{ padding: '4px 0' }}>
           <p>Todavía no hay canciones. Aquí verás cuántas tiene lista la banda.</p>
@@ -147,6 +151,8 @@ export default function HomePage() {
       <p className="sub" style={{ marginTop: 12 }}>
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>
       </p>
+      </div>
+      </div>
     </>
   )
 }
