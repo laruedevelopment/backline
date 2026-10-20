@@ -1,5 +1,8 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import { CalendarDays, GraduationCap, Home, ListMusic, Music2, User } from 'lucide-react'
+import LoginPage from './pages/LoginPage'
+import { supabase } from './lib/supabase'
+import { useAuth } from './store/useAuth'
 import LearnPage from './pages/LearnPage'
 import LessonPage from './pages/LessonPage'
 import HomePage from './pages/HomePage'
@@ -18,6 +21,9 @@ const tabs = [
 ]
 
 export default function App() {
+  const { session, ready } = useAuth()
+  if (!ready) return <p className="empty">Cargando…</p>
+  if (supabase && !session) return <LoginPage />
   return (
     <BrowserRouter>
       <div className="shell">

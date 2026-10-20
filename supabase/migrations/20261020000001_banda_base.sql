@@ -133,3 +133,12 @@ create policy invites_admin on public.band_invites for all to authenticated
 
 create policy songs_all on public.songs for all to authenticated
   using (public.is_band_member(band_id)) with check (public.is_band_member(band_id));
+
+-- Permisos del Data API (las tablas nuevas no se exponen solas). RLS decide qué filas.
+grant usage on schema public to authenticated;
+grant select, update on public.profiles to authenticated;
+grant select, update, delete on public.bands to authenticated;
+grant select, update, delete on public.band_members to authenticated;
+grant select, insert, update, delete on public.band_invites to authenticated;
+grant select, insert, update, delete on public.songs to authenticated;
+grant execute on function public.is_band_member, public.is_band_admin to authenticated;
