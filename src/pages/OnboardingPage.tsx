@@ -37,18 +37,18 @@ export default function OnboardingPage({ onCancel }: Props) {
   }
 
   return (
-    <main className={onCancel ? '' : 'login'}>
+    <main className={onCancel ? 'stack' : 'login'}>
       {!onCancel && (
-        <>
+        <header className="login-head">
           <div className="brand-big">back<span>line</span></div>
-          <p className="page-sub">Primero lo primero: tu banda.</p>
-        </>
+          <p className="login-tag">Primero lo primero: tu banda. Créala o únete con el código que te pasaron.</p>
+        </header>
       )}
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={mode === 'new'} className={mode === 'new' ? 'active' : ''} onClick={() => setMode('new')}>Crear banda</button>
-        <button role="tab" aria-selected={mode === 'join'} className={mode === 'join' ? 'active' : ''} onClick={() => setMode('join')}>Tengo un código</button>
+      <div className="seg" role="group" aria-label="Qué quieres hacer" style={onCancel ? undefined : { alignSelf: 'center' }}>
+        <button type="button" aria-pressed={mode === 'new'} onClick={() => setMode('new')}>Crear banda</button>
+        <button type="button" aria-pressed={mode === 'join'} onClick={() => setMode('join')}>Tengo un código</button>
       </div>
-      <form className="card login-form" style={onCancel ? { maxWidth: 'none', marginTop: 12 } : undefined} onSubmit={submit}>
+      <form className={`login-form ${onCancel ? 'flat' : ''}`} onSubmit={submit}>
         {mode === 'new' ? (
           <>
             <label className="field">Nombre de la banda
@@ -64,7 +64,7 @@ export default function OnboardingPage({ onCancel }: Props) {
           </label>
         )}
         {msg && <p className="form-error" role="alert">{msg}</p>}
-        <button className="btn primary" disabled={busy}>{busy ? 'Un momento…' : mode === 'new' ? 'Crear banda' : 'Unirme'}</button>
+        <button className="btn primary block" disabled={busy}>{busy ? 'Un momento…' : mode === 'new' ? 'Crear banda' : 'Unirme'}</button>
         {onCancel && <button type="button" className="link-btn" onClick={onCancel}>Cancelar</button>}
       </form>
     </main>

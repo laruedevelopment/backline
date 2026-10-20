@@ -21,15 +21,15 @@ export default function NewPasswordPage() {
 
   return (
     <main className="login">
-      <div className="brand-big">back<span>line</span></div>
-      <form className="card login-form" onSubmit={submit}>
+      <header className="login-head"><div className="brand-big">back<span>line</span></div></header>
+      <form className="login-form" onSubmit={submit}>
         <h1 className="login-title">Contraseña nueva</h1>
         <label className="field">Escribe tu contraseña nueva
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} autoComplete="new-password" required autoFocus />
           <span className="li-sub">Mínimo 8 caracteres.</span>
         </label>
         {msg && <p className="form-error" role="alert">{msg}</p>}
-        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar y entrar'}</button>
+        <button className="btn primary block" disabled={busy}>{busy ? 'Guardando…' : 'Guardar y entrar'}</button>
       </form>
     </main>
   )
