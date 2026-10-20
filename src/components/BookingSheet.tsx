@@ -5,6 +5,7 @@ import { bogotaDate, buildSlots, formatDay, formatTime, money, todayBogota, week
 import { bookingError, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
 import { useBands } from '../store/useBandSession'
 import { useAuth } from '../store/useAuth'
+import DayTimeline from './DayTimeline'
 import Sheet from './Sheet'
 
 const APP_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}`
@@ -119,7 +120,12 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
         {day && isLoading && <p className="li-sub">Buscando franjas…</p>}
         {day && !isLoading && slots.length === 0 && <p className="li-sub wrap">No hay franjas de esa duración en el horario de ese día.</p>}
         {day && !isLoading && slots.length > 0 && free === 0 && <p className="li-sub wrap">Todo está ocupado ese día. Prueba con otro.</p>}
-        <div className="slots" role="group" aria-label="Horas disponibles">
+        {day && !isLoading && (
+          <DayTimeline date={date} opens={day.opens} closes={day.closes}
+            busy={busy.map((b) => ({ start: new Date(b.starts_at), end: new Date(b.ends_at) }))}
+            chosen={slot ? { start: slot.start, end: slot.end } : null} />
+        )}
+        <div className="slots" role="group" aria-label="Horas disponibles" style={{ marginTop: 10 }}>
           {slots.map((s) => (
             <button key={s.start.toISOString()} type="button" className={`slot ${slot?.start.getTime() === s.start.getTime() ? 'on' : ''}`}
               disabled={!s.free} aria-pressed={slot?.start.getTime() === s.start.getTime()} aria-label={`${formatTime(s.start)} a ${formatTime(s.end)}${s.free ? '' : ', ocupada'}`}
