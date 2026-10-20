@@ -6,7 +6,7 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Proyecto Vite + React + TS, PWA, router, estado.
 - [x] Documentación de visión, datos y diseño.
 - [x] Esqueleto de UI móvil con datos de demo (Inicio, Repertorio, Setlists, Agenda, Perfil).
-- [ ] Repo en GitHub (organización laruedevelopment) y deploy gratis.
+- [x] Repo público en GitHub (laruedevelopment/backline) y deploy gratis: https://laruedevelopment.github.io/backline/
 
 ## Fase 1 — Banda MVP (el dolor real de Javier)
 - [ ] Supabase: proyecto, Auth (email + Google), migraciones, RLS por banda. *(migración 0001 escrita en `supabase/migrations/`, sin aplicar; falta proyecto — ver PENDIENTES)*
