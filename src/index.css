@@ -128,3 +128,5 @@ textarea { resize: vertical; }
 .login-title { font-size: 1.3rem; }
 .link-btn { background: none; border: 0; color: var(--amber); min-height: 44px; }
 .btn:disabled { opacity: 0.6; cursor: progress; }
+
+.invite-code { font-family: ui-monospace, monospace; font-size: 1.2rem; letter-spacing: 0.1em; color: var(--amber); }

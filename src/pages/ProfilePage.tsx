@@ -1,9 +1,20 @@
-import { LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { Copy, LogOut, UserPlus } from 'lucide-react'
+import { createInvite } from '../lib/api'
+import { useActiveBand } from '../store/useBandSession'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 
 export default function ProfilePage() {
   const session = useAuth((s) => s.session)
+  const band = useActiveBand()
+  const [code, setCode] = useState('')
+  const [err, setErr] = useState('')
+  const canInvite = band?.role === 'owner' || band?.role === 'admin'
+  async function invite() {
+    setErr('')
+    try { setCode(await createInvite(band!.id, session!.user.id)) } catch { setErr('No pudimos crear el código. Intenta de nuevo.') }
+  }
   const name = session?.user.user_metadata?.name as string | undefined
   return (
     <>
@@ -18,6 +29,27 @@ export default function ProfilePage() {
           <button className="btn" onClick={() => void supabase?.auth.signOut()}>
             <LogOut size={18} aria-hidden /> Salir
           </button>
+        </div>
+      )}
+      {band && (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <div className="title">{band.name}</div>
+          <div className="sub">{band.city || 'Sin ciudad'} · {band.role === 'owner' ? 'Líder' : band.role === 'admin' ? 'Admin' : 'Miembro'}</div>
+          {canInvite && (
+            <>
+              <button className="btn" style={{ marginTop: 12 }} onClick={() => void invite()}>
+                <UserPlus size={18} aria-hidden /> Invitar a un integrante
+              </button>
+              {code && (
+                <div className="row" style={{ marginTop: 10 }}>
+                  <code className="invite-code grow">{code}</code>
+                  <button className="btn" aria-label="Copiar código" onClick={() => void navigator.clipboard.writeText(code)}><Copy size={18} aria-hidden /></button>
+                </div>
+              )}
+              {code && <div className="sub note">Pásaselo por WhatsApp. Sirve 7 días: en la app elige "Tengo un código".</div>}
+              {err && <p className="form-error" role="alert">{err}</p>}
+            </>
+          )}
         </div>
       )}
       <div className="card empty">

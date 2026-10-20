@@ -1,5 +1,5 @@
 -- Fase 1 · base: perfiles, bandas, miembros, invitaciones y repertorio.
--- NO aplicada todavía (falta proyecto Supabase). Revisar con `daniela-seguridad` antes de aplicar.
+-- Aplicada en el proyecto `backline` el 2026-10-20 (SQL Editor). Pendiente: revisión de `daniela-seguridad`.
 
 create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,

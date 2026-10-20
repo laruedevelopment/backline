@@ -1,5 +1,9 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import { CalendarDays, GraduationCap, Home, ListMusic, Music2, User } from 'lucide-react'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { myBands } from './lib/api'
+import { BandContext } from './store/useBandSession'
+import OnboardingPage from './pages/OnboardingPage'
 import LoginPage from './pages/LoginPage'
 import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
@@ -20,10 +24,33 @@ const tabs = [
   { to: '/perfil', label: 'Perfil', icon: User },
 ]
 
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
+
+function WithBand() {
+  const { data: bands, isLoading, error } = useQuery({ queryKey: ['bands'], queryFn: myBands })
+  if (isLoading) return <p className="empty">Cargando tu banda…</p>
+  if (error) return <p className="empty">No pudimos cargar tu banda. Revisa tu conexión y recarga.</p>
+  if (!bands?.length) return <OnboardingPage />
+  return (
+    <BandContext.Provider value={bands[0]}>
+      <Shell />
+    </BandContext.Provider>
+  )
+}
+
 export default function App() {
   const { session, ready } = useAuth()
   if (!ready) return <p className="empty">Cargando…</p>
-  if (supabase && !session) return <LoginPage />
+  if (!supabase) return <Shell />
+  if (!session) return <LoginPage />
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WithBand />
+    </QueryClientProvider>
+  )
+}
+
+function Shell() {
   return (
     <BrowserRouter>
       <div className="shell">
