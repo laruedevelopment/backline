@@ -11,6 +11,8 @@ import { BandContext, BandsContext, useActiveBand } from './store/useBandSession
 import TopBar from './components/TopBar'
 import OfflineBanner from './components/OfflineBanner'
 import ListSkeleton from './components/Skeleton'
+import ErrorBoundary from './components/ErrorBoundary'
+import { reloadForNewVersion } from './lib/reload'
 import { useLiveBookings, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
@@ -189,7 +191,13 @@ function Nav() {
 
 function Shell() {
   useLiveBookings()
+  const { pathname } = useLocation()
   // Con la app ya abierta, se descargan las demás pantallas en un momento libre: al navegar no hay espera.
+  useEffect(() => {
+    const onPreloadError = (e: Event) => { e.preventDefault(); reloadForNewVersion() }
+    window.addEventListener('vite:preloadError', onPreloadError)
+    return () => window.removeEventListener('vite:preloadError', onPreloadError)
+  }, [])
   useEffect(() => {
     const warm = () => Object.values(pageLoaders).forEach((load) => void load().catch(() => {}))
     const idle = typeof window.requestIdleCallback === 'function'
@@ -205,6 +213,7 @@ function Shell() {
           <OfflineBanner />
           <main className="content">
             {/* Al cambiar de banda se reinicia la pantalla: nada de lo escrito o generado (códigos, búsquedas, formularios) se arrastra de la anterior. */}
+            <ErrorBoundary key={`${band?.id ?? 'local'}${pathname}`} compact>
             <Suspense key={band?.id ?? 'local'} fallback={<ListSkeleton rows={3} />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -225,6 +234,7 @@ function Shell() {
               <Route path="/perfil" element={<Measure><ProfilePage /></Measure>} />
             </Routes>
             </Suspense>
+            </ErrorBoundary>
           </main>
         </div>
     </div>
@@ -234,6 +244,7 @@ function Shell() {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <ErrorBoundary>
       <Suspense fallback={<Splash />}>
       <Routes>
         {/* Públicas: se pueden leer antes de registrarse. */}
@@ -243,6 +254,7 @@ export default function App() {
         <Route path="*" element={<AuthGate />} />
       </Routes>
       </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   )
 }
