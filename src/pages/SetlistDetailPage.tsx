@@ -4,10 +4,11 @@ import { ArrowDown, ArrowLeft, ArrowUp, Check, Plus, X } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
-import { isStandard, tuningSignature, tuningSummary } from '../lib/song'
+import { isStandard, tuningSignature, tuningSummary, type Song } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { norm } from '../lib/importSetlist'
 import Sheet from '../components/Sheet'
+import SongForm from '../components/SongForm'
 import StageMode from '../components/StageMode'
 import ListSkeleton from '../components/Skeleton'
 
@@ -15,12 +16,13 @@ export default function SetlistDetailPage() {
   const { id } = useParams()
   const nav = useNavigate()
   const band = useActiveBand()
-  const { songs } = useSongs(band?.id)
+  const { songs, save: saveSong, remove: removeSong } = useSongs(band?.id)
   const { setlists, loading, save, remove } = useSetlists(band?.id)
   const [editing, setEditing] = useState(false)
   const [stage, setStage] = useState(false)
   const [copied, setCopied] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [editingSong, setEditingSong] = useState<Song | null>(null)
   const [picked, setPicked] = useState<string[]>([])
   const [q, setQ] = useState('')
   const canEdit = band ? band.role !== 'guest' : true
@@ -66,10 +68,17 @@ export default function SetlistDetailPage() {
           <div key={s.id} className={`paper-row ${editing ? 'editing' : ''}`}>
             {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
             <span className="n">{i + 1}</span>
-            <div>
-              <div className="t">{s.title}</div>
-              <div className="a">{s.artist}</div>
-            </div>
+            {canEdit && !editing ? (
+              <button type="button" className="paper-main" onClick={() => setEditingSong(s)} aria-label={`Editar detalles de ${s.title}`}>
+                <div className="t">{s.title}</div>
+                <div className="a">{s.artist}{s.tunings.length > 0 && !isStandard(s) ? ` · ${tuningSummary(s)}` : ''}</div>
+              </button>
+            ) : (
+              <div>
+                <div className="t">{s.title}</div>
+                <div className="a">{s.artist}</div>
+              </div>
+            )}
             <span className="k">{s.key}{s.key && ' · '}{s.bpm}</span>
             {editing && (
               <div className="tools">
@@ -83,6 +92,7 @@ export default function SetlistDetailPage() {
       </article>
 
       <div className="stack" style={{ marginTop: 16 }}>
+        {canEdit && items.length > 0 && <p className="li-sub wrap">Toca una canción para editar su afinación por instrumento, tono, notas y letra.</p>}
         {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
@@ -138,6 +148,11 @@ export default function SetlistDetailPage() {
             </>
           )}
         </Sheet>
+      )}
+      {editingSong && (
+        <SongForm song={editingSong} onClose={() => setEditingSong(null)}
+          onSave={async (s) => { await saveSong(s); setEditingSong(null) }}
+          onDelete={async () => { await removeSong(editingSong.id); setEditingSong(null) }} />
       )}
       {stage && <StageMode songs={items} onClose={() => setStage(false)} />}
     </>

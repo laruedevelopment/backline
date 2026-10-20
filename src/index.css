@@ -480,3 +480,6 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
   .stage-main.has-chart > * { grid-column: 1; }
   .stage-main.has-chart > .chart { grid-column: 2; grid-row: 1 / -1; min-height: 0; overflow-y: auto; align-self: stretch; }
 }
+
+.paper-main { all: unset; cursor: pointer; display: block; min-width: 0; }
+.paper-main:focus-visible { outline: 2px solid var(--paper-ink); outline-offset: 3px; }

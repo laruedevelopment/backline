@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
+import { instrumentOptions } from '../lib/identity'
 import Sheet from './Sheet'
 
 const empty = (): Song => ({
@@ -91,10 +92,12 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       </label>
 
       <h3 className="section-title">Afinación por instrumento</h3>
+      <datalist id="tuning-instruments">{['Todos', ...instrumentOptions].map((o) => <option key={o} value={o} />)}</datalist>
+      <p className="li-sub wrap">«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento.</p>
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
           <label className="field">Instrumento
-            <input value={t.instrument} placeholder="Guitarra" maxLength={30} onChange={(e) => setTuning(i, { instrument: e.target.value })} />
+            <input value={t.instrument} placeholder="Guitarra" maxLength={30} list="tuning-instruments" onChange={(e) => setTuning(i, { instrument: e.target.value })} />
           </label>
           <div className="grid-row">
             <label className="field grow">Afinación
