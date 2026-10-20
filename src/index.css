@@ -496,3 +496,13 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
   .home-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0 48px; align-items: start; }
 }
 @media (min-width: 1700px) { .list.cols.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); } .explore-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Reordenar arrastrando */
+.paper-row.has-grip { grid-template-columns: 40px 32px 1fr auto; }
+.paper-row.has-grip.editing { grid-template-columns: 40px 32px 1fr; }
+.paper-row.has-grip .retune { grid-column: 1 / -1; }
+.paper-row.has-grip.editing .tools { grid-column: 1 / -1; }
+.paper .grip { all: unset; box-sizing: border-box; width: 40px; min-height: 44px; display: grid; place-items: center; cursor: grab; touch-action: none; color: var(--paper-ink); opacity: 0.55; border-radius: var(--r-s); align-self: center; }
+.paper .grip:hover { opacity: 1; background: color-mix(in srgb, var(--paper-ink) 10%, transparent); }
+.paper .grip:focus-visible { outline: 2px solid var(--paper-ink); opacity: 1; }
+.paper-row.dragging { position: relative; z-index: 5; background: var(--paper); box-shadow: 0 8px 24px rgb(0 0 0 / 0.35); border-radius: 4px; opacity: 0.96; }

@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowLeft, ArrowUp, Check, Plus, X } from 'lucide-react'
+import { ArrowLeft, Check, GripVertical, Plus, X } from 'lucide-react'
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
@@ -11,6 +14,23 @@ import Sheet from '../components/Sheet'
 import SongForm from '../components/SongForm'
 import StageMode from '../components/StageMode'
 import ListSkeleton from '../components/Skeleton'
+
+type RowProps = { id: string; className: string; handle: boolean; title: string; children: React.ReactNode }
+
+/** Fila del setlist que se puede arrastrar desde su asa (así el resto de la fila sigue siendo táctil y no estorba al desplazar). */
+function SortableRow({ id, className, handle, title, children }: RowProps) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
+  return (
+    <div ref={setNodeRef} className={`${className} ${isDragging ? 'dragging' : ''}`} style={{ transform: CSS.Translate.toString(transform), transition }}>
+      {handle && (
+        <button ref={setActivatorNodeRef} type="button" className="grip" aria-label={`Mover ${title}`} {...attributes} {...listeners}>
+          <GripVertical size={20} aria-hidden />
+        </button>
+      )}
+      {children}
+    </div>
+  )
+}
 
 export default function SetlistDetailPage() {
   const { id } = useParams()
@@ -26,6 +46,11 @@ export default function SetlistDetailPage() {
   const [picked, setPicked] = useState<string[]>([])
   const [q, setQ] = useState('')
   const canEdit = band ? band.role !== 'guest' : true
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   const list = setlists.find((l) => l.id === id)
   if (loading) return <ListSkeleton rows={4} />
@@ -37,10 +62,10 @@ export default function SetlistDetailPage() {
   const differs = (i: number) => i > 0 && tuningSignature(items[i]) !== tuningSignature(items[i - 1])
   const changes = items.filter((_, i) => differs(i)).length
   const update = (songIds: string[]) => void save({ ...list, songIds })
-  const move = (i: number, d: -1 | 1) => {
-    const next = [...ids]
-    ;[next[i], next[i + d]] = [next[i + d], next[i]]
-    update(next)
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    const from = ids.indexOf(String(active.id)), to = ids.indexOf(String(over.id))
+    if (from >= 0 && to >= 0) update(arrayMove(ids, from, to))
   }
   const copy = async () => {
     const lines = items.map((s, i) => `${i + 1}. ${s.title}${s.artist ? ` - ${s.artist}` : ''}${s.key ? ` (${s.key})` : ''}`)
@@ -64,40 +89,43 @@ export default function SetlistDetailPage() {
         <h2>{list.name}</h2>
         <div className="meta">{items.length} CANCIONES · {minutes} MIN · {changes} CAMBIO{changes === 1 ? '' : 'S'} DE AFINACIÓN</div>
         {items.length === 0 && <p style={{ padding: '18px 0' }}>Vacío. Agrega canciones de tu repertorio.</p>}
-        {items.map((s, i) => (
-          <div key={s.id} className={`paper-row ${editing ? 'editing' : ''}`}>
-            {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
-            <span className="n">{i + 1}</span>
-            {canEdit && !editing ? (
-              <button type="button" className="paper-main" onClick={() => setEditingSong(s)} aria-label={`Editar detalles de ${s.title}`}>
-                <div className="t">{s.title}</div>
-                <div className="a">{s.artist}{s.tunings.length > 0 && !isStandard(s) ? ` · ${tuningSummary(s)}` : ''}</div>
-              </button>
-            ) : (
-              <div>
-                <div className="t">{s.title}</div>
-                <div className="a">{s.artist}</div>
-              </div>
-            )}
-            <span className="k">{s.key}{s.key && ' · '}{s.bpm}</span>
-            {editing && (
-              <div className="tools">
-                <button aria-label={`Subir ${s.title}`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={18} aria-hidden /></button>
-                <button aria-label={`Bajar ${s.title}`} disabled={i === items.length - 1} onClick={() => move(i, 1)}><ArrowDown size={18} aria-hidden /></button>
-                <button aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}><X size={18} aria-hidden /></button>
-              </div>
-            )}
-          </div>
-        ))}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+            {items.map((s, i) => (
+              <SortableRow key={s.id} id={s.id} title={s.title} handle={canEdit && items.length > 1}
+                className={`paper-row ${canEdit && items.length > 1 ? 'has-grip' : ''} ${editing ? 'editing' : ''}`}>
+                {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
+                <span className="n">{i + 1}</span>
+                {canEdit && !editing ? (
+                  <button type="button" className="paper-main" onClick={() => setEditingSong(s)} aria-label={`Editar detalles de ${s.title}`}>
+                    <div className="t">{s.title}</div>
+                    <div className="a">{s.artist}{s.tunings.length > 0 && !isStandard(s) ? ` · ${tuningSummary(s)}` : ''}</div>
+                  </button>
+                ) : (
+                  <div>
+                    <div className="t">{s.title}</div>
+                    <div className="a">{s.artist}</div>
+                  </div>
+                )}
+                <span className="k">{s.key}{s.key && ' · '}{s.bpm}</span>
+                {editing && (
+                  <div className="tools">
+                    <button aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}><X size={18} aria-hidden /></button>
+                  </div>
+                )}
+              </SortableRow>
+            ))}
+          </SortableContext>
+        </DndContext>
       </article>
 
       <div className="stack" style={{ marginTop: 16 }}>
-        {canEdit && items.length > 0 && <p className="li-sub wrap">Toca una canción para editar su afinación por instrumento, tono, notas y letra.</p>}
+        {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden. Toca una canción para editar su afinación por instrumento, tono, notas y letra.</p>}
         {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
-          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar orden y canciones'}</button>
+          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Quitar canciones'}</button>
         )}
       </div>
 
