@@ -4,10 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import AgendaNav from '../components/AgendaNav'
 import ListSkeleton from '../components/Skeleton'
 import Sheet from '../components/Sheet'
+import ManualBookingSheet from '../components/ManualBookingSheet'
 import { RoomForm, VenueForm } from '../components/VenueForms'
 import VenueMedia from '../components/VenueMedia'
 import { ask } from '../lib/confirm'
 import { waLink } from '../lib/identity'
+import { googleCalendarUrl } from '../lib/calendar'
 import { formatDay, formatTime, money, weekOrder, weekdayNames } from '../lib/slots'
 import { supabase } from '../lib/supabase'
 import {
@@ -85,7 +87,9 @@ function Manage({ venue }: { venue: Venue }) {
 function Requests({ bookings, venue }: { bookings: Booking[]; venue: Venue }) {
   const qc = useQueryClient()
   const [rejecting, setRejecting] = useState<Booking | null>(null)
+  const [manual, setManual] = useState(false)
   const [msg, setMsg] = useState('')
+  const { data: rooms = [] } = useQuery({ queryKey: ['venue-rooms', venue.id], queryFn: () => listRooms(venue.id) })
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['venue-bookings', venue.id] }), qc.invalidateQueries({ queryKey: ['busy'] })])
 
   const respond = useMutation({
@@ -114,7 +118,7 @@ function Requests({ bookings, venue }: { bookings: Booking[]; venue: Venue }) {
         <div className="li-main" style={{ minWidth: 200 }}>
           <div className="li-title">{b.contactName || 'Banda sin nombre'} · {b.roomName}</div>
           <div className="li-sub">{formatDay(s)}</div>
-          <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span>{b.bandId && <span>A nombre de una banda</span>}{wa && <a href={wa} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--amber)' }}>WhatsApp</a>}</div>
+          <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span>{b.bandId && <span>A nombre de una banda</span>}{b.source === 'owner' && <span className="tag">Anotada por ti</span>}{wa && <a href={wa} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--amber)' }}>WhatsApp</a>}</div>
           {b.note && <div className="li-sub wrap">“{b.note}”</div>}
           {b.responseNote && <div className="li-sub wrap">Tu respuesta: {b.responseNote}</div>}
         </div>
@@ -128,6 +132,8 @@ function Requests({ bookings, venue }: { bookings: Booking[]; venue: Venue }) {
   return (
     <>
       {msg && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{msg}</p>}
+      <button className="btn" style={{ marginTop: 16 }} onClick={() => setManual(true)} disabled={rooms.length === 0}>Anotar una reserva (WhatsApp o llamada)</button>
+      {rooms.length === 0 && <p className="li-sub wrap" style={{ marginTop: 6 }}>Primero agrega una salita en «Salitas y horario».</p>}
       <div className="section-title">Por responder{pending.length ? ` · ${pending.length}` : ''}</div>
       {pending.length === 0 && <p className="li-sub wrap">No hay solicitudes pendientes. Cuando una banda pida una franja, aparece aquí.</p>}
       <div className="list" style={{ borderTop: pending.length ? undefined : 0 }}>
@@ -144,7 +150,14 @@ function Requests({ bookings, venue }: { bookings: Booking[]; venue: Venue }) {
       <div className="section-title">Confirmadas · próximas</div>
       {confirmed.length === 0 && <p className="li-sub wrap">Todavía no hay reservas confirmadas.</p>}
       <div className="list" style={{ borderTop: confirmed.length ? undefined : 0 }}>
-        {confirmed.map((b) => <Row key={b.id} b={b} actions={<button className="btn ghost danger" onClick={() => void onCancel(b)} disabled={cancel.isPending}>Cancelar</button>} />)}
+        {confirmed.map((b) => (
+          <Row key={b.id} b={b} actions={
+            <div className="row" style={{ width: '100%', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+              <a className="btn" target="_blank" rel="noopener noreferrer" href={googleCalendarUrl({ title: `${b.contactName} · ${b.roomName}`, start: new Date(b.startsAt), end: new Date(b.endsAt), location: `${venue.name}${venue.address ? `, ${venue.address}` : ''}`, details: [b.note, b.contactPhone && `Tel: ${b.contactPhone}`].filter(Boolean).join('\n') })}>Agregar a Google Calendar</a>
+              <button className="btn ghost danger" onClick={() => void onCancel(b)} disabled={cancel.isPending}>Cancelar</button>
+            </div>
+          } />
+        ))}
       </div>
 
       {history.length > 0 && (
@@ -156,6 +169,7 @@ function Requests({ bookings, venue }: { bookings: Booking[]; venue: Venue }) {
         </>
       )}
 
+      {manual && <ManualBookingSheet rooms={rooms} onClose={() => setManual(false)} onSaved={refresh} />}
       {rejecting && <RejectSheet booking={rejecting} onClose={() => setRejecting(null)} onReject={(note) => { setMsg(''); respond.mutate({ id: rejecting.id, status: 'rejected', note }); setRejecting(null) }} />}
     </>
   )

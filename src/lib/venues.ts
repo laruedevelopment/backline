@@ -24,7 +24,7 @@ export type BookingStatus = 'requested' | 'confirmed' | 'rejected' | 'cancelled'
 export type Booking = {
   id: string; venueId: string; roomId: string; bandId: string | null; status: BookingStatus
   startsAt: string; endsAt: string; note: string; responseNote: string
-  contactName: string; contactPhone: string
+  contactName: string; contactPhone: string; source: 'app' | 'owner'
   venueName: string; venueCity: string; roomName: string
 }
 
@@ -199,6 +199,15 @@ export async function respondBooking(id: string, status: 'confirmed' | 'rejected
   if (error) throw error
 }
 
+/** El dueño registra una reserva que le llegó por WhatsApp o llamada: queda confirmada y la franja se bloquea. */
+export async function ownerBooking(v: { roomId: string; start: Date; end: Date; label: string; phone: string; note: string }): Promise<string> {
+  const { data, error } = await db().rpc('owner_booking', {
+    p_room: v.roomId, p_start: v.start.toISOString(), p_end: v.end.toISOString(), p_label: v.label, p_phone: v.phone || null, p_note: v.note || null,
+  })
+  if (error) throw error
+  return data as string
+}
+
 export async function cancelBooking(id: string) {
   const { error } = await db().rpc('cancel_booking', { p_id: id })
   if (error) throw error
@@ -206,9 +215,9 @@ export async function cancelBooking(id: string) {
 
 type BookingRow = {
   id: string; venue_id: string; room_id: string; band_id: string | null; status: BookingStatus; starts_at: string; ends_at: string
-  note: string | null; response_note: string | null; contact_name: string; contact_phone: string | null
+  note: string | null; response_note: string | null; contact_name: string; contact_phone: string | null; source: 'app' | 'owner'
 }
-const BOOKING_COLS = 'id, venue_id, room_id, band_id, status, starts_at, ends_at, note, response_note, contact_name, contact_phone'
+const BOOKING_COLS = 'id, venue_id, room_id, band_id, status, starts_at, ends_at, note, response_note, contact_name, contact_phone, source'
 
 async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   if (!rows.length) return []
@@ -222,7 +231,7 @@ async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   const rooms = new Map((r.data ?? []).map((x: { id: string; name: string }) => [x.id, x.name]))
   return rows.map((b) => ({
     id: b.id, venueId: b.venue_id, roomId: b.room_id, bandId: b.band_id, status: b.status, startsAt: b.starts_at, endsAt: b.ends_at,
-    note: b.note ?? '', responseNote: b.response_note ?? '', contactName: b.contact_name, contactPhone: b.contact_phone ?? '',
+    note: b.note ?? '', responseNote: b.response_note ?? '', contactName: b.contact_name, contactPhone: b.contact_phone ?? '', source: b.source,
     venueName: venues.get(b.venue_id)?.name ?? 'Sala', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '',
   }))
 }
@@ -247,6 +256,9 @@ export function bookingError(e: unknown): string {
   if (/anticipación/i.test(m)) return 'Esa franja empieza muy pronto: pide con al menos una hora de anticipación.'
   if (/cerrada|fuera del horario/i.test(m)) return 'La sala no atiende en ese horario.'
   if (/demasiadas solicitudes/i.test(m)) return 'Tienes muchas solicitudes pendientes. Espera a que respondan alguna.'
+  if (/falta el nombre/i.test(m)) return 'Escribe el nombre de quien reservó.'
+  if (/ya pasó|muy lejos/i.test(m)) return 'Esa fecha no es válida.'
+  if (/duración/i.test(m)) return 'La duración debe estar entre 30 minutos y 12 horas.'
   if (/propia sala/i.test(m)) return 'No puedes reservar tu propia sala desde aquí.'
   if (/no está pendiente|ya no se puede/i.test(m)) return 'Esa reserva ya cambió. Recarga para ver su estado.'
   if (/no disponible/i.test(m)) return 'Esa sala ya no está disponible.'

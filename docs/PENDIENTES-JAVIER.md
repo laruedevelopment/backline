@@ -33,8 +33,11 @@ Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas d
 6. Antes de subir logos y fotos: política de contenido, reporte de abuso y borrado de archivos al borrar la cuenta.
 
 ## Salas de ensayo: piloto con tu amigo
-1. **Aplicar la migración** `20261020000009_salas_y_reservas.sql` en el SQL Editor (la app nueva la necesita; no publicar antes).
+1. **Aplicar las migraciones** `20261020000009_salas_y_reservas.sql` (ya aplicada) y `20261020000010_reserva_manual.sql` en el SQL Editor (la app nueva necesita la 0010; no publicar antes).
 2. Pedirle a tu amigo lo que necesita cargar: nombre, dirección, WhatsApp, cuántas salitas tiene y qué equipo hay en cada una, precio por hora, horario de atención y 3-5 fotos.
 3. Que cree su cuenta, entre a **Agenda → Salas de ensayo → Publicar mi sala** y la deje lista. Tú reservas con tu banda para probar el flujo completo (pedir, confirmar, ver el ensayo en la agenda).
 4. Ver cómo reserva hoy (WhatsApp, cuaderno, llamadas) para medir si Backline le quita trabajo. Esa fricción decide qué sigue (avisos, pagos, Slothy).
 5. Cuando Slothy esté desplegado: poner el enlace de su chat en el campo "Enlace para reservar en otro sistema" de la sala.
+
+### Cómo reserva hoy el amigo (dato del piloto)
+Las bandas le escriben por WhatsApp y él anota a mano en su Google Calendar. Por eso Backline le ofrece: (1) **Anotar una reserva** que le llegó por WhatsApp o llamada, para que las bandas vean la disponibilidad real; (2) botón **Agregar a Google Calendar** en cada reserva confirmada (un toque, sin escribir); (3) el aviso por WhatsApp que manda la banda al pedir una franja, con el enlace para confirmarla. Pendiente si el piloto lo pide: aviso automático al dueño (correo/WhatsApp), página pública sin cuenta para compartir su disponibilidad, y feed `.ics` para suscribir su Google Calendar.

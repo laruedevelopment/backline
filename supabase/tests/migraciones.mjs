@@ -155,6 +155,27 @@ await rejects('el cupo de pendientes por usuario es 6', async () => {
   for (let i = 0; i < 7; i++) await as('member', `select public.request_booking($1,$2,$3)`, [room, t(10 + i, '09:00'), t(10 + i, '10:00')])
 }, /demasiadas/)
 
+
+console.log('\nReservas manuales del dueño (WhatsApp / llamada)')
+await ok('el dueño registra una reserva manual y queda confirmada', async () => {
+  const [r] = await as('owner', `select public.owner_booking($1,$2,$3,'Los Chinos','300 555 0000','Pagó en efectivo') as id`, [room, t(7, '18:00'), t(7, '20:00')])
+  const [row] = await as('owner', `select status, source, contact_name, band_id, requested_by from public.bookings where id=$1`, [r.id])
+  eq([row.status, row.source, row.contact_name, row.band_id, row.requested_by], ['confirmed', 'owner', 'Los Chinos', null, null], 'reserva manual')
+})
+await rejects('nadie más puede registrar reservas en esa sala', () => as('other', `select public.owner_booking($1,$2,$3,'X')`, [room, t(8, '18:00'), t(8, '19:00')]), /solo el dueño/)
+await rejects('una reserva manual no puede solaparse con otra confirmada', () => as('owner', `select public.owner_booking($1,$2,$3,'Otra')`, [room, t(7, '19:00'), t(7, '21:00')]), /ocupada/)
+await rejects('las bandas ya no pueden pedir esa franja', () => as('leader', `select public.request_booking($1,$2,$3)`, [room, t(7, '18:30'), t(7, '19:30')]), /ocupada/)
+await rejects('exige un nombre', () => as('owner', `select public.owner_booking($1,$2,$3,'  ')`, [room, t(9, '18:00'), t(9, '19:00')]), /falta el nombre/)
+await ok('la franja aparece ocupada para las bandas sin revelar el nombre', async () => {
+  const rows = await as('leader', `select * from public.room_busy($1,$2,$3)`, [room, t(7, '00:00'), t(7, '23:59')])
+  eq(rows.length, 1, 'franjas'); eq(Object.keys(rows[0]).sort(), ['ends_at', 'starts_at'], 'columnas')
+})
+await ok('el dueño puede cancelarla y la franja se libera', async () => {
+  const [{ id }] = await as('owner', `select id from public.bookings where contact_name='Los Chinos'`)
+  await as('owner', `select public.cancel_booking($1)`, [id])
+  eq((await as('leader', `select * from public.room_busy($1,$2,$3)`, [room, t(7, '00:00'), t(7, '23:59')])).length, 0, 'sigue ocupada')
+})
+
 console.log('\nFotos y límites')
 await rejects('una foto no puede apuntar a la carpeta de otra sala', () => as('owner', `insert into public.venue_photos (venue_id, path) values ($1,'otra/photos/x.webp')`, [venue]), /check/)
 await ok('el dueño sube hasta 12 fotos y la 13 se rechaza', async () => {

@@ -8,6 +8,7 @@ import ListSkeleton from '../components/Skeleton'
 import { ask } from '../lib/confirm'
 import { norm } from '../lib/importSetlist'
 import { supabase } from '../lib/supabase'
+import { googleCalendarUrl } from '../lib/calendar'
 import { formatDay, formatTime, money } from '../lib/slots'
 import { bookingError, cancelBooking, kindLabel, listVenues, minPrices, myBookings, myVenues, type Booking } from '../lib/venues'
 import { useAuth } from '../store/useAuth'
@@ -77,7 +78,10 @@ export default function SalasPage() {
                     <div className="li-sub">{formatDay(s)}</div>
                     <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span><span className={`tag ${b.status === 'confirmed' ? 'ok' : ''}`}>{statusText[b.status]}</span></div>
                   </div>
-                  <button className="btn ghost danger" onClick={() => void onCancel(b)} disabled={cancel.isPending}>Cancelar</button>
+                  <div className="row" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                    {b.status === 'confirmed' && <a className="btn ghost" target="_blank" rel="noopener noreferrer" href={googleCalendarUrl({ title: `Ensayo en ${b.venueName} · ${b.roomName}`, start: s, end: e, location: b.venueName })}>Google Calendar</a>}
+                    <button className="btn ghost danger" onClick={() => void onCancel(b)} disabled={cancel.isPending}>Cancelar</button>
+                  </div>
                 </div>
               )
             })}

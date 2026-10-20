@@ -7,6 +7,7 @@ import { useBands } from '../store/useBandSession'
 import { useAuth } from '../store/useAuth'
 import Sheet from './Sheet'
 
+const APP_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}`
 const DURATIONS = [{ m: 60, l: '1 hora' }, { m: 90, l: '1 h 30' }, { m: 120, l: '2 horas' }, { m: 180, l: '3 horas' }, { m: 240, l: '4 horas' }]
 
 const addDays = (date: string, n: number) => {
@@ -58,7 +59,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
   const total = room && slot ? Math.round((room.pricePerHour * minutes) / 60) : 0
   const wa = venue.whatsapp && slot
-    ? waLink(venue.whatsapp, `Hola, soy de Backline. Acabo de pedir ${room?.name} el ${formatDay(slot.start)} de ${formatTime(slot.start)} a ${formatTime(slot.end)}.`)
+    ? waLink(venue.whatsapp, `Hola, acabo de pedir ${room?.name} para el ${formatDay(slot.start)}, de ${formatTime(slot.start)} a ${formatTime(slot.end)}. Puedes confirmarla en Backline: ${APP_URL}mi-sala`)
     : undefined
 
   function submit(e: React.FormEvent) {
@@ -74,8 +75,9 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
         <p><b>{venue.name} · {room?.name}</b></p>
         <p>{formatDay(slot.start)}, de {formatTime(slot.start)} a {formatTime(slot.end)}</p>
         <p className="li-sub wrap">La sala responderá la solicitud. Verás el estado en «Mis reservas»{bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.</p>
-        {wa && <a className="btn" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
-        <button className="btn primary" onClick={onClose}>Listo</button>
+        {wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
+        {wa && <p className="li-sub wrap">Escríbeles para que sepan que hay una solicitud nueva: así la ven rápido.</p>}
+        <button className="btn" onClick={onClose}>Listo</button>
       </Sheet>
     )
   }
