@@ -18,6 +18,8 @@ Convenciones: `uuid` PK, `created_at`, RLS en todas las tablas, acceso por perte
 - `song_parts` (song_id, member_id, part: "guitarra 1", "voz principal", guest_name?) — quién toca qué / invitados
 - `song_files` (song_id, kind: chart|tab|audio|demo, storage_path)
 
+> Decisión Fase 1: `song_tunings` y `song_key_changes` se guardan como columnas `jsonb` (`tunings`, `key_changes`) en `songs`; `song_parts` queda para después.
+
 ## Setlists y agenda
 - `setlists` (band_id, name, notes)
 - `setlist_items` (setlist_id, position, song_id | break_label, note) → duración total y cambios de afinación se calculan

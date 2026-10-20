@@ -1,10 +1,10 @@
-import { Play } from 'lucide-react'
-import type { Song } from '../data/demo'
+import { ExternalLink, Pencil } from 'lucide-react'
+import { isStandard, keyChangeLabel, safeLink, statusLabel, tuningLabel, type Song } from '../lib/song'
 
-const statusLabel = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }
+type Props = { song: Song; index?: number; onEdit?: () => void }
 
-export default function SongRow({ song, index }: { song: Song; index?: number }) {
-  const drop = song.tuning.includes('Drop')
+export default function SongRow({ song, index, onEdit }: Props) {
+  const listen = safeLink(song.links.youtube, 'youtube') ?? safeLink(song.links.spotify, 'spotify')
   return (
     <div className="card row">
       {index !== undefined && <div className="num">{index}</div>}
@@ -12,17 +12,25 @@ export default function SongRow({ song, index }: { song: Song; index?: number })
         <div className="title">{song.title}</div>
         <div className="sub">{song.artist}</div>
         <div className="chips">
-          <span className="chip key">{song.key}</span>
+          {song.key && <span className="chip key">{song.key}</span>}
           <span className="chip">{song.bpm} bpm</span>
-          <span className={`chip ${drop ? 'warn' : ''}`}>{song.tuning}</span>
-          {song.keyChange && <span className="chip warn">{song.keyChange}</span>}
+          <span className={`chip ${isStandard(song) ? '' : 'warn'}`}>{tuningLabel(song)}</span>
+          {song.keyChanges.map((k, i) => <span key={i} className="chip warn">{keyChangeLabel(k)}</span>)}
           {song.guest && <span className="chip">{song.guest}</span>}
           <span className={`chip ${song.status === 'ready' ? 'ok' : ''}`}>{statusLabel[song.status]}</span>
         </div>
+        {song.notes && <div className="sub note">{song.notes}</div>}
       </div>
-      <button className="btn" aria-label={`Escuchar ${song.title}`}>
-        <Play size={18} aria-hidden />
-      </button>
+      {listen && (
+        <a className="btn" href={listen} target="_blank" rel="noopener noreferrer" aria-label={`Escuchar ${song.title}`}>
+          <ExternalLink size={18} aria-hidden />
+        </a>
+      )}
+      {onEdit && (
+        <button className="btn" onClick={onEdit} aria-label={`Editar ${song.title}`}>
+          <Pencil size={18} aria-hidden />
+        </button>
+      )}
     </div>
   )
 }

@@ -52,6 +52,18 @@ Cuadrar canciones con la banda es un caos: toca buscar en el chat de WhatsApp d�
 - Empezar como **clasificados** (contacto directo, sin pagos ni envíos) → luego escrow/pagos con comisión.
 - Requiere términos, reputación, reportes y revisión legal (Estatuto del Consumidor).
 
+### G. Aprender (Fase 1b)
+- Lecciones paso a paso por instrumento (guitarra, bajo, batería, piano; luego voz, ukulele, etc.) y por nivel.
+- Cada lección: objetivo, pasos, **diagrama gráfico** (diapasón, patrón de batería, teclado) y **metrónomo** con BPM de partida y meta.
+- Progreso por usuario (lecciones completadas, racha de práctica, minutos practicados).
+- Ideas: afinador (micrófono), entrenamiento de oído, "practicar con mi repertorio" (desde una canción, abrir ejercicios del tono/afinación), retos semanales de la banda, tablero de práctica compartido.
+
+### H. Perfil público de banda y verificación
+- Logo, foto de portada, galería de fotos, bio, géneros, ciudad.
+- Redes: Instagram, Facebook, YouTube, Spotify, TikTok, web (enlaces validados).
+- **Banda verificada** (insignia): se verifica con un proceso manual simple (enlace a una red oficial + código en la bio, o confirmación de un venue). Evita suplantación.
+- Storage con límites de tamaño/tipo; fotos solo propias.
+
 ## Ideas extra (para decidir juntos)
 - **EPK automático** (kit de prensa) generado desde el perfil de la banda: link público único para mandar a venues.
 - **Mapa de afinaciones**: el setlist optimiza el orden para minimizar cambios de afinación.
@@ -64,6 +76,12 @@ Cuadrar canciones con la banda es un caos: toca buscar en el chat de WhatsApp d�
 - **Cartelera + calendario sincronizable** (.ics) con Google Calendar.
 - **Insignias/reputación** para vendedores y salas.
 - Importar setlist desde texto pegado (lo del chat de WhatsApp) — gran gancho de adopción.
+- **Integración con Slothy** (recepcionista/reservas): las salas de ensayo reservan y sincronizan horarios con Slothy; chatbot dentro de la app que responde horarios disponibles. Decidir si es la misma base o una API entre ambos.
+- **Retos y rachas** de práctica (gamificación suave), tablas de la banda.
+- **Setlist a PDF/imagen** para compartir; **tablero de ideas** (riffs en nota de voz).
+- **Directorio de técnicos/luthiers/profes** y **clases particulares** (profes publican y reciben solicitudes).
+- **Cartelera de la ciudad + .ics**; **perfil público compartible** (link corto + QR para el cartel del toque).
+- **Estadísticas de banda** (canciones más tocadas, horas de ensayo, asistencia).
 - Modo offline para escenario (PWA con caché) — crítico: en los toques no hay buena señal.
 
 ## Principios

@@ -1,15 +1,4 @@
-export type Song = {
-  id: string
-  title: string
-  artist: string
-  key: string
-  bpm: number
-  tuning: string
-  status: 'ready' | 'learning' | 'paused'
-  minutes: number
-  keyChange?: string
-  guest?: string
-}
+import type { Song } from '../lib/song'
 
 export type EventItem = {
   id: string
@@ -35,11 +24,11 @@ export const band = {
 }
 
 export const songs: Song[] = [
-  { id: '1', title: 'Come Together', artist: 'The Beatles', key: 'Dm', bpm: 82, tuning: 'E estándar', status: 'ready', minutes: 4 },
-  { id: '2', title: 'Seven Nation Army', artist: 'The White Stripes', key: 'Em', bpm: 124, tuning: 'E estándar', status: 'ready', minutes: 4 },
-  { id: '3', title: 'Smooth Operator', artist: 'Sade', key: 'Dm', bpm: 118, tuning: 'E estándar', status: 'learning', minutes: 5, guest: 'Trompeta invitada' },
-  { id: '4', title: 'Black Hole Sun', artist: 'Soundgarden', key: 'B', bpm: 104, tuning: 'Drop D', status: 'ready', minutes: 5, keyChange: 'B → D en el puente' },
-  { id: '5', title: 'Wonderwall', artist: 'Oasis', key: 'F#m', bpm: 87, tuning: 'E estándar · capo 2', status: 'paused', minutes: 4 },
+  { id: '1', title: 'Come Together', artist: 'The Beatles', key: 'Dm', bpm: 82, status: 'ready', minutes: 4, tunings: [{ instrument: 'Todos', tuning: 'E estándar' }], keyChanges: [], links: {} },
+  { id: '2', title: 'Seven Nation Army', artist: 'The White Stripes', key: 'Em', bpm: 124, status: 'ready', minutes: 4, tunings: [{ instrument: 'Todos', tuning: 'E estándar' }], keyChanges: [], links: {} },
+  { id: '3', title: 'Smooth Operator', artist: 'Sade', key: 'Dm', bpm: 118, status: 'learning', minutes: 5, tunings: [{ instrument: 'Todos', tuning: 'E estándar' }], keyChanges: [], guest: 'Trompeta invitada', links: {} },
+  { id: '4', title: 'Black Hole Sun', artist: 'Soundgarden', key: 'B', bpm: 104, status: 'ready', minutes: 5, tunings: [{ instrument: 'Guitarra', tuning: 'Drop D' }, { instrument: 'Bajo', tuning: 'E estándar' }], keyChanges: [{ section: 'Puente', from: 'B', to: 'D' }], links: {} },
+  { id: '5', title: 'Wonderwall', artist: 'Oasis', key: 'F#m', bpm: 87, status: 'paused', minutes: 4, tunings: [{ instrument: 'Guitarra', tuning: 'E estándar', capo: 2 }], keyChanges: [], links: {} },
 ]
 
 export const setlist = {

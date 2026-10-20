@@ -1,5 +1,7 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
-import { CalendarDays, Home, ListMusic, Music2, User } from 'lucide-react'
+import { CalendarDays, GraduationCap, Home, ListMusic, Music2, User } from 'lucide-react'
+import LearnPage from './pages/LearnPage'
+import LessonPage from './pages/LessonPage'
 import HomePage from './pages/HomePage'
 import RepertoirePage from './pages/RepertoirePage'
 import SetlistsPage from './pages/SetlistsPage'
@@ -11,6 +13,7 @@ const tabs = [
   { to: '/repertorio', label: 'Repertorio', icon: Music2 },
   { to: '/setlists', label: 'Setlists', icon: ListMusic },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays },
+  { to: '/aprender', label: 'Aprender', icon: GraduationCap },
   { to: '/perfil', label: 'Perfil', icon: User },
 ]
 
@@ -35,6 +38,8 @@ export default function App() {
             <Route path="/repertorio" element={<RepertoirePage />} />
             <Route path="/setlists" element={<SetlistsPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
+            <Route path="/aprender" element={<LearnPage />} />
+            <Route path="/aprender/:id" element={<LessonPage />} />
             <Route path="/perfil" element={<ProfilePage />} />
           </Routes>
         </main>

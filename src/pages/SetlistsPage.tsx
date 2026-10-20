@@ -1,23 +1,28 @@
 import { Monitor } from 'lucide-react'
-import { setlist, songs } from '../data/demo'
+import { setlist } from '../data/demo'
+import { useBand } from '../store/useBand'
+import { tuningLabel, tuningSignature } from '../lib/song'
 import SongRow from '../components/SongRow'
 
 export default function SetlistsPage() {
-  const items = setlist.songIds.map((id) => songs.find((s) => s.id === id)!)
+  const all = useBand((s) => s.songs)
+  const items = setlist.songIds.flatMap((id) => all.find((s) => s.id === id) ?? [])
   const minutes = items.reduce((t, s) => t + s.minutes, 0)
-  const changes = items.slice(1).filter((s, i) => s.tuning !== items[i].tuning).length
+  const differs = (i: number) => i > 0 && tuningSignature(items[i]) !== tuningSignature(items[i - 1])
+  const changes = items.filter((_, i) => differs(i)).length
   return (
     <>
       <h1 className="page-title">{setlist.name}</h1>
       <p className="page-sub">
         {items.length} canciones · {minutes} min · {changes} cambio{changes === 1 ? '' : 's'} de afinación
       </p>
+      {items.length === 0 && <p className="empty">Este setlist no tiene canciones.</p>}
       <div className="stack">
         {items.map((s, i) => (
           <div key={s.id}>
-            {i > 0 && s.tuning !== items[i - 1].tuning && (
+            {differs(i) && (
               <div className="live" style={{ margin: '0 0 6px 4px' }}>
-                Cambiar a {s.tuning} antes de esta canción
+                Cambiar a {tuningLabel(s)} antes de esta canción
               </div>
             )}
             <SongRow song={s} index={i + 1} />
