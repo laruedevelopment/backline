@@ -18,7 +18,8 @@ type Mode = 'grey' | 'min'
  * `cropFrom` recorta el lado izquierdo (fracción del ancho) para leer solo una columna.
  */
 async function preprocess(file: File, mode: Mode, cropFrom = 0): Promise<{ blob: Blob; width: number; height: number; offsetX: number }> {
-  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  // Algunos navegadores no aceptan la opción de orientación; otros no pueden abrir el formato (p. ej. HEIC de iPhone).
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file)).catch(() => { throw new Error('decode') })
   try {
     const scale = Math.min(MAX_SIDE / Math.max(bmp.width, bmp.height), Math.max(1, TARGET_WIDTH / bmp.width))
     const fullW = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale)

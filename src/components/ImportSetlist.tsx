@@ -54,8 +54,12 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
         setImageName(layout.name)
       } else if (!out.text.trim()) setError('No pudimos leer texto en esa imagen. Prueba con una foto más nítida y de frente.')
       else append(out.text)
-    } catch {
-      setError('No pudimos leer la imagen. Revisa que sea una foto o captura de menos de 12 MB.')
+    } catch (err) {
+      console.error('Lectura de imagen', err)
+      const why = (err as Error).message
+      setError(why === 'decode'
+        ? 'Este navegador no puede abrir ese formato de imagen (a veces pasa con HEIC). Toma una captura de pantalla o guárdala como JPG o PNG.'
+        : `No pudimos leer la imagen. Revisa que sea una foto o captura de menos de 12 MB. (${why.slice(0, 80)})`)
     }
     setReading(null)
   }
