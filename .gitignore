@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos temporales de la herramienta de Supabase
+supabase/.temp/
+supabase/.branches/
