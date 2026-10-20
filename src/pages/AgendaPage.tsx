@@ -1,30 +1,29 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ListMusic, MapPin, Pencil, Plus } from 'lucide-react'
-import { events as demoEvents } from '../data/demo'
+import { Plus } from 'lucide-react'
 import { listMembers, type BandEvent, type RsvpStatus } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand } from '../store/useBandSession'
 import { useSetlists } from '../lib/useSetlists'
 import { dayParts, isUpcoming, useEvents } from '../lib/useEvents'
-import EventCard from '../components/EventCard'
 import EventForm from '../components/EventForm'
+import ListSkeleton from '../components/Skeleton'
 
 const options: { v: RsvpStatus; label: string }[] = [
   { v: 'yes', label: 'Voy' },
   { v: 'maybe', label: 'Tal vez' },
   { v: 'no', label: 'No voy' },
 ]
+const kindLabel = { rehearsal: 'Ensayo', gig: 'Toque', other: 'Evento' } as const
 
 export default function AgendaPage() {
   const band = useActiveBand()
   if (!band) {
     return (
       <>
-        <h1 className="page-title">Agenda</h1>
-        <p className="page-sub">Ensayos y toques de la banda (demostración)</p>
-        <div className="stack">{demoEvents.map((e) => <EventCard key={e.id} event={e} />)}</div>
+        <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Agenda</h1></div>
+        <p className="notice">Ingresa con tu cuenta para ver y crear los ensayos y toques de tu banda.</p>
       </>
     )
   }
@@ -45,18 +44,27 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
 
   return (
     <>
-      <h1 className="page-title">Agenda</h1>
-      <p className="page-sub">Ensayos y toques. Confirma si vas para que nadie tenga que preguntar en el chat.</p>
-      <div className="tabs" role="tablist">
-        <button role="tab" aria-selected={!showPast} className={!showPast ? 'active' : ''} onClick={() => setShowPast(false)}>Próximos</button>
-        <button role="tab" aria-selected={showPast} className={showPast ? 'active' : ''} onClick={() => setShowPast(true)}>Pasados</button>
+      <div className="page-head">
+        <span className="eyebrow">Ensayos y toques</span>
+        <h1 className="page-title">Agenda</h1>
+        <p className="page-sub">Confirma si vas para que nadie tenga que preguntar en el chat.</p>
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      {loading && <p className="empty">Cargando…</p>}
+      <div className="seg" role="tablist" aria-label="Rango">
+        <button role="tab" aria-selected={!showPast} onClick={() => setShowPast(false)}>Próximos{upcoming.length ? ` · ${upcoming.length}` : ''}</button>
+        <button role="tab" aria-selected={showPast} onClick={() => setShowPast(true)}>Pasados</button>
+      </div>
+
+      {error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
+      {loading && <ListSkeleton rows={3} />}
       {!loading && shown.length === 0 && (
-        <p className="empty">{showPast ? 'Todavía no hay eventos pasados.' : canEdit ? 'No hay nada agendado. Crea el próximo ensayo.' : 'No hay nada agendado.'}</p>
+        <div className="empty">
+          <h3>{showPast ? 'Sin eventos pasados' : 'Nada agendado'}</h3>
+          <p>{showPast ? 'Cuando pasen los ensayos y toques, quedan aquí.' : canEdit ? 'Crea el próximo ensayo o toque y la banda podrá confirmar asistencia desde el celular.' : 'El líder aún no ha agendado nada.'}</p>
+          {!showPast && canEdit && <button className="btn primary" onClick={() => setEditing('new')}>Agendar un evento</button>}
+        </div>
       )}
-      <div className="stack" style={{ marginTop: 12 }}>
+
+      <div className="stack" style={{ marginTop: 18 }}>
         {shown.map((e) => {
           const { day, month, long, time } = dayParts(e.startsAt)
           const mine = e.rsvps.find((r) => r.profileId === userId)?.status
@@ -64,35 +72,35 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
           const pending = members.filter((m) => !e.rsvps.some((r) => r.profileId === m.profileId)).map((m) => m.name)
           const setlist = setlists.find((s) => s.id === e.setlistId)
           return (
-            <div key={e.id} className="card">
-              <div className="row">
-                <div className="date-badge"><b>{day}</b>{month}</div>
-                <div className="grow">
-                  <div className="title">{e.title}</div>
-                  <div className="sub" style={{ textTransform: 'capitalize' }}>{long} · {time}</div>
-                  {e.place && <div className="sub"><MapPin size={12} aria-hidden /> {e.place}</div>}
+            <article key={e.id}>
+              <div className={`ticket ${showPast ? 'past' : ''}`}>
+                <div className="ticket-date"><b>{day}</b><span>{month}</span></div>
+                <div className="ticket-body">
+                  <span className="eyebrow" style={{ textTransform: 'capitalize' }}>{kindLabel[e.kind]} · {long}</span>
+                  <div className="ticket-title">{e.title}</div>
+                  <div className="li-sub">{time}{e.place ? ` · ${e.place}` : ''}</div>
+                  <div className="sub-row">
+                    <span style={{ color: 'var(--sage)' }}>{yes}/{members.length || 1} confirmados</span>
+                    {setlist && <Link to={`/setlists/${setlist.id}`} style={{ color: 'var(--amber)' }}>{setlist.name}</Link>}
+                    {canEdit && <button className="link-btn" style={{ minHeight: 28, padding: 0, fontSize: '0.8rem' }} onClick={() => setEditing(e)}>Editar</button>}
+                  </div>
                 </div>
-                {canEdit && (
-                  <button className="btn" aria-label={`Editar ${e.title}`} onClick={() => setEditing(e)}><Pencil size={18} aria-hidden /></button>
-                )}
               </div>
-              <div className="chips">
-                <span className={`chip ${e.kind === 'gig' ? 'warn' : ''}`}>{e.kind === 'gig' ? 'Toque' : e.kind === 'rehearsal' ? 'Ensayo' : 'Evento'}</span>
-                <span className="chip ok">{yes}/{members.length || 1} confirmados</span>
-                {setlist && <Link className="chip" to={`/setlists/${setlist.id}`}><ListMusic size={12} aria-hidden /> {setlist.name}</Link>}
-              </div>
-              {e.notes && <div className="sub note">{e.notes}</div>}
-              <div className="rsvp" role="group" aria-label="¿Vas?">
-                {options.map((o) => (
-                  <button key={o.v} className={`btn ${mine === o.v ? `on ${o.v}` : ''}`} aria-pressed={mine === o.v} onClick={() => rsvp(e.id, o.v)}>{o.label}</button>
-                ))}
-              </div>
-              {pending.length > 0 && <div className="sub note">Sin responder: {pending.join(', ')}</div>}
-            </div>
+              {e.notes && <p className="li-sub wrap" style={{ marginTop: 8 }}>{e.notes}</p>}
+              {!showPast && (
+                <div className="rsvp" role="group" aria-label={`¿Vas a ${e.title}?`}>
+                  {options.map((o) => (
+                    <button key={o.v} className={`btn ${mine === o.v ? `on ${o.v}` : ''}`} aria-pressed={mine === o.v} onClick={() => rsvp(e.id, o.v)}>{o.label}</button>
+                  ))}
+                </div>
+              )}
+              {!showPast && pending.length > 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>Sin responder: {pending.join(', ')}</p>}
+            </article>
           )
         })}
       </div>
-      {canEdit && (
+
+      {canEdit && shown.length > 0 && !showPast && (
         <button className="btn primary fab" onClick={() => setEditing('new')}><Plus size={20} aria-hidden /> Nuevo evento</button>
       )}
       {editing && (

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowLeft, ArrowUp, Monitor, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { tuningLabel, tuningSignature } from '../lib/song'
-import SongRow from '../components/SongRow'
 import StageMode from '../components/StageMode'
+import ListSkeleton from '../components/Skeleton'
 
 export default function SetlistDetailPage() {
   const { id } = useParams()
@@ -14,12 +14,13 @@ export default function SetlistDetailPage() {
   const band = useActiveBand()
   const { songs } = useSongs(band?.id)
   const { setlists, loading, save, remove } = useSetlists(band?.id)
-  const [picking, setPicking] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [stage, setStage] = useState(false)
+  const canEdit = band ? band.role !== 'guest' : true
 
   const list = setlists.find((l) => l.id === id)
-  if (loading) return <p className="empty">Cargando…</p>
-  if (!list) return <p className="empty">No encontramos ese setlist. <Link to="/setlists">Volver</Link></p>
+  if (loading) return <ListSkeleton rows={4} />
+  if (!list) return <p className="empty">No encontramos ese setlist. <Link to="/setlists" style={{ color: 'var(--amber)' }}>Volver a setlists</Link></p>
 
   const items = list.songIds.flatMap((sid) => songs.find((s) => s.id === sid) ?? [])
   const ids = items.map((s) => s.id) // sin canciones borradas
@@ -36,50 +37,60 @@ export default function SetlistDetailPage() {
 
   return (
     <>
-      <Link to="/setlists" className="back"><ArrowLeft size={18} aria-hidden /> Setlists</Link>
-      <h1 className="page-title">{list.name}</h1>
-      <p className="page-sub">
-        {items.length} canciones · {minutes} min · {changes} cambio{changes === 1 ? '' : 's'} de afinación
-      </p>
-      {items.length === 0 && <p className="empty">Vacío. Agrega canciones de tu repertorio.</p>}
-      <div className="stack">
+      <Link to="/setlists" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Setlists</Link>
+
+      <article className="paper" style={{ marginTop: 6 }}>
+        <h2>{list.name}</h2>
+        <div className="meta">{items.length} CANCIONES · {minutes} MIN · {changes} CAMBIO{changes === 1 ? '' : 'S'} DE AFINACIÓN</div>
+        {items.length === 0 && <p style={{ padding: '18px 0' }}>Vacío. Agrega canciones de tu repertorio.</p>}
         {items.map((s, i) => (
-          <div key={s.id}>
-            {differs(i) && <div className="live" style={{ margin: '0 0 6px 4px' }}>Cambiar a {tuningLabel(s)} antes de esta canción</div>}
-            <div className="reorder">
-              <div className="grow"><SongRow song={s} index={i + 1} /></div>
-              <div className="reorder-btns">
-                <button className="btn" aria-label={`Subir ${s.title}`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={16} aria-hidden /></button>
-                <button className="btn" aria-label={`Bajar ${s.title}`} disabled={i === items.length - 1} onClick={() => move(i, 1)}><ArrowDown size={16} aria-hidden /></button>
-                <button className="btn" aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}><X size={16} aria-hidden /></button>
-              </div>
+          <div key={s.id} className="paper-row" style={editing ? { gridTemplateColumns: '32px 1fr auto auto' } : undefined}>
+            {differs(i) && <div className="retune">CAMBIAR A {tuningLabel(s).toUpperCase()}</div>}
+            <span className="n">{i + 1}</span>
+            <div>
+              <div className="t">{s.title}</div>
+              <div className="a">{s.artist}</div>
             </div>
+            <span className="k">{s.key}{s.key && ' · '}{s.bpm}</span>
+            {editing && (
+              <div className="tools">
+                <button aria-label={`Subir ${s.title}`} disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+                <button aria-label={`Bajar ${s.title}`} disabled={i === items.length - 1} onClick={() => move(i, 1)}>↓</button>
+                <button aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}>✕</button>
+              </div>
+            )}
           </div>
         ))}
+      </article>
+
+      <div className="stack" style={{ marginTop: 16 }}>
+        <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
+        {canEdit && (
+          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar orden y canciones'}</button>
+        )}
       </div>
 
-      <button className="btn" style={{ marginTop: 16, width: '100%' }} onClick={() => setPicking(!picking)}>
-        <Plus size={20} aria-hidden /> {picking ? 'Listo' : 'Agregar canciones'}
-      </button>
-      {picking && (
-        <div className="stack" style={{ marginTop: 10 }}>
-          {available.length === 0 && <p className="empty">Ya están todas las canciones del repertorio.</p>}
-          {available.map((s) => (
-            <button key={s.id} className="card row pick" onClick={() => update([...ids, s.id])}>
-              <div className="grow"><div className="title">{s.title}</div><div className="sub">{s.artist} · {s.key} · {tuningLabel(s)}</div></div>
-              <Plus size={18} aria-hidden />
-            </button>
-          ))}
-        </div>
+      {editing && (
+        <>
+          <div className="section-title">Agregar del repertorio</div>
+          {available.length === 0 && <p className="sub">Ya están todas las canciones del repertorio.</p>}
+          <div className="list">
+            {available.map((s) => (
+              <button key={s.id} className="li" onClick={() => update([...ids, s.id])}>
+                <div className="li-main">
+                  <div className="li-title">{s.title}</div>
+                  <div className="li-sub">{s.artist} · {tuningLabel(s)}</div>
+                </div>
+                <span className="tag">Agregar</span>
+              </button>
+            ))}
+          </div>
+          <button className="btn danger block" style={{ marginTop: 24 }}
+            onClick={() => confirm(`¿Borrar el setlist "${list.name}"?`) && void remove(list.id).then(() => nav('/setlists'))}>
+            Borrar setlist
+          </button>
+        </>
       )}
-
-      <button className="btn primary" style={{ marginTop: 12, width: '100%' }} disabled={!items.length} onClick={() => setStage(true)}>
-        <Monitor size={20} aria-hidden /> Modo escenario
-      </button>
-      <button className="btn danger" style={{ marginTop: 12, width: '100%' }}
-        onClick={() => confirm(`¿Borrar el setlist "${list.name}"?`) && void remove(list.id).then(() => nav('/setlists'))}>
-        <Trash2 size={18} aria-hidden /> Borrar setlist
-      </button>
       {stage && <StageMode songs={items} onClose={() => setStage(false)} />}
     </>
   )

@@ -1,7 +1,8 @@
 import { supabase } from './supabase'
 import type { Song } from './song'
 
-export type Band = { id: string; name: string; city: string | null; role: string }
+export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
+export type Band = { id: string; name: string; city: string | null; role: string; genres: string[]; bio: string | null; links: BandLinks }
 
 const db = () => {
   if (!supabase) throw new Error('Supabase no configurado')
@@ -26,9 +27,9 @@ const toRow = (bandId: string, s: Song) => ({
 })
 
 export async function myBands(userId: string): Promise<Band[]> {
-  const { data, error } = await db().from('band_members').select('role, bands(id, name, city)').eq('profile_id', userId)
+  const { data, error } = await db().from('band_members').select('role, bands(id, name, city, genres, bio, links)').eq('profile_id', userId)
   if (error) throw error
-  return (data as unknown as { role: string; bands: { id: string; name: string; city: string | null } }[]).map((m) => ({ ...m.bands, role: m.role }))
+  return (data as unknown as { role: string; bands: Omit<Band, 'role'> }[]).map((m) => ({ ...m.bands, role: m.role }))
 }
 
 export async function createBand(name: string, city: string) {
@@ -83,13 +84,13 @@ export async function deleteSetlist(id: string) {
   if (error) throw error
 }
 
-export type Member = { profileId: string; name: string; role: string; instrument: string | null }
+export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[] }
 
 export async function listMembers(bandId: string): Promise<Member[]> {
-  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name)').eq('band_id', bandId).order('created_at')
+  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name, instruments)').eq('band_id', bandId).order('created_at')
   if (error) throw error
-  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string } | null }[]).map((m) => ({
-    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument,
+  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string; instruments: string[] } | null }[]).map((m) => ({
+    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument, instruments: m.profiles?.instruments ?? [],
   }))
 }
 
@@ -125,5 +126,60 @@ export async function deleteEvent(id: string) {
 
 export async function setRsvp(eventId: string, userId: string, status: RsvpStatus) {
   const { error } = await db().from('event_rsvps').upsert({ event_id: eventId, profile_id: userId, status, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+export type Profile = { displayName: string; instruments: string[]; city: string; bio: string }
+
+export async function getProfile(userId: string): Promise<Profile> {
+  const { data, error } = await db().from('profiles').select('display_name, instruments, city, bio').eq('id', userId).single()
+  if (error) throw error
+  return { displayName: data.display_name, instruments: data.instruments ?? [], city: data.city ?? '', bio: data.bio ?? '' }
+}
+
+export async function updateProfile(userId: string, p: Profile) {
+  const { error } = await db().from('profiles').update({
+    display_name: p.displayName.trim(), instruments: p.instruments, city: p.city.trim() || null, bio: p.bio.trim() || null,
+  }).eq('id', userId)
+  if (error) throw error
+}
+
+export async function updateBand(id: string, b: { name: string; city: string; genres: string[]; bio: string; links: BandLinks }) {
+  const { error } = await db().from('bands').update({ name: b.name.trim(), city: b.city.trim() || null, genres: b.genres, bio: b.bio.trim() || null, links: b.links }).eq('id', id)
+  if (error) throw error
+}
+
+export async function setMemberRole(bandId: string, profileId: string, role: 'admin' | 'member' | 'guest') {
+  const { error } = await db().from('band_members').update({ role }).eq('band_id', bandId).eq('profile_id', profileId)
+  if (error) throw error
+}
+
+export async function setMemberInstrument(bandId: string, profileId: string, instrument: string) {
+  const { error } = await db().from('band_members').update({ instrument: instrument.trim() || null }).eq('band_id', bandId).eq('profile_id', profileId)
+  if (error) throw error
+}
+
+export async function removeMember(bandId: string, profileId: string) {
+  const { error } = await db().from('band_members').delete().eq('band_id', bandId).eq('profile_id', profileId)
+  if (error) throw error
+}
+
+export async function transferOwnership(bandId: string, toProfileId: string) {
+  const { error } = await db().rpc('transfer_ownership', { p_band: bandId, p_to: toProfileId })
+  if (error) throw error
+}
+
+export async function deleteBand(id: string) {
+  const { error } = await db().from('bands').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteAccount() {
+  const { error } = await db().rpc('delete_account')
+  if (error) throw error
+}
+
+export async function setMyInstrument(bandId: string, instrument: string) {
+  const { error } = await db().rpc('set_my_instrument', { p_band: bandId, p_instrument: instrument })
   if (error) throw error
 }
