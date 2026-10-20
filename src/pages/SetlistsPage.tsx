@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ChevronRight, Plus } from 'lucide-react'
+import { ChevronRight, ClipboardPaste, Plus } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
+import ImportSetlist from '../components/ImportSetlist'
 
 export default function SetlistsPage() {
   const band = useActiveBand()
   const nav = useNavigate()
-  const { songs } = useSongs(band?.id)
+  const { songs, save: saveSong } = useSongs(band?.id)
   const { setlists, loading, error, save } = useSetlists(band?.id)
   const [name, setName] = useState('')
   const [adding, setAdding] = useState(false)
+  const [importing, setImporting] = useState(false)
 
   async function create(e: React.FormEvent) {
     e.preventDefault()
@@ -50,9 +52,17 @@ export default function SetlistsPage() {
           <button className="btn primary">Crear</button>
         </form>
       ) : (
-        <button className="btn primary fab" onClick={() => setAdding(true)}>
-          <Plus size={20} aria-hidden /> Nuevo setlist
-        </button>
+        <>
+          <button className="btn" style={{ marginTop: 16, width: '100%' }} onClick={() => setImporting(true)}>
+            <ClipboardPaste size={20} aria-hidden /> Importar desde el chat o una nota
+          </button>
+          <button className="btn primary fab" onClick={() => setAdding(true)}>
+            <Plus size={20} aria-hidden /> Nuevo setlist
+          </button>
+        </>
+      )}
+      {importing && (
+        <ImportSetlist songs={songs} saveSong={saveSong} saveSetlist={save} onClose={() => setImporting(false)} onDone={(id) => nav(`/setlists/${id}`)} />
       )}
     </>
   )
