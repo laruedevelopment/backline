@@ -82,3 +82,13 @@ export async function deleteSetlist(id: string) {
   const { error } = await db().from('setlists').delete().eq('id', id)
   if (error) throw error
 }
+
+export type Member = { profileId: string; name: string; role: string; instrument: string | null }
+
+export async function listMembers(bandId: string): Promise<Member[]> {
+  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name)').eq('band_id', bandId).order('created_at')
+  if (error) throw error
+  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string } | null }[]).map((m) => ({
+    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument,
+  }))
+}
