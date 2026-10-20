@@ -55,7 +55,7 @@ export function safeLink(url: string | undefined, host: 'youtube' | 'spotify'): 
   if (!url) return undefined
   try {
     const u = new URL(url.trim())
-    const ok = host === 'youtube' ? /(^|\.)(youtube\.com|youtu\.be)$/ : /(^|\.)spotify\.com$/
+    const ok = host === 'youtube' ? /(^|\.)(youtube\.com|youtu\.be)$/ : /(^|\.)(spotify\.com|spotify\.link)$/
     return u.protocol === 'https:' && ok.test(u.hostname) ? u.toString() : undefined
   } catch {
     return undefined

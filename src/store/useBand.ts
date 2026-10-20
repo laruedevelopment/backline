@@ -4,8 +4,8 @@ import { setlist as demoSetlist, songs as demoSongs } from '../data/demo'
 import type { Song } from '../lib/song'
 
 type BandState = {
-  setlists: { id: string; name: string; songIds: string[] }[]
-  saveSetlist: (s: { id: string; name: string; songIds: string[] }) => void
+  setlists: { id: string; name: string; songIds: string[]; spotifyUrl?: string }[]
+  saveSetlist: (s: { id: string; name: string; songIds: string[]; spotifyUrl?: string }) => void
   removeSetlist: (id: string) => void
   songs: Song[]
   saveSong: (song: Song) => void

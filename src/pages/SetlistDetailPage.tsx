@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Check, GripVertical, Plus, X } from 'lucide-react'
+import { ArrowLeft, Check, ExternalLink, GripVertical, Plus, X } from 'lucide-react'
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -10,7 +10,7 @@ import { listMembers } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
-import { isStandard, tuningSignature, tuningSummary, type Song } from '../lib/song'
+import { isStandard, safeLink, tuningSignature, tuningSummary, type Song } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { norm } from '../lib/importSetlist'
 import Sheet from '../components/Sheet'
@@ -45,6 +45,9 @@ export default function SetlistDetailPage() {
   const [stage, setStage] = useState(false)
   const [copied, setCopied] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [spotifyDraft, setSpotifyDraft] = useState<string | null>(null)
+  const [spotifyError, setSpotifyError] = useState('')
+  const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [editingSong, setEditingSong] = useState<Song | null>(null)
   const [picked, setPicked] = useState<string[]>([])
   const [q, setQ] = useState('')
@@ -82,6 +85,21 @@ export default function SetlistDetailPage() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch { /* sin permiso de portapapeles */ }
+  }
+  const saveName = () => {
+    const n = (nameDraft ?? '').trim()
+    if (nameDraft !== null && n && n !== list.name) void save({ ...list, name: n.slice(0, 80) })
+    setNameDraft(null)
+  }
+  const spotify = safeLink(list.spotifyUrl, 'spotify')
+  const spotifyValue = spotifyDraft ?? list.spotifyUrl ?? ''
+  const saveSpotify = () => {
+    const raw = (spotifyDraft ?? '').trim()
+    if (spotifyDraft === null || raw === (list.spotifyUrl ?? '')) return setSpotifyDraft(null)
+    if (raw && !safeLink(raw, 'spotify')) return setSpotifyError('Pega el link de Spotify completo (empieza por https://).')
+    setSpotifyError('')
+    void save({ ...list, spotifyUrl: raw || undefined })
+    setSpotifyDraft(null)
   }
   const available = songs.filter((s) => !ids.includes(s.id))
   const shown = available.filter((s) => !q.trim() || norm(`${s.title} ${s.artist}`).includes(norm(q)))
@@ -129,12 +147,26 @@ export default function SetlistDetailPage() {
       </article>
 
       <div className="stack detail-side" style={{ marginTop: 16 }}>
-        {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden. Toca una canción para editar su afinación por instrumento, tono, notas y letra.</p>}
+        {editing && (
+          <div className="card stack">
+          <label className="field" style={{ marginBottom: 8 }}>Nombre del setlist
+            <input value={nameDraft ?? list.name} maxLength={80} onChange={(e) => setNameDraft(e.target.value)} onBlur={saveName}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }} />
+          </label>
+          <label className="field" style={{ marginBottom: 8 }}>Link de la playlist de Spotify (opcional)
+            <input type="url" inputMode="url" value={spotifyValue} placeholder="https://open.spotify.com/playlist/…" maxLength={300}
+              onChange={(e) => { setSpotifyDraft(e.target.value); setSpotifyError('') }} onBlur={saveSpotify} />
+          </label>
+          {spotifyError && <p className="form-error" role="alert">{spotifyError}</p>}
+          </div>
+        )}
+        {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden. Toca una canción para editar sus detalles. Para cambiar el nombre, el link de Spotify o quitar canciones, pulsa «Editar setlist».</p>}
         {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
+        {spotify && <a className="btn block" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
-          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Quitar canciones'}</button>
+          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>
         )}
       </div>
 

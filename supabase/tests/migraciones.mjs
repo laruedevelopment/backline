@@ -357,6 +357,16 @@ await ok('notas por instrumento: la banda las guarda y otras personas no las ven
 await rejects('las notas por instrumento deben ser un objeto', async () => {
   await as('leader', `update public.songs set instrument_notes = '[1,2]'::jsonb where band_id=$1`, [band])
 }, /check|instrument_notes/)
+await ok('setlist: guarda el link de Spotify', async () => {
+  await as('leader', `insert into public.setlists (band_id, name, spotify_url) values ($1,'Con Spotify',$2)`, [band, 'https://open.spotify.com/playlist/37i9dQZF1DX'])
+  await as('leader', `insert into public.setlists (band_id, name, spotify_url) values ($1,'Link corto',$2)`, [band, 'https://spotify.link/abc123'])
+})
+await rejects('setlist: el link debe ser de Spotify y https', async () => {
+  await as('leader', `insert into public.setlists (band_id, name, spotify_url) values ($1,'Malo',$2)`, [band, 'https://open.spotify.com.evil.com/x'])
+}, /check|spotify/)
+await rejects('setlist: un link http o de otro sitio se rechaza', async () => {
+  await as('leader', `insert into public.setlists (band_id, name, spotify_url) values ($1,'Malo2',$2)`, [band, 'http://open.spotify.com/x'])
+}, /check|spotify/)
 await rejects('la letra no puede pasar de 12000 caracteres', async () => {
   await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, 'a'.repeat(12001)])
 }, /check|lyrics/)
