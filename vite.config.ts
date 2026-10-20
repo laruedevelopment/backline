@@ -2,8 +2,12 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// En GitHub Pages el sitio vive en /backline/ (el workflow define VITE_BASE); en Cloudflare/Vercel o local es /.
+const base = process.env.VITE_BASE ?? '/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -17,7 +21,8 @@ export default defineConfig({
         theme_color: '#0F0E0D',
         background_color: '#0F0E0D',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [{ src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
       },
     }),

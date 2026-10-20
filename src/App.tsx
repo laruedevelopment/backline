@@ -65,7 +65,7 @@ export default function App() {
 
 function Shell() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <div className="shell">
         <nav className="nav" aria-label="Principal">
           <div className="brand">
