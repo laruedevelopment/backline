@@ -7,7 +7,7 @@ import { persistOptions, queryClient } from './lib/queryClient'
 import { joinBand, myBands } from './lib/api'
 import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
-import { BandContext, BandsContext } from './store/useBandSession'
+import { BandContext, BandsContext, useActiveBand } from './store/useBandSession'
 import TopBar from './components/TopBar'
 import OfflineBanner from './components/OfflineBanner'
 import { useLiveBookings, usePendingRequests } from './lib/useLive'
@@ -169,6 +169,7 @@ function Nav() {
 
 function Shell() {
   useLiveBookings()
+  const band = useActiveBand()
   return (
     <div className="shell">
         <Nav />
@@ -176,7 +177,8 @@ function Shell() {
           <TopBar />
           <OfflineBanner />
           <main className="content">
-            <Suspense fallback={<Splash />}>
+            {/* Al cambiar de banda se reinicia la pantalla: nada de lo escrito o generado (códigos, búsquedas, formularios) se arrastra de la anterior. */}
+            <Suspense key={band?.id ?? 'local'} fallback={<Splash />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/repertorio" element={<RepertoirePage />} />
