@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { CONTACT_EMAIL, RESPONSIBLE, TERMS_VERSION } from '../content/legal'
 import { supabase } from '../lib/supabase'
 
 type Mode = 'in' | 'up' | 'reset'
@@ -12,12 +14,17 @@ export default function LoginPage() {
   const [show, setShow] = useState(false)
   const [msg, setMsg] = useState<{ kind: 'error' | 'ok'; text: string } | null>(null)
   const [busy, setBusy] = useState(false)
+  const [consentData, setConsentData] = useState(false)
+  const [consentTerms, setConsentTerms] = useState(false)
+  const [age, setAge] = useState<'' | 'adult' | 'minor_with_consent'>('')
+  const canSignUp = consentData && consentTerms && age !== ''
 
   const go = (m: Mode) => { setMode(m); setMsg(null) }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!supabase || busy) return
+    if (mode === 'up' && !canSignUp) return
     setBusy(true)
     setMsg(null)
     if (mode === 'reset') {
@@ -32,7 +39,7 @@ export default function LoginPage() {
     const { data, error } =
       mode === 'in'
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password, options: { data: { name: name.trim() } } })
+        : await supabase.auth.signUp({ email, password, options: { data: { name: name.trim(), terms_version: TERMS_VERSION, age_declaration: age } } })
     setBusy(false)
     if (error) {
       setMsg({
@@ -78,14 +85,45 @@ export default function LoginPage() {
           </div>
         )}
 
+        {mode === 'up' && (
+          <div className="consent">
+            <label className="check-row">
+              <input type="checkbox" checked={consentData} onChange={(e) => setConsentData(e.target.checked)} />
+              <span>
+                Autorizo a Backline ({RESPONSIBLE}, {CONTACT_EMAIL}) a tratar mis datos personales para crear mi cuenta y compartir información con mi banda, según la{' '}
+                <Link to="/privacidad" target="_blank" rel="noopener">Política de privacidad</Link>. Sé que se guardan con Supabase fuera de Colombia y que puedo conocer, actualizar, rectificar y suprimir mis datos, o revocar esta autorización, escribiendo a ese correo o borrando mi cuenta en Perfil.
+              </span>
+            </label>
+            <label className="check-row">
+              <input type="checkbox" checked={consentTerms} onChange={(e) => setConsentTerms(e.target.checked)} />
+              <span>Acepto los <Link to="/terminos" target="_blank" rel="noopener">Términos de uso</Link>.</span>
+            </label>
+            <fieldset className="radio-group" style={{ border: 0, padding: 0 }}>
+              <legend>Mi edad</legend>
+              <label className="check-row">
+                <input type="radio" name="age" checked={age === 'adult'} onChange={() => setAge('adult')} />
+                <span>Tengo 18 años o más.</span>
+              </label>
+              <label className="check-row">
+                <input type="radio" name="age" checked={age === 'minor_with_consent'} onChange={() => setAge('minor_with_consent')} />
+                <span>Tengo entre 14 y 17 años y cuento con la autorización de mi madre, padre o representante legal.</span>
+              </label>
+            </fieldset>
+          </div>
+        )}
         {msg && <p className={msg.kind === 'ok' ? 'form-ok' : 'form-error'} role={msg.kind === 'ok' ? 'status' : 'alert'}>{msg.text}</p>}
-        <button className="btn primary block" disabled={busy}>{busy ? 'Un momento…' : mode === 'in' ? 'Ingresar' : mode === 'up' ? 'Crear cuenta' : 'Enviar enlace'}</button>
+        <button className="btn primary block" disabled={busy || (mode === 'up' && !canSignUp)}>{busy ? 'Un momento…' : mode === 'in' ? 'Ingresar' : mode === 'up' ? 'Crear cuenta' : 'Enviar enlace'}</button>
 
         <div className="login-or"><span>{mode === 'in' ? '¿Primera vez?' : mode === 'up' ? '¿Ya tienes cuenta?' : '¿Ya la recordaste?'}</span></div>
         <button type="button" className="btn block" onClick={() => go(mode === 'in' ? 'up' : 'in')}>
           {mode === 'in' ? 'Crear mi cuenta' : 'Ingresar'}
         </button>
       </form>
+      <nav className="legal-links" aria-label="Legal">
+        <Link to="/privacidad">Privacidad</Link>
+        <Link to="/terminos">Términos</Link>
+        <a href={`mailto:${CONTACT_EMAIL}`}>Contacto</a>
+      </nav>
     </main>
   )
 }

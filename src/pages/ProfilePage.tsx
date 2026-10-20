@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { deleteAccount, getProfile, updateProfile, type Profile } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
@@ -8,6 +10,13 @@ import { useAuth } from '../store/useAuth'
 import { useProgress } from '../store/useProgress'
 import { ask } from '../lib/confirm'
 import ListSkeleton from '../components/Skeleton'
+
+/** Al borrar la cuenta no queda nada de Backline guardado en el dispositivo. */
+function clearDeviceData() {
+  try {
+    Object.keys(localStorage).filter((k) => k.startsWith('backline-')).forEach((k) => localStorage.removeItem(k))
+  } catch { /* sin almacenamiento */ }
+}
 
 export default function ProfilePage() {
   const session = useAuth((s) => s.session)
@@ -54,10 +63,11 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   }
 
   async function removeAccount() {
-    if (!(await ask({ title: '¿Borrar tu cuenta?', body: 'Se eliminan tu perfil y tus respuestas de asistencia. No se puede deshacer.', confirmLabel: 'Borrar mi cuenta', typeToConfirm: 'BORRAR' }))) return
+    if (!(await ask({ title: '¿Borrar tu cuenta?', body: 'Se eliminan tu perfil, tus respuestas de asistencia y las bandas en las que seas el único integrante. No se puede deshacer.', confirmLabel: 'Borrar mi cuenta', typeToConfirm: 'BORRAR' }))) return
     setDanger('')
     try {
       await deleteAccount()
+      clearDeviceData()
       await supabase!.auth.signOut()
     } catch (err) {
       setDanger(/traspasa/i.test(String((err as Error).message))
@@ -95,7 +105,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
             <input value={city} onChange={(e) => { setCity(e.target.value); setStatus('') }} maxLength={80} autoComplete="address-level2" />
           </label>
           <label className="field">Sobre ti
-            <textarea rows={3} value={bio} onChange={(e) => { setBio(e.target.value); setStatus('') }} maxLength={300} placeholder="Qué tocas, qué escuchas, con quién has tocado." />
+            <textarea rows={3} value={bio} onChange={(e) => { setBio(e.target.value); setStatus('') }} maxLength={300} placeholder="Qué tocas, qué escuchas, con quién has tocado. No pongas datos sensibles." />
           </label>
           <button className="btn primary" disabled={status === 'saving'}>{status === 'saving' ? 'Guardando…' : 'Guardar perfil'}</button>
           {status === 'saved' && <p role="status" className="form-ok">Cambios guardados.</p>}
@@ -110,12 +120,21 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         <div className="stat"><b>{lessons.filter((l) => done.includes(l.id)).reduce((t, l) => t + l.minutes, 0)}</b><span>Minutos</span></div>
       </div>
 
+      <div className="section-title">Legal y datos</div>
+      <div className="list">
+        <Link className="li" to="/privacidad"><div className="li-main"><div className="li-title">Política de privacidad</div></div></Link>
+        <Link className="li" to="/terminos"><div className="li-main"><div className="li-title">Términos de uso</div></div></Link>
+        <a className="li" href={`mailto:${CONTACT_EMAIL}?subject=Backline%3A%20solicitud%20sobre%20mis%20datos`}>
+          <div className="li-main"><div className="li-title">Pedir mis datos o hacer un reclamo</div><div className="li-sub">Respondemos consultas en 10 días hábiles y reclamos en 15.</div></div>
+        </a>
+      </div>
+
       <div className="section-title">Cuenta</div>
       <div className="stack">
         <button className="btn" onClick={() => void supabase!.auth.signOut()}>Cerrar sesión</button>
         <button className="btn danger" onClick={() => void removeAccount()}>Borrar mi cuenta</button>
         {danger && <p className="form-error" role="alert">{danger}</p>}
-        <p className="li-sub wrap">Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia. Si eres el único integrante de una banda, también se borra esa banda.</p>
+        <p className="li-sub wrap">Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia, y también los datos guardados en este dispositivo. Si eres el único integrante de una banda, se borra esa banda.</p>
       </div>
     </>
   )

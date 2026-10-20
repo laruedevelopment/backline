@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
+import { clearLocalCache } from '../lib/queryClient'
 import { supabase } from '../lib/supabase'
 
 type AuthState = {
@@ -15,6 +16,7 @@ export const useAuth = create<AuthState>(() => ({ session: null, ready: !supabas
 if (supabase) {
   void supabase.auth.getSession().then(({ data }) => useAuth.setState({ session: data.session, ready: true }))
   supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT') clearLocalCache()
     useAuth.setState({ session, ready: true, ...(event === 'PASSWORD_RECOVERY' ? { recovery: true } : {}) })
   })
 }

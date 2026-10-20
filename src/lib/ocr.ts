@@ -1,4 +1,4 @@
-/** Lee texto de una foto o captura en el propio dispositivo (Tesseract.js): la imagen no se sube a ningún servidor. */
+/** Lee texto de una foto o captura en el propio dispositivo (Tesseract.js): la imagen no se envía a nuestros servidores. El motor descarga sus componentes de un CDN de terceros (declarado en la política de privacidad). */
 export async function readTextFromImage(file: File, onProgress?: (pct: number) => void): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('No es una imagen')
   if (file.size > 12 * 1024 * 1024) throw new Error('La imagen pesa más de 12 MB')

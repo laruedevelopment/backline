@@ -22,3 +22,12 @@
 2. Credenciales → Crear credencial → **Clave de API**. Restringirla: *Referentes HTTP* (`localhost:5173/*` y el dominio final) y *Restricción de API* = solo YouTube Data API v3.
 3. Pegarla en `.env.local` como `VITE_YOUTUBE_API_KEY`. Cuota gratis: 10.000 unidades/día (1 unidad por 50 canciones).
 - Spotify no permite leer playlists ajenas con claves de app (restricciones 2026): se usa captura de pantalla + lector de imagen.
+
+## Legal antes de abrir la app a gente fuera de tu banda (auditoría `lucia-cumplimiento`)
+Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas de autorización y edad al registrarse, enlaces en login y perfil, borrado de cuenta que limpia el dispositivo. Falta lo que solo tú puedes hacer:
+1. **Completar tus datos como responsable**: nombre completo, cédula y ciudad (hoy dice solo "Javier Rueda" y tu correo). Cambiarlos en `src/content/legal.ts`.
+2. **Que un abogado revise** política, términos, edades mínimas (14–17 con autorización del representante, 18+) y el régimen de transferencia internacional (Supabase está fuera de Colombia).
+3. **Consultar si debes inscribir la base de datos en el Registro Nacional de Bases de Datos (SIC).**
+4. Región de Supabase y hosting: confirmarlos para declararlos en la política.
+5. Revisar las plantillas de correo de Supabase Auth (Authentication → Emails): remitente y texto claros, en español.
+6. Antes de subir logos y fotos: política de contenido, reporte de abuso y borrado de archivos al borrar la cuenta.

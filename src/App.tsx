@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { CalendarDays, GraduationCap, Home, Music2, Users } from 'lucide-react'
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { persistOptions, queryClient } from './lib/queryClient'
 import { myBands } from './lib/api'
 import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
 import { BandContext, BandsContext } from './store/useBandSession'
 import TopBar from './components/TopBar'
+import OfflineBanner from './components/OfflineBanner'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
+import LegalPage from './pages/LegalPage'
 import LoginPage from './pages/LoginPage'
 import NewPasswordPage from './pages/NewPasswordPage'
 import HomePage from './pages/HomePage'
@@ -28,8 +32,6 @@ const tabs = [
   { to: '/aprender', label: 'Aprender', icon: GraduationCap, match: (p: string) => p.startsWith('/aprender') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
-
-const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
 
 const ACTIVE_KEY = 'backline-active-band'
 const readActive = () => { try { return localStorage.getItem(ACTIVE_KEY) } catch { return null } }
@@ -68,16 +70,16 @@ function WithBand() {
   )
 }
 
-export default function App() {
+function AuthGate() {
   const { session, ready, recovery } = useAuth()
   if (!ready) return <Splash />
   if (recovery && session) return <NewPasswordPage />
   if (supabase && !session) return <LoginPage />
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       {supabase ? <WithBand /> : <Shell />}
       <ConfirmHost />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }
 
@@ -101,17 +103,22 @@ function Nav() {
           {label}
         </NavLink>
       ))}
+      <div className="nav-foot">
+        <NavLink to="/perfil">Mi perfil</NavLink>
+        <NavLink to="/privacidad">Privacidad</NavLink>
+        <NavLink to="/terminos">Términos</NavLink>
+      </div>
     </nav>
   )
 }
 
 function Shell() {
   return (
-    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-      <div className="shell">
+    <div className="shell">
         <Nav />
         <div className="main">
           <TopBar />
+          <OfflineBanner />
           <main className="content">
             <Routes>
               <Route path="/" element={<HomePage />} />
@@ -126,7 +133,19 @@ function Shell() {
             </Routes>
           </main>
         </div>
-      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <Routes>
+        {/* Públicas: se pueden leer antes de registrarse. */}
+        <Route path="/privacidad" element={<LegalPage doc="privacy" />} />
+        <Route path="/terminos" element={<LegalPage doc="terms" />} />
+        <Route path="*" element={<AuthGate />} />
+      </Routes>
     </BrowserRouter>
   )
 }
