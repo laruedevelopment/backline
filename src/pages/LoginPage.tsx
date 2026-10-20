@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL, RESPONSIBLE, TERMS_VERSION } from '../content/legal'
+import { readPendingInvite } from '../lib/pendingInvite'
 import { supabase } from '../lib/supabase'
 
 type Mode = 'in' | 'up' | 'reset'
@@ -59,6 +60,7 @@ export default function LoginPage() {
       <header className="login-head">
         <div className="brand-big">back<span>line</span></div>
         <p className="login-tag">Repertorio, setlists y ensayos de tu banda, en un solo lugar.</p>
+        {readPendingInvite() && <p className="notice" role="status" style={{ textAlign: 'left' }}>Te invitaron a una banda. Crea tu cuenta o ingresa y entrarás a ella automáticamente.</p>}
       </header>
 
       <form className="login-form" onSubmit={submit}>

@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { CalendarClock, CalendarDays, Compass, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { persistOptions, queryClient } from './lib/queryClient'
-import { myBands } from './lib/api'
+import { joinBand, myBands } from './lib/api'
 import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
 import { BandContext, BandsContext } from './store/useBandSession'
@@ -13,6 +13,8 @@ import OfflineBanner from './components/OfflineBanner'
 import { useLiveBookings, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
+import JoinPage from './pages/JoinPage'
+import { clearPendingInvite, readPendingInvite } from './lib/pendingInvite'
 import LegalPage from './pages/LegalPage'
 import LoginPage from './pages/LoginPage'
 import NewPasswordPage from './pages/NewPasswordPage'
@@ -57,6 +59,27 @@ function WithBand() {
   const userId = useAuth((s) => s.session?.user.id)
   const { data: bands, isLoading, error, refetch } = useQuery({ queryKey: ['bands', userId], queryFn: () => myBands(userId!), enabled: !!userId })
   const [activeId, setActiveId] = useState<string | null>(readActive)
+  const qc = useQueryClient()
+  const [inviteMsg, setInviteMsg] = useState('')
+  const joining = useRef(false)
+
+  // Invitación por link: quien llegó con un código (aunque haya tenido que crear la cuenta antes) entra solo a esa banda.
+  useEffect(() => {
+    const code = readPendingInvite()
+    if (!code || !userId || joining.current) return
+    joining.current = true
+    joinBand(code)
+      .then(async (id) => {
+        clearPendingInvite()
+        await qc.refetchQueries({ queryKey: ['bands', userId] })
+        setActiveId(id)
+        try { localStorage.setItem(ACTIVE_KEY, id) } catch { /* solo en memoria */ }
+      })
+      .catch(() => {
+        clearPendingInvite()
+        setInviteMsg('Ese link de invitación ya no sirve o venció. Pídele a tu banda uno nuevo.')
+      })
+  }, [userId, qc])
   const setActive = (id: string) => {
     setActiveId(id)
     try { localStorage.setItem(ACTIVE_KEY, id) } catch { /* sin almacenamiento: queda solo en memoria */ }
@@ -81,7 +104,10 @@ function WithBand() {
           <Shell />
         </BandContext.Provider>
       ) : (
-        <OnboardingPage />
+        <>
+          {inviteMsg && <p className="form-error" role="alert" style={{ margin: 16, textAlign: 'center' }}>{inviteMsg}</p>}
+          <OnboardingPage />
+        </>
       )}
     </BandsContext.Provider>
   )
@@ -174,6 +200,7 @@ export default function App() {
         {/* Públicas: se pueden leer antes de registrarse. */}
         <Route path="/privacidad" element={<LegalPage doc="privacy" />} />
         <Route path="/terminos" element={<LegalPage doc="terms" />} />
+        <Route path="/unirse/:code" element={<JoinPage />} />
         <Route path="*" element={<AuthGate />} />
       </Routes>
     </BrowserRouter>

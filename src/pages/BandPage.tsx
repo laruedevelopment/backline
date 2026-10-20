@@ -7,6 +7,7 @@ import {
 } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
+import { inviteLink } from '../lib/pendingInvite'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
@@ -58,7 +59,8 @@ export default function BandPage() {
     setMsg('')
     try { setCode(await createInvite(band!.id, userId!)) } catch { setMsg('No pudimos crear el código. Intenta de nuevo.') }
   }
-  const shareText = `Te invito a ${band.name} en Backline. Entra a ${APP_URL}, crea tu cuenta y elige "Tengo un código": ${code}`
+  const shareText = `Te invito a ${band.name} en Backline. Entra con este link, crea tu cuenta y quedas dentro de la banda: ${inviteLink(APP_URL, code)}
+(Si te pide un código: ${code})`
 
   async function leave() {
     if (!(await ask({ title: `¿Salir de ${band!.name}?`, body: 'Dejas de ver su repertorio, setlists y agenda. Puedes volver con un código de invitación.', confirmLabel: 'Salir' }))) return
