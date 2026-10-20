@@ -545,3 +545,11 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .rep-summary { margin-top: 14px; color: var(--muted); font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.03em; }
 .rep-summary b { color: var(--text); font-weight: 600; }
 .meter.thin { height: 4px; margin-top: 6px; }
+
+.setlist-card { position: relative; }
+.setlist-link { color: inherit; }
+.setlist-link::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+.setlist-link:focus-visible { outline: none; }
+.setlist-link:focus-visible::after { outline: 2px solid var(--amber); outline-offset: 2px; }
+.setlist-spotify { position: relative; z-index: 1; justify-self: start; margin-top: 8px; color: var(--sage); border-color: color-mix(in srgb, var(--sage) 45%, var(--line)); }
+.setlist-spotify:hover { color: var(--text); }

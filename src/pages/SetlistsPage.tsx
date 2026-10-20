@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
-import { ChevronRight, Plus, Upload } from 'lucide-react'
-import { tuningSignature } from '../lib/song'
+import { ChevronRight, ExternalLink, Plus, Upload } from 'lucide-react'
+import { safeLink, tuningSignature } from '../lib/song'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
@@ -61,11 +61,13 @@ export default function SetlistsPage() {
       <div className="setlist-grid">
         {setlists.map((l) => {
           const items = l.songIds.flatMap((id) => songs.find((s) => s.id === id) ?? [])
+          const spotify = safeLink(l.spotifyUrl, 'spotify')
           const changes = items.filter((s, k) => k > 0 && tuningSignature(s) !== tuningSignature(items[k - 1])).length
           return (
-            <Link key={l.id} to={`/setlists/${l.id}`} className="setlist-card">
+            <article key={l.id} className="setlist-card">
               <div className="setlist-card-head">
-                <h2>{l.name}</h2>
+                {/* El enlace de la tarjeta cubre toda el área; el botón de Spotify queda por encima, sin anidar enlaces. */}
+                <h2><Link to={`/setlists/${l.id}`} className="setlist-link">{l.name}</Link></h2>
                 <ChevronRight size={22} color="var(--muted)" aria-hidden />
               </div>
               <div className="setlist-meta">{items.length} canciones · {items.reduce((t, s) => t + s.minutes, 0)} min{changes > 0 ? ` · ${changes} cambio${changes === 1 ? '' : 's'} de afinación` : ''}</div>
@@ -75,7 +77,12 @@ export default function SetlistsPage() {
                   {items.length > 3 && <li className="more">+{items.length - 3} más</li>}
                 </ol>
               )}
-            </Link>
+              {spotify && (
+                <a className="btn sm setlist-spotify" href={spotify} target="_blank" rel="noopener noreferrer" aria-label={`Escuchar ${l.name} en Spotify`}>
+                  <ExternalLink size={15} aria-hidden /> Escuchar en Spotify
+                </a>
+              )}
+            </article>
           )
         })}
       </div>
