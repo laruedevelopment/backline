@@ -37,6 +37,9 @@ export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: 
         <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
       </div>
       <div className="stage-main">
+        {retune && next && (
+          <div className="stage-banner" role="alert">{isStandard(next) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(next)}`}</div>
+        )}
         <h1 className="stage-title">{cur.title}</h1>
         <div className="stage-artist">{cur.artist}</div>
         <div className="stage-chips">
@@ -51,10 +54,9 @@ export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: 
       <div className="stage-next">
         {next ? (
           <>
-            {retune && <div className="stage-warn">{isStandard(next) ? 'Ojo: la siguiente vuelve a E estándar' : `Ojo: la siguiente va en ${tuningSummary(next)}`}</div>}
             <span>Sigue: <b>{next.title}</b></span>
           </>
-        ) : <span>Última canción. ¡Gracias, Bucaramanga!</span>}
+        ) : <span>Última canción</span>}
       </div>
       <div className="stage-nav">
         <button className="btn" disabled={i === 0} onClick={() => setI(i - 1)}><ChevronLeft size={28} aria-hidden /> Anterior</button>

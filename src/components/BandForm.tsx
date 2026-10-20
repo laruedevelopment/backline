@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
 import type { Band, BandLinks } from '../lib/api'
 import { genreOptions } from '../lib/identity'
 import { cleanSocial, socialKinds, socialLabels } from '../lib/links'
+import Sheet from './Sheet'
 
 type Draft = { name: string; city: string; genres: string[]; bio: string; links: BandLinks }
 type Props = { band: Band; onSave: (d: Draft) => Promise<unknown>; onClose: () => void }
@@ -45,12 +45,7 @@ export default function BandForm({ band, onSave, onClose }: Props) {
   }
 
   return (
-    <div className="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Ajustes de la banda">
-      <form className="sheet" onSubmit={submit}>
-        <div className="row">
-          <h2 className="grow">Ajustes de la banda</h2>
-          <button type="button" className="btn ghost" onClick={onClose} aria-label="Cerrar"><X size={20} aria-hidden /></button>
-        </div>
+    <Sheet title="Ajustes de la banda" onClose={onClose} onSubmit={submit}>
         <label className="field">Nombre
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required />
         </label>
@@ -61,7 +56,7 @@ export default function BandForm({ band, onSave, onClose }: Props) {
           <legend className="field" style={{ marginBottom: 6 }}>Géneros (hasta 6)</legend>
           <div className="chips" style={{ marginTop: 0 }}>
             {genreOptions.map((g) => (
-              <button key={g} type="button" className={`tag ${genres.includes(g) ? 'key' : ''}`} aria-pressed={genres.includes(g)} style={{ minHeight: 36, background: 'none', cursor: 'pointer' }} onClick={() => toggle(g)}>{g}</button>
+              <button key={g} type="button" className={`tag ${genres.includes(g) ? 'key' : ''}`} aria-pressed={genres.includes(g)} style={{ background: 'none', cursor: 'pointer' }} onClick={() => toggle(g)}>{g}</button>
             ))}
           </div>
         </fieldset>
@@ -74,9 +69,10 @@ export default function BandForm({ band, onSave, onClose }: Props) {
             <input value={links[k] ?? ''} onChange={(e) => setLinks((l) => ({ ...l, [k]: e.target.value }))} placeholder={placeholders[k]} inputMode="url" autoCapitalize="none" />
           </label>
         ))}
-        {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cambios'}</button>
-      </form>
-    </div>
+        <div className="sheet-foot">
+          {error && <p className="form-error" role="alert">{error}</p>}
+          <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : 'Guardar cambios'}</button>
+        </div>
+    </Sheet>
   )
 }

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, X } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { isStandard, tuningSignature, tuningSummary } from '../lib/song'
+import { ask } from '../lib/confirm'
 import StageMode from '../components/StageMode'
 import ListSkeleton from '../components/Skeleton'
 
@@ -16,6 +17,7 @@ export default function SetlistDetailPage() {
   const { setlists, loading, save, remove } = useSetlists(band?.id)
   const [editing, setEditing] = useState(false)
   const [stage, setStage] = useState(false)
+  const [copied, setCopied] = useState(false)
   const canEdit = band ? band.role !== 'guest' : true
 
   const list = setlists.find((l) => l.id === id)
@@ -33,6 +35,14 @@ export default function SetlistDetailPage() {
     ;[next[i], next[i + d]] = [next[i + d], next[i]]
     update(next)
   }
+  const copy = async () => {
+    const lines = items.map((s, i) => `${i + 1}. ${s.title}${s.artist ? ` - ${s.artist}` : ''}${s.key ? ` (${s.key})` : ''}`)
+    try {
+      await navigator.clipboard.writeText([list.name, ...lines, `${items.length} canciones · ${minutes} min`].join('\n'))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch { /* sin permiso de portapapeles */ }
+  }
   const available = songs.filter((s) => !ids.includes(s.id))
 
   return (
@@ -44,7 +54,7 @@ export default function SetlistDetailPage() {
         <div className="meta">{items.length} CANCIONES · {minutes} MIN · {changes} CAMBIO{changes === 1 ? '' : 'S'} DE AFINACIÓN</div>
         {items.length === 0 && <p style={{ padding: '18px 0' }}>Vacío. Agrega canciones de tu repertorio.</p>}
         {items.map((s, i) => (
-          <div key={s.id} className="paper-row" style={editing ? { gridTemplateColumns: '32px 1fr auto auto' } : undefined}>
+          <div key={s.id} className={`paper-row ${editing ? 'editing' : ''}`}>
             {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
             <span className="n">{i + 1}</span>
             <div>
@@ -54,9 +64,9 @@ export default function SetlistDetailPage() {
             <span className="k">{s.key}{s.key && ' · '}{s.bpm}</span>
             {editing && (
               <div className="tools">
-                <button aria-label={`Subir ${s.title}`} disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
-                <button aria-label={`Bajar ${s.title}`} disabled={i === items.length - 1} onClick={() => move(i, 1)}>↓</button>
-                <button aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}>✕</button>
+                <button aria-label={`Subir ${s.title}`} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp size={18} aria-hidden /></button>
+                <button aria-label={`Bajar ${s.title}`} disabled={i === items.length - 1} onClick={() => move(i, 1)}><ArrowDown size={18} aria-hidden /></button>
+                <button aria-label={`Quitar ${s.title}`} onClick={() => update(ids.filter((x) => x !== s.id))}><X size={18} aria-hidden /></button>
               </div>
             )}
           </div>
@@ -65,6 +75,7 @@ export default function SetlistDetailPage() {
 
       <div className="stack" style={{ marginTop: 16 }}>
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
+        <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
           <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar orden y canciones'}</button>
         )}
@@ -86,7 +97,7 @@ export default function SetlistDetailPage() {
             ))}
           </div>
           <button className="btn danger block" style={{ marginTop: 24 }}
-            onClick={() => confirm(`¿Borrar el setlist "${list.name}"?`) && void remove(list.id).then(() => nav('/setlists'))}>
+            onClick={async () => (await ask({ title: `¿Borrar «${list.name}»?`, body: 'Las canciones siguen en el repertorio.', confirmLabel: 'Borrar' })) && void remove(list.id).then(() => nav('/setlists'))}>
             Borrar setlist
           </button>
         </>

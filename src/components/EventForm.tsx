@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Trash2, X } from 'lucide-react'
 import type { BandEvent } from '../lib/api'
 import { toLocalInput } from '../lib/useEvents'
+import { ask } from '../lib/confirm'
+import Sheet from './Sheet'
 
 type Draft = Omit<BandEvent, 'rsvps'>
 type Props = {
@@ -49,47 +50,44 @@ export default function EventForm({ event, setlists, onSave, onDelete, onClose }
     }
   }
 
+  async function del() {
+    if (!onDelete || !(await ask({ title: `¿Borrar «${title}»?`, body: 'Se pierden también las confirmaciones de asistencia.', confirmLabel: 'Borrar' }))) return
+    setBusy(true)
+    try { await onDelete(); onClose() } catch { setError('No pudimos borrarlo. Intenta de nuevo.'); setBusy(false) }
+  }
+
   return (
-    <div className="sheet-backdrop" role="dialog" aria-modal="true" aria-label={event ? 'Editar evento' : 'Nuevo evento'}>
-      <form className="sheet" onSubmit={submit}>
-        <div className="row">
-          <h2 className="grow">{event ? 'Editar evento' : 'Nuevo evento'}</h2>
-          <button type="button" className="btn" onClick={onClose} aria-label="Cerrar"><X size={18} aria-hidden /></button>
-        </div>
-        <div className="tabs" role="tablist" aria-label="Tipo">
-          {([['rehearsal', 'Ensayo'], ['gig', 'Toque'], ['other', 'Otro']] as const).map(([v, l]) => (
-            <button key={v} type="button" role="tab" aria-selected={kind === v} className={kind === v ? 'active' : ''} onClick={() => setKind(v)}>{l}</button>
-          ))}
-        </div>
-        <label className="field">Nombre
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === 'gig' ? 'Bar La Esquina' : 'Ensayo general'} maxLength={100} required autoFocus />
-        </label>
-        <label className="field">Cuándo
-          <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} required />
-        </label>
-        <label className="field">Lugar
-          <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Sala Resonancia" maxLength={120} />
-        </label>
-        <label className="field">Setlist
-          <select value={setlistId} onChange={(e) => setSetlistId(e.target.value)}>
-            <option value="">Sin setlist</option>
-            {setlists.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        </label>
-        <label className="field">Notas (carga, montaje, pago…)
-          <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} />
-        </label>
+    <Sheet title={event ? 'Editar evento' : 'Nuevo evento'} onClose={onClose} onSubmit={submit}>
+      <div className="tabs" role="group" aria-label="Tipo de evento">
+        {([['rehearsal', 'Ensayo'], ['gig', 'Toque'], ['other', 'Otro']] as const).map(([v, l]) => (
+          <button key={v} type="button" aria-pressed={kind === v} className={kind === v ? 'active' : ''} onClick={() => setKind(v)}>{l}</button>
+        ))}
+      </div>
+      <label className="field">Nombre
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={kind === 'gig' ? 'Bar La Esquina' : 'Ensayo general'} maxLength={100} required />
+      </label>
+      <label className="field">Cuándo
+        <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} required />
+      </label>
+      <label className="field">Lugar
+        <input value={place} onChange={(e) => setPlace(e.target.value)} placeholder="Sala Resonancia" maxLength={120} />
+      </label>
+      <label className="field">Setlist
+        <select value={setlistId} onChange={(e) => setSetlistId(e.target.value)}>
+          <option value="">Sin setlist</option>
+          {setlists.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </label>
+      <label className="field">Notas (carga, montaje, pago…)
+        <textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={1000} />
+      </label>
+      <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="row">
-          {onDelete && (
-            <button type="button" className="btn danger" disabled={busy}
-              onClick={() => confirm(`¿Borrar "${title}"?`) && void onDelete().then(onClose)}>
-              <Trash2 size={16} aria-hidden /> Borrar
-            </button>
-          )}
+          {onDelete && <button type="button" className="btn danger" disabled={busy} onClick={() => void del()}>Borrar</button>}
           <button className="btn primary grow" disabled={busy}>{busy ? 'Guardando…' : 'Guardar'}</button>
         </div>
-      </form>
-    </div>
+      </div>
+    </Sheet>
   )
 }

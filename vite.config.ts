@@ -12,6 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,woff2}'] },
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Backline',

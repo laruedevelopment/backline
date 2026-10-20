@@ -57,9 +57,9 @@ export default function RepertoirePage() {
               <Search size={18} aria-hidden />
               <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por canción o artista" aria-label="Buscar canciones" />
             </label>
-            <div className="tabs" role="tablist" aria-label="Estado">
+            <div className="tabs" role="group" aria-label="Filtrar por estado">
               {filters.map((f) => (
-                <button key={f.v} role="tab" aria-selected={status === f.v} className={status === f.v ? 'active' : ''} onClick={() => setStatus(f.v)}>{f.label}</button>
+                <button key={f.v} aria-pressed={status === f.v} className={status === f.v ? 'active' : ''} onClick={() => setStatus(f.v)}>{f.label}</button>
               ))}
             </div>
           </div>
@@ -92,8 +92,8 @@ export default function RepertoirePage() {
         <SongForm
           song={editing === 'new' ? undefined : editing}
           onClose={() => setEditing(null)}
-          onSave={(s) => { void save(s).then(() => setEditing(null)) }}
-          onDelete={editing === 'new' ? undefined : () => { void remove(editing.id).then(() => setEditing(null)) }}
+          onSave={async (s) => { await save(s); setEditing(null) }}
+          onDelete={editing === 'new' ? undefined : async () => { await remove(editing.id); setEditing(null) }}
         />
       )}
     </>

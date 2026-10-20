@@ -7,8 +7,10 @@ import { supabase } from './lib/supabase'
 import { useAuth } from './store/useAuth'
 import { BandContext, BandsContext } from './store/useBandSession'
 import TopBar from './components/TopBar'
+import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
 import LoginPage from './pages/LoginPage'
+import NewPasswordPage from './pages/NewPasswordPage'
 import HomePage from './pages/HomePage'
 import RepertoirePage from './pages/RepertoirePage'
 import SetlistsPage from './pages/SetlistsPage'
@@ -34,14 +36,23 @@ const readActive = () => { try { return localStorage.getItem(ACTIVE_KEY) } catch
 
 function WithBand() {
   const userId = useAuth((s) => s.session?.user.id)
-  const { data: bands, isLoading, error } = useQuery({ queryKey: ['bands', userId], queryFn: () => myBands(userId!), enabled: !!userId })
+  const { data: bands, isLoading, error, refetch } = useQuery({ queryKey: ['bands', userId], queryFn: () => myBands(userId!), enabled: !!userId })
   const [activeId, setActiveId] = useState<string | null>(readActive)
   const setActive = (id: string) => {
     setActiveId(id)
     try { localStorage.setItem(ACTIVE_KEY, id) } catch { /* sin almacenamiento: queda solo en memoria */ }
   }
-  if (isLoading) return <p className="main" style={{ paddingTop: 40 }}>Cargando tu banda…</p>
-  if (error) return <p className="main" style={{ paddingTop: 40 }}>No pudimos cargar tu banda. Revisa tu conexión y recarga.</p>
+  if (isLoading) return <Splash />
+  if (error) {
+    return (
+      <div className="fullscreen-msg" role="alert">
+        <div className="brand-big">back<span>line</span></div>
+        <p className="page-sub">No pudimos cargar tu banda. Revisa tu conexión.</p>
+        <button className="btn primary" onClick={() => void refetch()}>Reintentar</button>
+        <button className="link-btn" onClick={() => void supabase?.auth.signOut()}>Cerrar sesión</button>
+      </div>
+    )
+  }
   const list = bands ?? []
   const active = list.find((b) => b.id === activeId) ?? list[0]
   return (
@@ -58,10 +69,25 @@ function WithBand() {
 }
 
 export default function App() {
-  const { session, ready } = useAuth()
-  if (!ready) return <p className="main" style={{ paddingTop: 40 }}>Cargando…</p>
+  const { session, ready, recovery } = useAuth()
+  if (!ready) return <Splash />
+  if (recovery && session) return <NewPasswordPage />
   if (supabase && !session) return <LoginPage />
-  return <QueryClientProvider client={queryClient}>{supabase ? <WithBand /> : <Shell />}</QueryClientProvider>
+  return (
+    <QueryClientProvider client={queryClient}>
+      {supabase ? <WithBand /> : <Shell />}
+      <ConfirmHost />
+    </QueryClientProvider>
+  )
+}
+
+function Splash() {
+  return (
+    <div className="fullscreen-msg" aria-busy="true" aria-label="Cargando">
+      <div className="brand-big">back<span>line</span></div>
+      <div className="skeleton" style={{ width: 140, height: 4 }} />
+    </div>
+  )
 }
 
 function Nav() {

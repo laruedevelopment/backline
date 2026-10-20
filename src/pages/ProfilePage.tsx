@@ -6,6 +6,7 @@ import { lessons } from '../lib/learn'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useProgress } from '../store/useProgress'
+import { ask } from '../lib/confirm'
 import ListSkeleton from '../components/Skeleton'
 
 export default function ProfilePage() {
@@ -53,7 +54,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   }
 
   async function removeAccount() {
-    if (!confirm('Vas a borrar tu cuenta y tus datos personales. Esto no se puede deshacer.\n¿Continuar?')) return
+    if (!(await ask({ title: '¿Borrar tu cuenta?', body: 'Se eliminan tu perfil y tus respuestas de asistencia. No se puede deshacer.', confirmLabel: 'Borrar mi cuenta', typeToConfirm: 'BORRAR' }))) return
     setDanger('')
     try {
       await deleteAccount()
@@ -86,7 +87,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
             <div className="chips" style={{ marginTop: 0 }}>
               {instrumentOptions.map((i) => (
                 <button key={i} type="button" className={`tag ${instruments.includes(i) ? 'key' : ''}`} aria-pressed={instruments.includes(i)}
-                  style={{ minHeight: 36, background: 'none', cursor: 'pointer' }} onClick={() => { toggle(i); setStatus('') }}>{i}</button>
+                  style={{ background: 'none', cursor: 'pointer' }} onClick={() => { toggle(i); setStatus('') }}>{i}</button>
               ))}
             </div>
           </fieldset>
@@ -97,7 +98,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
             <textarea rows={3} value={bio} onChange={(e) => { setBio(e.target.value); setStatus('') }} maxLength={300} placeholder="Qué tocas, qué escuchas, con quién has tocado." />
           </label>
           <button className="btn primary" disabled={status === 'saving'}>{status === 'saving' ? 'Guardando…' : 'Guardar perfil'}</button>
-          {status === 'saved' && <p role="status" style={{ color: 'var(--sage)' }}>Cambios guardados.</p>}
+          {status === 'saved' && <p role="status" className="form-ok">Cambios guardados.</p>}
           {status === 'error' && <p className="form-error" role="alert">No pudimos guardar. Revisa tu nombre e intenta de nuevo.</p>}
         </form>
       )}

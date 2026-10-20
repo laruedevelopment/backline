@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Camera, Check, Link2, Plus, X } from 'lucide-react'
+import { Camera, Check, Link2, Plus } from 'lucide-react'
 import { fetchYoutubePlaylist, playlistIdFromUrl, youtubeEnabled } from '../lib/youtubePlaylist'
 import { readTextFromImage } from '../lib/ocr'
 import type { Song } from '../lib/song'
 import { matchSongs, parseSetlistText } from '../lib/importSetlist'
+import Sheet from './Sheet'
 
 type Props = {
   songs: Song[]
@@ -87,12 +88,7 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
   }
 
   return (
-    <div className="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Importar setlist">
-      <div className="sheet">
-        <div className="row">
-          <h2 className="grow">Importar setlist</h2>
-          <button className="btn" onClick={onClose} aria-label="Cerrar"><X size={18} aria-hidden /></button>
-        </div>
+    <Sheet title="Importar setlist" onClose={onClose}>
         <p className="sub note">Pega la lista del chat, de tus notas o de un documento, o sube una foto o captura (se lee en tu celular). Revisa el texto antes de crear: el reconocimiento de letra a mano falla más que el texto impreso. Una canción por línea. Funciona con "Canción - Artista", "Canción (Artista)" o solo el nombre.</p>
         <textarea rows={8} value={text} onChange={(e) => setText(e.target.value)} placeholder={'Setlist Bar La Esquina:\n1. Seven Nation Army - The White Stripes\n2. Come Together (Beatles)\n3. Black Hole Sun'} aria-label="Lista de canciones" />
         {youtubeEnabled && (
@@ -129,10 +125,11 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
           </>
         )}
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary" disabled={busy || !matches.length} onClick={() => void create()}>
-          {busy ? 'Importando…' : matches.length ? `Crear "${title}"` : 'Pega tu lista para empezar'}
-        </button>
-      </div>
-    </div>
+        <div className="sheet-foot">
+          <button className="btn primary" disabled={busy || !matches.length} onClick={() => void create()}>
+            {busy ? 'Importando…' : matches.length ? `Crear «${title}»` : 'Pega tu lista para empezar'}
+          </button>
+        </div>
+    </Sheet>
   )
 }

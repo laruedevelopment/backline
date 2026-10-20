@@ -1,7 +1,7 @@
 /* Backline · "equipo de tarima"
    Base cálida de noche, un solo acento (ámbar de luz de escenario).
    Verde y rojo existen solo como estado (confirmado / alerta).
-   Tipografía: Archivo condensada (carteles de toque), Instrument Sans (texto), IBM Plex Mono (lecturas de equipo: tono, BPM, hora). */
+   Tipografía (alojada en la app, funciona sin conexión): Archivo condensada (carteles de toque), Instrument Sans (texto), IBM Plex Mono (lecturas de equipo: tono, BPM, hora). */
 
 :root {
   --bg: #0d0c0a;
@@ -23,8 +23,8 @@
   --r-l: 18px;
   --bar-h: 56px;
   --nav-h: 62px;
-  --display: 'Archivo', 'Arial Narrow', system-ui, sans-serif;
-  --body: 'Instrument Sans', system-ui, sans-serif;
+  --display: 'Archivo Variable', 'Archivo', 'Arial Narrow', system-ui, sans-serif;
+  --body: 'Instrument Sans Variable', 'Instrument Sans', system-ui, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
   color-scheme: dark;
 }
@@ -268,3 +268,48 @@ input[type=range] { accent-color: var(--amber); padding: 0; min-height: 32px; }
 .stage-nav .btn { min-height: 72px; font-size: 1.2rem; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ───────── Ajustes tras revisión de UX ───────── */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.btn.icon { min-width: 44px; padding: 0 10px; }
+.subform { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--sunk); }
+.sheet-foot { position: sticky; bottom: -18px; margin: 0 -16px -18px; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--raise); border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.form-ok { color: var(--sage); font-size: 0.9rem; }
+input::placeholder, textarea::placeholder { color: #8a8377; }
+.main { padding-bottom: calc(var(--nav-h) + 104px + env(safe-area-inset-bottom)); }
+@media (min-width: 960px) { .main { padding-bottom: 96px; } }
+.nav a { font-size: 0.75rem; }
+.avatar { position: relative; }
+.avatar::after { content: ''; position: absolute; inset: -4px; } /* área táctil de 44 px */
+.link-btn, .player-link { min-height: 44px; }
+.seg a, .seg button { min-height: 44px; }
+.tabs button { min-height: 44px; }
+.tag[aria-pressed] { min-height: 44px; padding: 0 12px; display: inline-flex; align-items: center; }
+.paper .tools { flex-direction: row; gap: 6px; }
+.paper .tools button { min-width: 44px; min-height: 44px; font-size: 1.1rem; }
+.paper-row.editing { grid-template-columns: 32px 1fr; }
+.paper-row.editing .k { display: none; }
+.paper-row.editing .tools { grid-column: 1 / -1; justify-content: flex-end; }
+.ticket.past .li-sub, .ticket.past .eyebrow { color: var(--text); }
+.stage-banner { background: var(--ember); color: #1a0504; font-weight: 800; font-size: clamp(1.2rem, 4.5vw, 1.8rem); padding: 12px 16px; border-radius: var(--r-m); text-align: center; }
+.fullscreen-msg { min-height: 100dvh; display: grid; place-content: center; justify-items: center; gap: 14px; padding: 24px; text-align: center; }
+.rsvp.compact { margin-top: 10px; }
+.checklist { display: grid; gap: 0; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--raise); }
+.check { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border-top: 1px solid var(--line); }
+.check:first-child { border-top: 0; }
+.check .box { width: 20px; height: 20px; border: 1.5px solid var(--line-2); border-radius: 5px; flex: none; display: grid; place-items: center; font-size: 0.8rem; }
+.check.done .box { background: var(--sage); border-color: var(--sage); color: #06150d; }
+.check.done .check-label { color: var(--muted); text-decoration: line-through; }
+.avatars { display: flex; flex-wrap: wrap; gap: 10px; }
+.avatars .person { display: grid; justify-items: center; gap: 4px; width: 64px; font-size: 0.78rem; text-align: center; color: var(--muted); }
+.avatars .person b { color: var(--text); font-weight: 600; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.seg [aria-pressed=true] { background: var(--raise); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.tabs button[aria-pressed=true] { background: var(--text); border-color: var(--text); color: var(--bg); }
+
+.pw { display: flex; align-items: center; gap: 4px; }
+.pw input { flex: 1; }
+.pw .link-btn { min-width: 64px; }
+
+.main-btn { background: none; border: 0; padding: 0; text-align: left; color: inherit; min-height: 44px; }
+.ticket-title { display: block; }

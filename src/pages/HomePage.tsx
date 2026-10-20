@@ -35,7 +35,7 @@ export default function HomePage() {
   const first = ((session?.user.user_metadata?.name as string | undefined) ?? '').split(' ')[0]
   const { songs, loading } = useSongs(band?.id)
   const { setlists } = useSetlists(band?.id)
-  const { events: bandEvents } = useEvents(band?.id, userId)
+  const { events: bandEvents, rsvp } = useEvents(band?.id, userId)
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band })
   const done = useProgress((s) => s.done)
 
@@ -48,6 +48,12 @@ export default function HomePage() {
   const ready = songs.filter((s) => s.status === 'ready').length
   const nextLesson = lessons.find((l) => !done.includes(l.id))
   const canEdit = band ? band.role !== 'guest' : true
+  const steps = [
+    { label: 'Agrega tus primeras 3 canciones', to: '/repertorio', done: songs.length >= 3 },
+    { label: 'Arma un setlist (o impórtalo del chat)', to: '/setlists', done: setlists.length > 0 },
+    { label: 'Invita a alguien de la banda', to: '/banda', done: members.length > 1 },
+    { label: 'Agenda el próximo ensayo', to: '/agenda', done: bandEvents.length > 0 },
+  ]
 
   return (
     <>
@@ -59,33 +65,43 @@ export default function HomePage() {
 
       <div className="section-title" style={{ marginTop: 8 }}>Lo próximo</div>
       {next && parts ? (
-        <Link to="/agenda" className="ticket" aria-label={`${next.title}, ${parts.long}`}>
-          <div className="ticket-date"><b>{parts.day}</b><span>{parts.month}</span></div>
-          <div className="ticket-body">
-            <span className="eyebrow">{inDays(next.startsAt)} · {next.kind === 'gig' ? 'Toque' : next.kind === 'rehearsal' ? 'Ensayo' : 'Evento'}</span>
-            <div className="ticket-title">{next.title}</div>
-            <div className="li-sub">{parts.time}{next.place ? ` · ${next.place}` : ''}</div>
-            <div className="sub-row">
-              <span>{going}/{members.length || 1} confirmados</span>
-              {mine ? <span style={{ color: mine === 'yes' ? 'var(--sage)' : mine === 'no' ? 'var(--ember)' : 'var(--amber)' }}>Tú: {mine === 'yes' ? 'vas' : mine === 'no' ? 'no vas' : 'tal vez'}</span> : <span style={{ color: 'var(--amber)' }}>Falta tu respuesta</span>}
-              {setlist && <span>{setlist.name}</span>}
+        <article>
+          <div className="ticket">
+            <div className="ticket-date"><b>{parts.day}</b><span>{parts.month}</span></div>
+            <div className="ticket-body">
+              <span className="eyebrow">{inDays(next.startsAt)} · {next.kind === 'gig' ? 'Toque' : next.kind === 'rehearsal' ? 'Ensayo' : 'Evento'}</span>
+              <Link to="/agenda" className="ticket-title">{next.title}</Link>
+              <div className="li-sub">{parts.time}{next.place ? ` · ${next.place}` : ''}</div>
+              <div className="sub-row">
+                <span>{going}/{members.length || 1} confirmados</span>
+                {setlist && <Link to={`/setlists/${setlist.id}`} style={{ color: 'var(--amber)' }}>{setlist.name}</Link>}
+              </div>
             </div>
           </div>
-        </Link>
+          <div className="rsvp compact" role="group" aria-label={`¿Vas a ${next.title}?`}>
+            {([['yes', 'Voy'], ['maybe', 'Tal vez'], ['no', 'No voy']] as const).map(([v, label]) => (
+              <button key={v} className={`btn ${mine === v ? `on ${v}` : ''}`} aria-pressed={mine === v} onClick={() => rsvp(next.id, v)}>{label}</button>
+            ))}
+          </div>
+          {!mine && <p className="li-sub" style={{ marginTop: 6, color: 'var(--amber)' }}>Falta tu respuesta.</p>}
+        </article>
       ) : (
         <div className="notice">
           Nada agendado todavía. {canEdit ? <Link to="/agenda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Agenda el próximo ensayo</Link> : 'El líder aún no ha agendado nada.'}
         </div>
       )}
 
-      {canEdit && (
+      {canEdit && !loading && steps.some((st) => !st.done) && (
         <>
-          <div className="section-title">Acciones rápidas</div>
-          <div className="quick">
-            <Link className="btn" to="/repertorio">Agregar canción</Link>
-            <Link className="btn" to="/setlists">Importar setlist</Link>
-            <Link className="btn" to="/agenda">Nuevo evento</Link>
-            <Link className="btn" to="/banda">Invitar a la banda</Link>
+          <div className="section-title">Primeros pasos · {steps.filter((st) => st.done).length}/{steps.length}</div>
+          <div className="checklist">
+            {steps.map((st) => (
+              <Link key={st.label} to={st.to} className={`check ${st.done ? 'done' : ''}`}>
+                <span className="box" aria-hidden>{st.done ? '✓' : ''}</span>
+                <span className="check-label">{st.label}</span>
+                <span className="sr-only">{st.done ? 'Hecho' : 'Pendiente'}</span>
+              </Link>
+            ))}
           </div>
         </>
       )}
@@ -118,17 +134,15 @@ export default function HomePage() {
       )}
 
       <div className="section-title">La banda</div>
-      <div className="list">
+      <div className="avatars">
         {members.map((m) => (
-          <div key={m.profileId} className="li" style={{ minHeight: 56 }}>
-            <span className="avatar" style={{ marginLeft: 0 }}>{initials(m.name)}</span>
-            <div className="li-main">
-              <div className="li-title">{m.name}</div>
-              <div className="li-sub">{[m.instrument ?? m.instruments[0], roleLabel[m.role]].filter(Boolean).join(' · ')}</div>
-            </div>
+          <div key={m.profileId} className="person">
+            <span className="avatar" style={{ marginLeft: 0, width: 48, height: 48 }} aria-hidden>{initials(m.name)}</span>
+            <b>{m.name.split(' ')[0]}</b>
+            <span>{m.instrument ?? m.instruments[0] ?? roleLabel[m.role]}</span>
           </div>
         ))}
-        {members.length === 0 && band === undefined && <p className="sub" style={{ padding: 12 }}>Modo demostración.</p>}
+        {members.length === 0 && band === undefined && <p className="sub">Modo demostración.</p>}
       </div>
       <p className="sub" style={{ marginTop: 12 }}>
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>

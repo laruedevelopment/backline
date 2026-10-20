@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronDown, X } from 'lucide-react'
+import { Check, ChevronDown } from 'lucide-react'
 import { band as demoBand } from '../data/demo'
 import { getProfile } from '../lib/api'
 import { initials } from '../lib/identity'
@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
 import OnboardingPage from '../pages/OnboardingPage'
+import Sheet from './Sheet'
 
 /** Barra superior: selector de banda (varias por músico) y acceso al perfil. */
 export default function TopBar() {
@@ -34,33 +35,27 @@ export default function TopBar() {
       )}
 
       {open && (
-        <div className="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Tus bandas" onClick={(e) => e.target === e.currentTarget && (setOpen(false), setAdding(false))}>
-          <div className="sheet">
-            <div className="row">
-              <h2 className="grow">Tus bandas</h2>
-              <button className="btn ghost" onClick={() => { setOpen(false); setAdding(false) }} aria-label="Cerrar"><X size={20} aria-hidden /></button>
-            </div>
-            {!adding ? (
-              <>
-                <div className="list">
-                  {bands.map((b) => (
-                    <button key={b.id} className="li" onClick={() => { setActive(b.id); setOpen(false) }} aria-pressed={b.id === band?.id}>
-                      <span className="mono-mark">{initials(b.name)}</span>
-                      <span className="li-main">
-                        <span className="li-title" style={{ display: 'block' }}>{b.name}</span>
-                        <span className="li-sub" style={{ display: 'block' }}>{b.city || 'Sin ciudad'}</span>
-                      </span>
-                      {b.id === band?.id && <Check size={20} color="var(--amber)" aria-label="Activa" />}
-                    </button>
-                  ))}
-                </div>
-                <button className="btn" onClick={() => setAdding(true)}>Crear otra banda o unirme con código</button>
-              </>
-            ) : (
-              <OnboardingPage onCancel={() => { setAdding(false); setOpen(false) }} />
-            )}
-          </div>
-        </div>
+        <Sheet title="Tus bandas" onClose={() => { setOpen(false); setAdding(false) }} dismissOnBackdrop>
+          {!adding ? (
+            <>
+              <div className="list">
+                {bands.map((b) => (
+                  <button key={b.id} className="li" onClick={() => { setActive(b.id); setOpen(false) }} aria-pressed={b.id === band?.id}>
+                    <span className="mono-mark">{initials(b.name)}</span>
+                    <span className="li-main">
+                      <span className="li-title" style={{ display: 'block' }}>{b.name}</span>
+                      <span className="li-sub" style={{ display: 'block' }}>{b.city || 'Sin ciudad'}</span>
+                    </span>
+                    {b.id === band?.id && <Check size={20} color="var(--amber)" aria-label="Activa" />}
+                  </button>
+                ))}
+              </div>
+              <button className="btn" onClick={() => setAdding(true)}>Crear otra banda o unirme con código</button>
+            </>
+          ) : (
+            <OnboardingPage onCancel={() => { setAdding(false); setOpen(false) }} />
+          )}
+        </Sheet>
       )}
     </header>
   )

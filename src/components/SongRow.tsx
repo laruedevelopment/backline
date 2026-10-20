@@ -1,9 +1,16 @@
 import { useState } from 'react'
-import { ExternalLink, Pause, Pencil, Play } from 'lucide-react'
+import { ExternalLink, Pause, Play } from 'lucide-react'
 import { embedsFor } from '../lib/embed'
 import { isStandard, keyChangeLabel, statusLabel, tuningSummary, type Song } from '../lib/song'
 
 type Props = { song: Song; onEdit?: () => void }
+
+/** Toda la zona de texto abre el editor (si se puede editar). */
+function Main({ onEdit, label, children }: { onEdit?: () => void; label: string; children: React.ReactNode }) {
+  return onEdit
+    ? <button className="li-main main-btn" onClick={onEdit} aria-label={label}>{children}</button>
+    : <div className="li-main">{children}</div>
+}
 
 /** Una canción del repertorio: tono y BPM como lectura de equipo, afinación solo destacada si no es estándar. */
 export default function SongRow({ song, onEdit }: Props) {
@@ -15,7 +22,7 @@ export default function SongRow({ song, onEdit }: Props) {
     <div className="song">
       <div className="li" style={{ borderBottom: current ? 0 : undefined }}>
         <span className={`dot ${song.status}`} title={statusLabel[song.status]} aria-label={statusLabel[song.status]} role="img" />
-        <div className="li-main">
+        <Main onEdit={onEdit} label={`Editar ${song.title}`}>
           <div className="li-title">{song.title}</div>
           <div className="li-sub">{song.artist || 'Sin artista'}</div>
           <div className="sub-row">
@@ -24,7 +31,7 @@ export default function SongRow({ song, onEdit }: Props) {
             {song.guest && <span>{song.guest}</span>}
             {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}
           </div>
-        </div>
+        </Main>
         <div className="readout key" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
           <b>{song.key || '—'}</b>
           {song.bpm} bpm
@@ -35,11 +42,6 @@ export default function SongRow({ song, onEdit }: Props) {
             {open === i ? <Pause size={18} aria-hidden /> : <Play size={18} aria-hidden />}
           </button>
         ))}
-        {onEdit && (
-          <button className="btn ghost" onClick={onEdit} aria-label={`Editar ${song.title}`}>
-            <Pencil size={17} aria-hidden />
-          </button>
-        )}
       </div>
       {song.notes && !current && <div className="li-sub wrap" style={{ padding: '0 0 12px 20px', borderBottom: '1px solid var(--line)', marginTop: -4 }}>{song.notes}</div>}
       {current && (

@@ -15,9 +15,9 @@ export default function LearnPage() {
         <h1 className="page-title">Aprender</h1>
         <p className="page-sub">Lecciones cortas con diagrama y metrónomo. Sube el tempo solo cuando salga limpio.</p>
       </div>
-      <div className="tabs" role="tablist" aria-label="Instrumento">
+      <div className="tabs" role="group" aria-label="Instrumento">
         {instruments.map((i) => (
-          <button key={i.id} role="tab" aria-selected={inst === i.id} className={inst === i.id ? 'active' : ''} onClick={() => setInst(i.id)}>{i.name}</button>
+          <button key={i.id} aria-pressed={inst === i.id} className={inst === i.id ? 'active' : ''} onClick={() => setInst(i.id)}>{i.name}</button>
         ))}
       </div>
       <div className="meter" role="img" aria-label={`${finished} de ${list.length} lecciones completadas`} style={{ marginTop: 16 }}>

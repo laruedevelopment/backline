@@ -49,9 +49,9 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
         <h1 className="page-title">Agenda</h1>
         <p className="page-sub">Confirma si vas para que nadie tenga que preguntar en el chat.</p>
       </div>
-      <div className="seg" role="tablist" aria-label="Rango">
-        <button role="tab" aria-selected={!showPast} onClick={() => setShowPast(false)}>Próximos{upcoming.length ? ` · ${upcoming.length}` : ''}</button>
-        <button role="tab" aria-selected={showPast} onClick={() => setShowPast(true)}>Pasados</button>
+      <div className="seg" role="group" aria-label="Rango">
+        <button aria-pressed={!showPast} onClick={() => setShowPast(false)}>Próximos{upcoming.length ? ` · ${upcoming.length}` : ''}</button>
+        <button aria-pressed={showPast} onClick={() => setShowPast(true)}>Pasados</button>
       </div>
 
       {error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}

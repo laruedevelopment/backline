@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { X } from 'lucide-react'
 import {
   createInvite, deleteBand, listMembers, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
   type Member,
@@ -11,6 +10,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
 import BandForm from '../components/BandForm'
+import { ask } from '../lib/confirm'
+import Sheet from '../components/Sheet'
 import ListSkeleton from '../components/Skeleton'
 
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
@@ -56,7 +57,7 @@ export default function BandPage() {
   const shareText = `Te invito a ${band.name} en Backline. Entra a ${APP_URL}, crea tu cuenta y elige "Tengo un código": ${code}`
 
   async function leave() {
-    if (!confirm(`¿Salir de ${band!.name}?`)) return
+    if (!(await ask({ title: `¿Salir de ${band!.name}?`, body: 'Dejas de ver su repertorio, setlists y agenda. Puedes volver con un código de invitación.', confirmLabel: 'Salir' }))) return
     try {
       await removeMember(band!.id, userId!)
       await qc.invalidateQueries({ queryKey: ['bands'] })
@@ -167,48 +168,42 @@ function MemberSheet({ member, me, bandId, isOwner, isAdmin, onClose, onChanged 
   }
 
   return (
-    <div className="sheet-backdrop" role="dialog" aria-modal="true" aria-label={member.name} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="sheet">
-        <div className="row">
-          <span className="avatar lg" style={{ marginLeft: 0 }}>{initials(member.name)}</span>
-          <div className="grow">
-            <h2>{member.name}</h2>
-            <span className="eyebrow">{roleLabel[member.role]}</span>
-          </div>
-          <button className="btn ghost" onClick={onClose} aria-label="Cerrar"><X size={20} aria-hidden /></button>
-        </div>
-
-        {canInstrument && (
-          <label className="field">Instrumento en esta banda
-            <input list="instruments" value={instrument} onChange={(e) => setInstrument(e.target.value)} maxLength={40} placeholder="Guitarra" />
-            <datalist id="instruments">{instrumentOptions.map((i) => <option key={i} value={i} />)}</datalist>
-          </label>
-        )}
-        {canInstrument && (
-          <button className="btn" disabled={busy} onClick={() => void run(() => (me ? setMyInstrument(bandId, instrument) : setMemberInstrument(bandId, member.profileId, instrument)), false)}>Guardar instrumento</button>
-        )}
-
-        {canManage && (
-          <>
-            <label className="field">Rol
-              <select value={member.role} disabled={busy} onChange={(e) => void run(() => setMemberRole(bandId, member.profileId, e.target.value as 'admin' | 'member' | 'guest'))}>
-                <option value="admin">Admin: administra la banda</option>
-                <option value="member">Integrante: edita repertorio y agenda</option>
-                <option value="guest">Invitado: solo ve y confirma asistencia</option>
-              </select>
-            </label>
-            {isOwner && (
-              <button className="btn" disabled={busy} onClick={() => confirm(`¿Traspasar el liderazgo a ${member.name}? Tú quedas como admin.`) && void run(() => transferOwnership(bandId, member.profileId))}>
-                Traspasar liderazgo
-              </button>
-            )}
-            <button className="btn danger" disabled={busy} onClick={() => confirm(`¿Sacar a ${member.name} de la banda?`) && void run(() => removeMember(bandId, member.profileId))}>
-              Sacar de la banda
-            </button>
-          </>
-        )}
-        {err && <p className="form-error" role="alert">{err}</p>}
+    <Sheet title={member.name} onClose={onClose} dismissOnBackdrop>
+      <div className="row">
+        <span className="avatar lg" style={{ marginLeft: 0 }} aria-hidden>{initials(member.name)}</span>
+        <span className="eyebrow">{roleLabel[member.role]}</span>
       </div>
-    </div>
+
+      {canInstrument && (
+        <label className="field">Instrumento en esta banda
+          <input list="instruments" value={instrument} onChange={(e) => setInstrument(e.target.value)} maxLength={40} placeholder="Guitarra" />
+          <datalist id="instruments">{instrumentOptions.map((i) => <option key={i} value={i} />)}</datalist>
+        </label>
+      )}
+      {canInstrument && (
+        <button className="btn" disabled={busy} onClick={() => void run(() => (me ? setMyInstrument(bandId, instrument) : setMemberInstrument(bandId, member.profileId, instrument)), false)}>Guardar instrumento</button>
+      )}
+
+      {canManage && (
+        <>
+          <label className="field">Rol
+            <select value={member.role} disabled={busy} onChange={(e) => void run(() => setMemberRole(bandId, member.profileId, e.target.value as 'admin' | 'member' | 'guest'))}>
+              <option value="admin">Admin: administra la banda</option>
+              <option value="member">Integrante: edita repertorio y agenda</option>
+              <option value="guest">Invitado: solo ve y confirma asistencia</option>
+            </select>
+          </label>
+          {isOwner && (
+            <button className="btn" disabled={busy} onClick={async () => (await ask({ title: `¿Traspasar el liderazgo a ${member.name}?`, body: 'Tú quedas como admin. Solo el nuevo líder podrá borrar la banda.', confirmLabel: 'Traspasar' })) && void run(() => transferOwnership(bandId, member.profileId))}>
+              Traspasar liderazgo
+            </button>
+          )}
+          <button className="btn danger" disabled={busy} onClick={async () => (await ask({ title: `¿Sacar a ${member.name} de la banda?`, confirmLabel: 'Sacar' })) && void run(() => removeMember(bandId, member.profileId))}>
+            Sacar de la banda
+          </button>
+        </>
+      )}
+      {err && <p className="form-error" role="alert">{err}</p>}
+    </Sheet>
   )
 }
