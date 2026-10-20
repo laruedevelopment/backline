@@ -2,7 +2,8 @@ import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom'
 import { CalendarDays, GraduationCap, Home, ListMusic, Music2, User } from 'lucide-react'
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { myBands } from './lib/api'
-import { BandContext } from './store/useBandSession'
+import { useState } from 'react'
+import { BandContext, BandsContext } from './store/useBandSession'
 import OnboardingPage from './pages/OnboardingPage'
 import LoginPage from './pages/LoginPage'
 import { supabase } from './lib/supabase'
@@ -27,16 +28,31 @@ const tabs = [
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
 
+const ACTIVE_KEY = 'backline-active-band'
+const readActive = () => { try { return localStorage.getItem(ACTIVE_KEY) } catch { return null } }
+
 function WithBand() {
   const userId = useAuth((s) => s.session?.user.id)
   const { data: bands, isLoading, error } = useQuery({ queryKey: ['bands', userId], queryFn: () => myBands(userId!), enabled: !!userId })
+  const [activeId, setActiveId] = useState<string | null>(readActive)
+  const setActive = (id: string) => {
+    setActiveId(id)
+    try { localStorage.setItem(ACTIVE_KEY, id) } catch { /* sin almacenamiento: queda solo en memoria */ }
+  }
   if (isLoading) return <p className="empty">Cargando tu banda…</p>
   if (error) return <p className="empty">No pudimos cargar tu banda. Revisa tu conexión y recarga.</p>
-  if (!bands?.length) return <OnboardingPage />
+  const list = bands ?? []
+  const active = list.find((b) => b.id === activeId) ?? list[0]
   return (
-    <BandContext.Provider value={bands[0]}>
-      <Shell />
-    </BandContext.Provider>
+    <BandsContext.Provider value={{ bands: list, setActive }}>
+      {active ? (
+        <BandContext.Provider value={active}>
+          <Shell />
+        </BandContext.Provider>
+      ) : (
+        <OnboardingPage />
+      )}
+    </BandsContext.Provider>
   )
 }
 

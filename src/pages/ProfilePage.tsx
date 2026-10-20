@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Copy, LogOut, UserPlus } from 'lucide-react'
 import { createInvite } from '../lib/api'
-import { useActiveBand } from '../store/useBandSession'
+import { useActiveBand, useBands } from '../store/useBandSession'
+import OnboardingPage from './OnboardingPage'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 
 export default function ProfilePage() {
   const session = useAuth((s) => s.session)
   const band = useActiveBand()
+  const { bands, setActive } = useBands()
+  const [adding, setAdding] = useState(false)
   const [code, setCode] = useState('')
   const [err, setErr] = useState('')
   const canInvite = band?.role === 'owner' || band?.role === 'admin'
@@ -30,6 +33,25 @@ export default function ProfilePage() {
             <LogOut size={18} aria-hidden /> Salir
           </button>
         </div>
+      )}
+      {bands.length > 0 && (
+        <>
+          <div className="section-title" style={{ marginTop: 8 }}>Tus bandas</div>
+          <div className="stack" style={{ marginBottom: 12 }}>
+            {bands.map((b) => (
+              <button key={b.id} className={`card row pick ${b.id === band?.id ? 'current' : ''}`} onClick={() => setActive(b.id)} aria-pressed={b.id === band?.id}>
+                <div className="grow">
+                  <div className="title">{b.name}</div>
+                  <div className="sub">{b.city || 'Sin ciudad'}</div>
+                </div>
+                {b.id === band?.id && <span className="chip ok">Activa</span>}
+              </button>
+            ))}
+          </div>
+          {adding ? <OnboardingPage onCancel={() => setAdding(false)} /> : (
+            <button className="btn" style={{ marginBottom: 12 }} onClick={() => setAdding(true)}>Crear otra banda o unirme a una</button>
+          )}
+        </>
       )}
       {band && (
         <div className="card" style={{ marginBottom: 12 }}>

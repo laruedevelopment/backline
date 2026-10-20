@@ -151,3 +151,4 @@ textarea { resize: vertical; }
 .stage-next b { color: var(--text); }
 .stage-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
 .stage-nav .btn { min-height: 72px; font-size: 1.2rem; }
+.card.current { border-color: var(--amber); }
