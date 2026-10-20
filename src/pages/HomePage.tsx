@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
+import Avatar from '../components/Avatar'
 import { Link } from 'react-router-dom'
 import { band as demoBand } from '../data/demo'
 import { listMembers } from '../lib/api'
-import { initials } from '../lib/identity'
 import { lessons } from '../lib/learn'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand } from '../store/useBandSession'
@@ -149,7 +149,7 @@ export default function HomePage() {
       <div className="avatars">
         {members.map((m) => (
           <div key={m.profileId} className="person">
-            <span className="avatar" style={{ marginLeft: 0, width: 48, height: 48 }} aria-hidden>{initials(m.name)}</span>
+            <Avatar name={m.name} url={m.avatarUrl} size={48} />
             <b>{m.name.split(' ')[0]}</b>
             <span>{m.instrument ?? m.instruments[0] ?? roleLabel[m.role]}</span>
           </div>

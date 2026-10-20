@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
+import Avatar from '../components/Avatar'
 import BandMark from '../components/BandMark'
 import ListSkeleton from '../components/Skeleton'
 import { getPublicMusician, musicianBands } from '../lib/community'
-import { initials, waLink } from '../lib/identity'
+import { waLink } from '../lib/identity'
 import { useAuth } from '../store/useAuth'
 
 /** Perfil público de un músico (solo lo que esa persona decidió mostrar). */
@@ -31,7 +32,7 @@ export default function PublicMusicianPage() {
     <>
       <Link to="/explorar/musicos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Comunidad</Link>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
-        <span className="avatar lg" style={{ marginLeft: 0 }} aria-hidden>{initials(m.name)}</span>
+        <Avatar name={m.name} url={m.avatarUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
           <span className="eyebrow">Músico{m.id === me ? ' · eres tú' : ''}</span>
           <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)' }}>{m.name}</h1>

@@ -444,6 +444,28 @@ await ok('almacenamiento de bandas: solo admins de la banda', async () => {
   if (!failed) throw new Error('otro escribió en carpeta de banda')
 })
 
+console.log('\nFoto de perfil')
+await ok('cada persona sube su foto en su propia carpeta; en la de otra no', async () => {
+  await as('member', `insert into storage.objects (bucket_id, name) values ('profile-media', $1)`, [`${U.member}/avatar-1.webp`])
+  let failed = false
+  try { await as('other', `insert into storage.objects (bucket_id, name) values ('profile-media', $1)`, [`${U.member}/avatar-2.webp`]) } catch { failed = true }
+  if (!failed) throw new Error('otra persona escribió en la carpeta ajena')
+})
+await ok('avatar_path solo acepta rutas de la propia persona', async () => {
+  await as('member', `update public.profiles set avatar_path = $2 where id = $1`, [U.member, `${U.member}/avatar-1.webp`])
+  let failed = false
+  try { await as('member', `update public.profiles set avatar_path = $2 where id = $1`, [U.member, `${U.other}/avatar-1.webp`]) } catch { failed = true }
+  if (!failed) throw new Error('aceptó la ruta de otra persona')
+})
+await ok('nadie cambia la foto de otra persona', async () => {
+  const r = await as('other', `update public.profiles set avatar_path = null where id = $1 returning id`, [U.member])
+  eq(r.length, 0, 'modificó el perfil ajeno')
+})
+await ok('la función de integrantes públicos devuelve la foto', async () => {
+  const cols = await pg.query(`select column_name from information_schema.columns where table_schema='public' and table_name='profiles' and column_name='avatar_path'`)
+  eq(cols.rows.length, 1, 'falta la columna')
+})
+
 console.log('\nBorrar cuenta (Ley 1581)')
 await ok('al borrar la cuenta del solicitante se anonimizan sus datos de contacto', async () => {
   await as('other', `select public.delete_account()`)

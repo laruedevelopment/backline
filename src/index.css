@@ -553,3 +553,10 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .setlist-link:focus-visible::after { outline: 2px solid var(--amber); outline-offset: 2px; }
 .setlist-spotify { position: relative; z-index: 1; justify-self: start; margin-top: 8px; color: var(--sage); border-color: color-mix(in srgb, var(--sage) 45%, var(--line)); }
 .setlist-spotify:hover { color: var(--text); }
+
+/* Foto de perfil */
+.avatar.has-img { overflow: hidden; padding: 0; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatar-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.avatar-link { margin-left: auto; display: inline-flex; border-radius: 50%; }
+.avatar-link .avatar { margin-left: 0 !important; }

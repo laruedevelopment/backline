@@ -8,6 +8,8 @@ export type Band = {
 }
 
 const BUCKET = 'band-media'
+const AVATARS = 'profile-media'
+export const avatarUrl = (path: string | null | undefined) => (path ? db().storage.from(AVATARS).getPublicUrl(path).data.publicUrl : null)
 
 const db = () => {
   if (!supabase) throw new Error('Supabase no configurado')
@@ -96,13 +98,13 @@ export async function deleteSetlist(id: string) {
   if (error) throw error
 }
 
-export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[] }
+export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[]; avatarUrl: string | null }
 
 export async function listMembers(bandId: string): Promise<Member[]> {
-  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name, instruments)').eq('band_id', bandId).order('created_at')
+  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name, instruments, avatar_path)').eq('band_id', bandId).order('created_at')
   if (error) throw error
-  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string; instruments: string[] } | null }[]).map((m) => ({
-    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument, instruments: m.profiles?.instruments ?? [],
+  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string; instruments: string[]; avatar_path: string | null } | null }[]).map((m) => ({
+    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument, instruments: m.profiles?.instruments ?? [], avatarUrl: avatarUrl(m.profiles?.avatar_path),
   }))
 }
 
@@ -141,19 +143,46 @@ export async function setRsvp(eventId: string, userId: string, status: RsvpStatu
   if (error) throw error
 }
 
-export type Profile = { displayName: string; instruments: string[]; city: string; bio: string; whatsapp: string; isPublic: boolean }
+export type Profile = { displayName: string; instruments: string[]; city: string; bio: string; whatsapp: string; isPublic: boolean; avatarPath: string | null; avatarUrl: string | null }
 
 export async function getProfile(userId: string): Promise<Profile> {
-  const { data, error } = await db().from('profiles').select('display_name, instruments, city, bio, whatsapp, is_public').eq('id', userId).single()
+  const { data, error } = await db().from('profiles').select('display_name, instruments, city, bio, whatsapp, is_public, avatar_path').eq('id', userId).single()
   if (error) throw error
-  return { displayName: data.display_name, instruments: data.instruments ?? [], city: data.city ?? '', bio: data.bio ?? '', whatsapp: data.whatsapp ?? '', isPublic: data.is_public }
+  return { displayName: data.display_name, instruments: data.instruments ?? [], city: data.city ?? '', bio: data.bio ?? '', whatsapp: data.whatsapp ?? '', isPublic: data.is_public, avatarPath: data.avatar_path ?? null, avatarUrl: avatarUrl(data.avatar_path) }
 }
 
-export async function updateProfile(userId: string, p: Profile) {
+export async function updateProfile(userId: string, p: Omit<Profile, 'avatarPath' | 'avatarUrl'>) {
   const { error } = await db().from('profiles').update({
     display_name: p.displayName.trim(), instruments: p.instruments, city: p.city.trim() || null, bio: p.bio.trim() || null, whatsapp: p.whatsapp.trim() || null,
   }).eq('id', userId)
   if (error) throw error
+}
+
+/** Ruta nueva en cada subida: el enlace anterior no queda en caché. */
+export async function setAvatar(userId: string, blob: Blob, ext: string, previous: string | null) {
+  const path = `${userId}/avatar-${Date.now()}.${ext}`
+  const { error: upErr } = await db().storage.from(AVATARS).upload(path, blob, { contentType: blob.type, cacheControl: '31536000', upsert: false })
+  if (upErr) throw upErr
+  const { error } = await db().from('profiles').update({ avatar_path: path }).eq('id', userId)
+  if (error) {
+    await db().storage.from(AVATARS).remove([path]).catch(() => {})
+    throw error
+  }
+  if (previous) await db().storage.from(AVATARS).remove([previous]).catch(() => {})
+}
+
+export async function clearAvatar(userId: string, previous: string | null) {
+  const { error } = await db().from('profiles').update({ avatar_path: null }).eq('id', userId)
+  if (error) throw error
+  if (previous) await db().storage.from(AVATARS).remove([previous]).catch(() => {})
+}
+
+/** Al borrar la cuenta: quita todo lo que haya en su carpeta de fotos. */
+export async function purgeAvatars(userId: string) {
+  const store = db().storage.from(AVATARS)
+  const { data } = await store.list(userId, { limit: 100 })
+  const paths = (data ?? []).filter((f) => f.id).map((f) => `${userId}/${f.name}`)
+  if (paths.length) await store.remove(paths)
 }
 
 export async function updateBand(id: string, b: { name: string; city: string; genres: string[]; bio: string; links: BandLinks }) {

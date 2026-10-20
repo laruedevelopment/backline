@@ -5,12 +5,13 @@ const db = () => {
   if (!supabase) throw new Error('Supabase no configurado')
   return supabase
 }
+const avatar = (path: string | null | undefined) => (path ? db().storage.from('profile-media').getPublicUrl(path).data.publicUrl : null)
 const logoUrl = (path: string | null) => (path ? db().storage.from('band-media').getPublicUrl(path).data.publicUrl : null)
 export const PAGE = 20
 
 export type PublicBand = { id: string; name: string; city: string; genres: string[]; bio: string; links: BandLinks; logoUrl: string | null }
-export type PublicMusician = { id: string; name: string; instruments: string[]; city: string; bio: string; whatsapp: string }
-export type PublicMember = { profileId: string; name: string; instrument: string; instruments: string[]; role: string }
+export type PublicMusician = { id: string; name: string; instruments: string[]; city: string; bio: string; whatsapp: string; avatarUrl: string | null }
+export type PublicMember = { profileId: string; name: string; instrument: string; instruments: string[]; role: string; avatarUrl: string | null }
 export type MusicianBand = { bandId: string; name: string; city: string; genres: string[]; logoUrl: string | null; instrument: string }
 
 type BandRow = { id: string; name: string; city: string | null; genres: string[]; bio: string | null; links: BandLinks; logo_path: string | null }
@@ -39,8 +40,8 @@ export async function getPublicBand(id: string): Promise<PublicBand | null> {
 export async function bandMembers(bandId: string): Promise<PublicMember[]> {
   const { data, error } = await db().rpc('band_public_members', { p_band: bandId })
   if (error) throw error
-  return (data as { profile_id: string; display_name: string; instrument: string | null; instruments: string[]; role: string }[]).map((m) => ({
-    profileId: m.profile_id, name: m.display_name, instrument: m.instrument ?? '', instruments: m.instruments ?? [], role: m.role,
+  return (data as { profile_id: string; display_name: string; instrument: string | null; instruments: string[]; role: string; avatar_path: string | null }[]).map((m) => ({
+    profileId: m.profile_id, name: m.display_name, instrument: m.instrument ?? '', instruments: m.instruments ?? [], role: m.role, avatarUrl: avatar(m.avatar_path),
   }))
 }
 
@@ -50,9 +51,9 @@ export async function bandMemberCount(bandId: string): Promise<number> {
   return data as number
 }
 
-type MusicianRow = { id: string; display_name: string; instruments: string[]; city: string | null; bio: string | null; whatsapp: string | null }
-const toMusician = (r: MusicianRow): PublicMusician => ({ id: r.id, name: r.display_name, instruments: r.instruments ?? [], city: r.city ?? '', bio: r.bio ?? '', whatsapp: r.whatsapp ?? '' })
-const MUSICIAN_COLS = 'id, display_name, instruments, city, bio, whatsapp'
+type MusicianRow = { id: string; display_name: string; instruments: string[]; city: string | null; bio: string | null; whatsapp: string | null; avatar_path: string | null }
+const toMusician = (r: MusicianRow): PublicMusician => ({ id: r.id, name: r.display_name, instruments: r.instruments ?? [], city: r.city ?? '', bio: r.bio ?? '', whatsapp: r.whatsapp ?? '', avatarUrl: avatar(r.avatar_path) })
+const MUSICIAN_COLS = 'id, display_name, instruments, city, bio, whatsapp, avatar_path'
 
 export async function exploreMusicians(f: { q: string; city: string; instrument: string; offset: number }): Promise<PublicMusician[]> {
   let query = db().from('profiles').select(MUSICIAN_COLS).eq('is_public', true).order('display_name').range(f.offset, f.offset + PAGE - 1)

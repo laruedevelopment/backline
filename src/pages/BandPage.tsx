@@ -5,12 +5,13 @@ import {
   createInvite, deleteBand, listMembers, purgeBandMedia, setBandPublic, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
   type Member,
 } from '../lib/api'
-import { initials, instrumentOptions } from '../lib/identity'
+import { instrumentOptions } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
 import { inviteLink } from '../lib/pendingInvite'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import { useActiveBand, useBands } from '../store/useBandSession'
+import Avatar from '../components/Avatar'
 import BandForm from '../components/BandForm'
 import BandMark from '../components/BandMark'
 import BandMedia from '../components/BandMedia'
@@ -130,7 +131,7 @@ export default function BandPage() {
             const me = m.profileId === userId
             return (
               <button key={m.profileId} className="li" onClick={() => setMember(m)} aria-label={`${m.name}, ${roleLabel[m.role]}. Ver opciones`}>
-                <span className="avatar" style={{ marginLeft: 0 }}>{initials(m.name)}</span>
+                <Avatar name={m.name} url={m.avatarUrl} />
                 <div className="li-main">
                   <div className="li-title">{m.name}{me && <span className="sub"> · tú</span>}</div>
                   <div className="li-sub">{m.instrument ?? m.instruments[0] ?? 'Sin instrumento'}</div>
@@ -197,7 +198,7 @@ function MemberSheet({ member, me, bandId, isOwner, isAdmin, onClose, onChanged 
   return (
     <Sheet title={member.name} onClose={onClose} dismissOnBackdrop>
       <div className="row">
-        <span className="avatar lg" style={{ marginLeft: 0 }} aria-hidden>{initials(member.name)}</span>
+        <Avatar name={member.name} url={member.avatarUrl} size="lg" />
         <span className="eyebrow">{roleLabel[member.role]}</span>
       </div>
 

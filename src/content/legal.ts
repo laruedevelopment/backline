@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.4'
+export const TERMS_VERSION = '0.5'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -18,7 +18,7 @@ export const privacy: LegalDoc = {
       title: '2. Datos que recogemos',
       bullets: [
         'Al registrarte: nombre (como te dicen en la banda), correo electrónico y contraseña (se guarda cifrada; nosotros no la vemos).',
-        'En tu perfil, de forma opcional: instrumentos que tocas, ciudad, una descripción corta y un número de WhatsApp.',
+        'En tu perfil, de forma opcional: foto, instrumentos que tocas, ciudad, una descripción corta y un número de WhatsApp. La foto se recorta y se reduce en tu dispositivo y se le quita la ubicación (EXIF) antes de subirla.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
         'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de ese ensayadero para que pueda confirmarte. Si publicas tu propio ensayadero: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
         'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
@@ -49,8 +49,8 @@ export const privacy: LegalDoc = {
       title: '4. Quién ve tus datos',
       paragraphs: [
         'Por defecto, tu nombre, instrumentos, ciudad y descripción los ven solo las personas que integran las bandas de las que haces parte. El repertorio, los setlists, las letras, la agenda y las reservas de una banda son siempre privados de esa banda.',
-        'Comunidad es opcional y está apagada por defecto. Si eres mayor de edad y activas «Perfil público», las demás personas con cuenta en Backline podrán ver tu nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Si los administradores de una banda activan su perfil público, las personas con cuenta podrán ver su nombre, logo, ciudad, géneros, descripción, redes, fotos y los integrantes que hayan hecho público su perfil. Puedes apagarlo cuando quieras. Tu correo nunca se muestra. Quienes no tienen cuenta no ven estos perfiles.',
-        'El logo y las fotos de una banda se guardan en un espacio público de solo lectura: cualquier persona que tenga el enlace de la imagen puede verla.',
+        'Comunidad es opcional y está apagada por defecto. Si eres mayor de edad y activas «Perfil público», las demás personas con cuenta en Backline podrán ver tu foto, nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Si los administradores de una banda activan su perfil público, las personas con cuenta podrán ver su nombre, logo, ciudad, géneros, descripción, redes, fotos y los integrantes que hayan hecho público su perfil. Puedes apagarlo cuando quieras. Tu correo nunca se muestra. Quienes no tienen cuenta no ven estos perfiles.',
+        'El logo y las fotos de una banda, y las fotos de perfil, se guardan en un espacio público de solo lectura: cualquier persona que tenga el enlace de la imagen puede verla. Si quitas tu foto o borras tu cuenta, se elimina el archivo.',
       ],
     },
     {

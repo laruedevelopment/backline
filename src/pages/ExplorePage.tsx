@@ -5,8 +5,9 @@ import { Search } from 'lucide-react'
 import BandMark from '../components/BandMark'
 import ListSkeleton from '../components/Skeleton'
 import { exploreBands, exploreMusicians, PAGE, type PublicBand, type PublicMusician } from '../lib/community'
-import { genreOptions, initials, instrumentOptions } from '../lib/identity'
+import { genreOptions, instrumentOptions } from '../lib/identity'
 import { supabase } from '../lib/supabase'
+import Avatar from '../components/Avatar'
 import CityInput from '../components/CityInput'
 
 function useDebounced<T>(value: T, ms = 350): T {
@@ -119,7 +120,7 @@ function BandRow({ b }: { b: PublicBand }) {
 function MusicianRow({ m }: { m: PublicMusician }) {
   return (
     <Link to={`/explorar/musicos/${m.id}`} className="explore-card">
-      <span className="avatar" style={{ marginLeft: 0 }} aria-hidden>{initials(m.name)}</span>
+      <Avatar name={m.name} url={m.avatarUrl} />
       <div className="explore-card-main">
         <div className="li-title">{m.name}</div>
         <div className="li-sub">{m.city || 'Sin ciudad'}</div>

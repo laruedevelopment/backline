@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
+import Avatar from '../components/Avatar'
 import BandMark from '../components/BandMark'
 import MediaManager, { type MediaApi, type Photo } from '../components/MediaManager'
 import ListSkeleton from '../components/Skeleton'
 import { listPhotos } from '../lib/api'
 import { bandMembers, getPublicBand } from '../lib/community'
-import { initials } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
 import { useBands } from '../store/useBandSession'
 
@@ -66,7 +66,7 @@ export default function PublicBandPage() {
       <div className="list cols" style={{ borderTop: members.length ? undefined : 0 }}>
         {members.map((m) => (
           <Link key={m.profileId} to={`/explorar/musicos/${m.profileId}`} className="li" style={{ minHeight: 60 }}>
-            <span className="avatar" style={{ marginLeft: 0 }} aria-hidden>{initials(m.name)}</span>
+            <Avatar name={m.name} url={m.avatarUrl} />
             <div className="li-main">
               <div className="li-title">{m.name}</div>
               <div className="li-sub">{m.instrument || m.instruments[0] || 'Sin instrumento'}</div>

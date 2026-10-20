@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { confirmAdult, deleteAccount, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
-import { initials, instrumentOptions } from '../lib/identity'
+import { clearAvatar, confirmAdult, deleteAccount, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
+import { instrumentOptions } from '../lib/identity'
+import { processImage } from '../lib/image'
+import Avatar from '../components/Avatar'
 import { lessons } from '../lib/learn'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
@@ -51,6 +53,8 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   const [isPublic, setIsPublic] = useState(initial.isPublic)
   const [pubMsg, setPubMsg] = useState('')
   const [needAdult, setNeedAdult] = useState(false)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoMsg, setPhotoMsg] = useState('')
   const [status, setStatus] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const [danger, setDanger] = useState('')
 
@@ -87,6 +91,38 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
     }
   }
 
+  async function changePhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !userId || photoBusy) return
+    setPhotoBusy(true)
+    setPhotoMsg('')
+    try {
+      // Recorte cuadrado de 512 px: sin ubicación ni metadatos, liviana para la red.
+      const img = await processImage(file, { maxSide: 512, quality: 0.85, square: true })
+      await setAvatar(userId, img.blob, img.ext, initial.avatarPath ?? null)
+      await qc.invalidateQueries({ queryKey: ['profile', userId] })
+      await qc.invalidateQueries({ queryKey: ['members'] })
+    } catch (err) {
+      setPhotoMsg(/12 MB/.test(String((err as Error).message)) ? 'Esa imagen pesa más de 12 MB.' : 'No pudimos subir la foto. Prueba con otra imagen (JPG, PNG o WebP).')
+    }
+    setPhotoBusy(false)
+  }
+
+  async function removePhoto() {
+    if (!userId || photoBusy) return
+    setPhotoBusy(true)
+    setPhotoMsg('')
+    try {
+      await clearAvatar(userId, initial.avatarPath ?? null)
+      await qc.invalidateQueries({ queryKey: ['profile', userId] })
+      await qc.invalidateQueries({ queryKey: ['members'] })
+    } catch {
+      setPhotoMsg('No pudimos quitar la foto. Intenta de nuevo.')
+    }
+    setPhotoBusy(false)
+  }
+
   async function declareAdult() {
     try {
       await confirmAdult()
@@ -105,6 +141,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       for (const b of bands.filter((x) => x.role === 'owner')) {
         if ((await listMembers(b.id)).length === 1) await purgeBandMedia(b.id).catch(() => {})
       }
+      await purgeAvatars(userId!).catch(() => {})
       await deleteAccount()
       clearDeviceData()
       await supabase!.auth.signOut()
@@ -118,13 +155,23 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   return (
     <>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
-        <span className="avatar lg" style={{ marginLeft: 0 }} aria-hidden>{initials(name || email || '?')}</span>
+        <Avatar name={name || email || '?'} url={initial.avatarUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
           <span className="eyebrow">Tu perfil</span>
           <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)' }}>{name || 'Músico'}</h1>
         </div>
       </div>
       <p className="page-sub">{email}</p>
+      {supabase && (
+        <div className="avatar-edit">
+          <label className={`btn sm ${photoBusy ? 'disabled' : ''}`}>
+            {photoBusy ? 'Subiendo…' : initial.avatarUrl ? 'Cambiar foto' : 'Agregar foto'}
+            <input type="file" accept="image/*" hidden disabled={photoBusy} onChange={(e) => void changePhoto(e)} />
+          </label>
+          {initial.avatarUrl && <button type="button" className="btn sm" disabled={photoBusy} onClick={() => void removePhoto()}>Quitar</button>}
+          {photoMsg && <span className="form-error" role="alert">{photoMsg}</span>}
+        </div>
+      )}
 
       {(
         <form className="stack" style={{ marginTop: 16 }} onSubmit={save}>

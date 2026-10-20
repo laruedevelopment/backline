@@ -1,10 +1,10 @@
 import { useState } from 'react'
+import Avatar from './Avatar'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronDown } from 'lucide-react'
 import { band as demoBand } from '../data/demo'
 import { getProfile } from '../lib/api'
-import { initials } from '../lib/identity'
 import { supabase } from '../lib/supabase'
 import { usePendingRequests } from '../lib/useLive'
 import { kindLabel } from '../lib/venues'
@@ -49,7 +49,7 @@ export default function TopBar() {
         </span>
         {band && <ChevronDown size={16} className="chev" aria-hidden />}
       </button>
-      {session && <Link to="/perfil" className="avatar" aria-label="Mi perfil">{initials(me)}</Link>}
+      {session && <Link to="/perfil" className="avatar-link" aria-label="Mi perfil"><Avatar name={me} url={profile?.avatarUrl} /></Link>}
 
       {open && (
         <Sheet title="Cambiar de sombrero" onClose={close} dismissOnBackdrop>
