@@ -222,7 +222,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       {isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/musicos/${userId}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo me ven los demás</Link></p>}
 
       <div className="section-title">Mi negocio</div>
-      <p className="li-sub wrap">¿Tienes un ensayadero, estudio u otro negocio musical? Publica tus salas, horarios y precios, y recibe reservas de las bandas.</p>
+      <p className="li-sub wrap">¿Tienes una sala de ensayos, estudio u otro negocio musical? Publica tus salas, horarios y precios, y recibe reservas de las bandas.</p>
       <Link className="btn" to="/mi-negocio" style={{ marginTop: 8 }}>Ir a mi negocio</Link>
 
       <div className="section-title">Tu práctica</div>

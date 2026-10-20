@@ -24,7 +24,7 @@ function RoomToday({ venue, room, today, pending }: { venue: Venue; room: Room; 
   )
 }
 
-/** Lo primero que ve el dueño: qué tiene que responder y qué pasa hoy en su ensayadero. */
+/** Lo primero que ve el dueño: qué tiene que responder y qué pasa hoy en su sala de ensayos. */
 export default function BusinessToday() {
   const venue = useVenue()
   const board = useBookingBoard(venue)
@@ -45,7 +45,7 @@ export default function BusinessToday() {
 
       {!venue.isPublished && (
         <p className="notice" style={{ marginBottom: 14 }}>
-          Tu ensayadero todavía no está publicado: las bandas no lo ven. <Link to="/mi-negocio/perfil" style={{ color: 'var(--amber)', fontWeight: 600 }}>Completar y publicar</Link>
+          Tu sala de ensayos todavía no está publicada: las bandas no la ven. <Link to="/mi-negocio/perfil" style={{ color: 'var(--amber)', fontWeight: 600 }}>Completar y publicar</Link>
         </p>
       )}
 
@@ -64,7 +64,7 @@ export default function BusinessToday() {
       {board.isLoading && <ListSkeleton rows={3} />}
 
       <div className="section-title">Por responder{board.pending.length ? ` · ${board.pending.length}` : ''}</div>
-      {board.pending.length === 0 && !board.isLoading && <p className="li-sub wrap">No hay solicitudes pendientes.{venue.autoConfirm ? ' Tu ensayadero confirma las reservas solo.' : ' Cuando una banda pida una franja, aparece aquí.'}</p>}
+      {board.pending.length === 0 && !board.isLoading && <p className="li-sub wrap">No hay solicitudes pendientes.{venue.autoConfirm ? ' Tu sala de ensayos confirma las reservas solo.' : ' Cuando una banda pida una franja, aparece aquí.'}</p>}
       <div className="list" style={{ borderTop: board.pending.length ? undefined : 0 }}>
         {board.pending.map((b) => <BookingRow key={b.id} b={b} venue={venue} board={board} />)}
       </div>

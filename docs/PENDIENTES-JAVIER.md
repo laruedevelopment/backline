@@ -6,7 +6,7 @@
 4. **Spotify Developer** (gratis): crear app para obtener Client ID/Secret si se quiere búsqueda de canciones. (YouTube/Spotify embebidos no requieren claves.)
 5. **Google OAuth** (login con Google): crear credenciales en Google Cloud Console.
 6. **Su banda** como primera prueba: 2–3 compañeros para probar Fase 1.
-7. **Amigo del ensayadero**: horarios, precios, equipo, fotos y cómo gestiona hoy las reservas (para la Fase 3).
+7. **Amigo de la sala de ensayos**: horarios, precios, equipo, fotos y cómo gestiona hoy las reservas (para la Fase 3).
 8. Costos: por ahora $0. Anotar aquí cualquier costo nuevo (dominio ≈ USD 12/año).
 
 ## Crear el proyecto Supabase (paso a paso, $0)

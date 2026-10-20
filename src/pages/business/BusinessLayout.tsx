@@ -13,7 +13,7 @@ import BusinessProfile from './Profile'
 import BusinessRooms from './Rooms'
 import BusinessToday from './Today'
 
-/** Área «Mi negocio»: el otro sombrero del usuario. Tiene su propia navegación (Hoy, Reservas, Salas, Ensayadero). */
+/** Área «Mi negocio»: el otro sombrero del usuario. Tiene su propia navegación (Hoy, Reservas, Salas, Perfil). */
 export default function BusinessLayout() {
   const userId = useAuth((s) => s.session?.user.id)
   const qc = useQueryClient()
@@ -24,7 +24,7 @@ export default function BusinessLayout() {
     return (
       <>
         <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Mi negocio</h1></div>
-        <p className="notice">Ingresa con tu cuenta para publicar tu ensayadero.</p>
+        <p className="notice">Ingresa con tu cuenta para publicar tu sala de ensayos.</p>
       </>
     )
   }
@@ -35,8 +35,8 @@ export default function BusinessLayout() {
     return (
       <>
         <div className="page-head">
-          <span className="eyebrow">Para dueños de ensayaderos</span>
-          <h1 className="page-title">Publica tu ensayadero</h1>
+          <span className="eyebrow">Para dueños de salas de ensayos</span>
+          <h1 className="page-title">Publica tu sala de ensayos</h1>
           <p className="page-sub">Las bandas de tu ciudad ven tus salas, tus precios y tus horarios, y te piden una franja. Tú confirmas o rechazas, o dejas que se confirme sola.</p>
         </div>
         <div className="stack">
@@ -45,9 +45,9 @@ export default function BusinessLayout() {
             <li>Opcional: conectas tu Google Calendar y lo que ya anotas allí bloquea esas horas solo.</li>
             <li>Las bandas reservan desde el celular y te llega un aviso.</li>
           </ul>
-          <p className="notice">Es gratis. El pago se hace en el ensayadero, como siempre. Sigues teniendo tus bandas: cambias entre tu banda y tu negocio desde la barra de arriba.</p>
-          <button className="btn primary" onClick={() => setCreating(true)}>Publicar mi ensayadero</button>
-          <Link to="/ensayaderos" className="link-btn">Ver los ensayaderos publicados</Link>
+          <p className="notice">Es gratis. El pago se hace en la sala de ensayos, como siempre. Sigues teniendo tus bandas: cambias entre tu banda y tu negocio desde la barra de arriba.</p>
+          <button className="btn primary" onClick={() => setCreating(true)}>Publicar mi sala de ensayos</button>
+          <Link to="/ensayaderos" className="link-btn">Ver las salas de ensayos publicadas</Link>
         </div>
         {creating && (
           <VenueForm

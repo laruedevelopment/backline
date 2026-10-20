@@ -69,7 +69,7 @@ export default function HomePage() {
       <div className="home-col">
       {pendingRequests > 0 && (
         <Link to="/mi-negocio" className="notice" style={{ display: 'block', marginTop: 8 }}>
-          <b>{pendingRequests === 1 ? 'Tienes 1 solicitud de reserva' : `Tienes ${pendingRequests} solicitudes de reserva`}</b> por responder en {myVenue?.name ?? 'tu ensayadero'}.
+          <b>{pendingRequests === 1 ? 'Tienes 1 solicitud de reserva' : `Tienes ${pendingRequests} solicitudes de reserva`}</b> por responder en {myVenue?.name ?? 'tu sala de ensayos'}.
         </Link>
       )}
 
@@ -160,7 +160,7 @@ export default function HomePage() {
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>
       </p>
       </div>
-      <div className="section-title">¿Tienes un ensayadero?</div>
+      <div className="section-title">¿Tienes una sala de ensayos?</div>
       <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
       </div>
     </>

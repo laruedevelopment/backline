@@ -12,7 +12,7 @@ const BUCKET = 'venue-media'
 const publicUrl = (path: string) => db().storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 
 export type VenueKind = 'rehearsal_room' | 'studio' | 'venue'
-export const kindLabel: Record<VenueKind, string> = { rehearsal_room: 'Ensayadero', studio: 'Estudio de grabación', venue: 'Lugar de toques' }
+export const kindLabel: Record<VenueKind, string> = { rehearsal_room: 'Sala de ensayos', studio: 'Estudio de grabación', venue: 'Lugar de toques' }
 
 export type Venue = {
   id: string; ownerId: string; kind: VenueKind; name: string; city: string; address: string; description: string
@@ -249,7 +249,7 @@ async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   return rows.map((b) => ({
     id: b.id, venueId: b.venue_id, roomId: b.room_id, bandId: b.band_id, status: b.status, startsAt: b.starts_at, endsAt: b.ends_at,
     note: b.note ?? '', responseNote: b.response_note ?? '', contactName: b.contact_name, contactPhone: b.contact_phone ?? '', source: b.source,
-    venueName: venues.get(b.venue_id)?.name ?? 'Ensayadero', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '',
+    venueName: venues.get(b.venue_id)?.name ?? 'Sala de ensayos', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '',
   }))
 }
 
@@ -271,18 +271,18 @@ export function bookingError(e: unknown): string {
   const m = String((e as { message?: string })?.message ?? e)
   if (/ocupada|bookings_sin_solape|conflicting key/i.test(m)) return 'Esa franja ya está ocupada. Elige otra.'
   if (/anticipación/i.test(m)) return 'Esa franja empieza muy pronto: pide con al menos una hora de anticipación.'
-  if (/cerrada|fuera del horario/i.test(m)) return 'El ensayadero no atiende en ese horario.'
+  if (/cerrada|fuera del horario/i.test(m)) return 'La sala de ensayos no atiende en ese horario.'
   if (/demasiadas solicitudes/i.test(m)) return 'Tienes muchas solicitudes pendientes. Espera a que respondan alguna.'
   if (/falta el nombre/i.test(m)) return 'Escribe el nombre de quien reservó.'
   if (/ya pasó|muy lejos/i.test(m)) return 'Esa fecha no es válida.'
   if (/duración/i.test(m)) return 'La duración debe estar entre 30 minutos y 12 horas.'
-  if (/propia sala/i.test(m)) return 'No puedes reservar en tu propio ensayadero desde aquí.'
+  if (/propia sala/i.test(m)) return 'No puedes reservar en tu propia sala de ensayos desde aquí.'
   if (/no está pendiente|ya no se puede/i.test(m)) return 'Esa reserva ya cambió. Recarga para ver su estado.'
-  if (/no disponible/i.test(m)) return 'Ese ensayadero o esa sala ya no está disponible.'
+  if (/no disponible/i.test(m)) return 'Esa sala de ensayos o esa sala ya no está disponible.'
   return 'No pudimos completar la reserva. Intenta de nuevo.'
 }
 
-/** Precio más bajo por hora de cada ensayadero (para mostrar "desde $X"). */
+/** Precio más bajo por hora de cada sala de ensayos (para mostrar "desde $X"). */
 export async function minPrices(venueIds: string[]): Promise<Record<string, number>> {
   if (!venueIds.length) return {}
   const { data, error } = await db().from('venue_rooms').select('venue_id, price_per_hour').in('venue_id', venueIds)
@@ -318,7 +318,7 @@ export async function removeCalendarSource(roomId: string) {
   if (error) throw error
 }
 
-/** Pide leer los calendarios del ensayadero. Si falla no importa: se usa lo último que se leyó. Devuelve cuántos se actualizaron. */
+/** Pide leer los calendarios de la sala de ensayos. Si falla no importa: se usa lo último que se leyó. Devuelve cuántos se actualizaron. */
 export async function syncCalendars(venueId: string, force = false): Promise<number> {
   try {
     const { data } = await db().functions.invoke('sync-calendars', { body: { venue_id: venueId, force } })
@@ -334,7 +334,7 @@ type EquipRow = {
 }
 const EQUIP_COLS = 'id, room_id, kind, title, quantity, format, brand, model, channels, details, included, extra_price, extra_unit'
 
-/** Todo el equipo de todas las salas de un ensayadero, en una sola consulta. */
+/** Todo el equipo de todas las salas de una sala de ensayos, en una sola consulta. */
 export async function listEquipment(venueId: string): Promise<Equipment[]> {
   const { data, error } = await db().from('room_equipment').select(EQUIP_COLS).eq('venue_id', venueId).order('created_at')
   if (error) throw error

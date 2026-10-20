@@ -36,7 +36,7 @@ export default function EnsayaderoPage() {
   if (venueQ.isLoading) return <ListSkeleton rows={4} />
   const venue = venueQ.data
   if (!venue) {
-    return <p className="empty">Ese ensayadero no está disponible. <Link to="/ensayaderos" style={{ color: 'var(--amber)' }}>Volver a ensayaderos</Link></p>
+    return <p className="empty">Esa sala de ensayos no está disponible. <Link to="/ensayaderos" style={{ color: 'var(--amber)' }}>Volver a salas de ensayos</Link></p>
   }
 
   const isOwner = venue.ownerId === userId
@@ -47,7 +47,7 @@ export default function EnsayaderoPage() {
 
   return (
     <>
-      <Link to="/ensayaderos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Ensayaderos</Link>
+      <Link to="/ensayaderos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Salas de ensayos</Link>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
         <BandMark name={venue.name} logoUrl={venue.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
@@ -76,7 +76,7 @@ export default function EnsayaderoPage() {
 
       {isOwner && (
         <p className="notice" style={{ marginTop: 12 }}>
-          {venue.isPublished ? 'Así ven tu ensayadero las bandas.' : 'Tu ensayadero aún no está publicado: solo tú lo ves.'}{' '}
+          {venue.isPublished ? 'Así ven tu sala de ensayos las bandas.' : 'Tu sala de ensayos aún no está publicada: solo tú la ves.'}{' '}
           <Link to="/mi-negocio/perfil" style={{ color: 'var(--amber)', fontWeight: 600 }}>Administrar</Link>
         </p>
       )}
@@ -90,7 +90,7 @@ export default function EnsayaderoPage() {
       </div>
 
       <div className="section-title">Salas y precios</div>
-      {rooms.length === 0 && <p className="li-sub wrap">Este ensayadero aún no ha cargado sus salas.</p>}
+      {rooms.length === 0 && <p className="li-sub wrap">Esta sala de ensayos aún no ha cargado sus salas.</p>}
       <div className="list">
         {rooms.map((r) => {
           const items = equipByRoom.get(r.id) ?? []
@@ -136,7 +136,7 @@ export default function EnsayaderoPage() {
           )
         })}
       </div>
-      {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>El ensayadero aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
+      {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>La sala de ensayos aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
 
       <div className="section-title">Horario</div>
       <div className="kv" style={{ maxWidth: 360 }}>

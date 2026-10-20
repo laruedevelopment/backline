@@ -15,7 +15,7 @@ import BandMark from './BandMark'
 import Sheet from './Sheet'
 
 /**
- * Barra superior. El usuario puede tener dos sombreros: sus bandas y su negocio (por ejemplo un ensayadero).
+ * Barra superior. El usuario puede tener dos sombreros: sus bandas y su negocio (por ejemplo una sala de ensayos).
  * El selector de aquí cambia entre ellos; cada uno tiene su propia navegación.
  */
 export default function TopBar() {
@@ -85,8 +85,8 @@ export default function TopBar() {
                 </div>
               ) : (
                 <>
-                  <p className="li-sub wrap">¿Tienes un ensayadero u otro negocio musical? Publícalo en Backline y recibe reservas de las bandas.</p>
-                  <button className="btn" onClick={() => { close(); nav('/mi-negocio') }}>Publicar mi ensayadero</button>
+                  <p className="li-sub wrap">¿Tienes una sala de ensayos u otro negocio musical? Publícalo en Backline y recibe reservas de las bandas.</p>
+                  <button className="btn" onClick={() => { close(); nav('/mi-negocio') }}>Publicar mi sala de ensayos</button>
                 </>
               )}
             </>

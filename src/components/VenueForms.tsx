@@ -41,7 +41,7 @@ export function VenueForm({ venue, onSave, onClose }: { venue?: Venue; onSave: (
   }
 
   return (
-    <Sheet title={venue ? 'Datos de tu ensayadero' : 'Publicar mi ensayadero'} onClose={onClose} onSubmit={submit}>
+    <Sheet title={venue ? 'Datos de tu sala de ensayos' : 'Publicar mi sala de ensayos'} onClose={onClose} onSubmit={submit}>
       <div className="tabs" role="group" aria-label="Tipo de lugar">
         {(Object.keys(kindLabel) as VenueKind[]).map((k) => (
           <button key={k} type="button" aria-pressed={d.kind === k} className={d.kind === k ? 'active' : ''} onClick={() => patch({ kind: k })}>{kindLabel[k]}</button>
@@ -83,7 +83,7 @@ export function VenueForm({ venue, onSave, onClose }: { venue?: Venue; onSave: (
       </label>
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : venue ? 'Guardar' : 'Crear mi ensayadero'}</button>
+        <button className="btn primary" disabled={busy}>{busy ? 'Guardando…' : venue ? 'Guardar' : 'Crear mi sala de ensayos'}</button>
       </div>
     </Sheet>
   )

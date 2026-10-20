@@ -17,7 +17,7 @@ export default function LocationEditor({ venue }: { venue: Venue }) {
 
   async function locateMe() {
     setBusy('gps'); setMsg(null)
-    try { setDraft(await currentPosition()); setMsg({ kind: 'ok', text: 'Tomamos tu ubicación actual. Si estás en el ensayadero, está bien; si no, ajústala con la dirección.' }) } catch (e) {
+    try { setDraft(await currentPosition()); setMsg({ kind: 'ok', text: 'Tomamos tu ubicación actual. Si estás en la sala de ensayos, está bien; si no, ajústala con la dirección.' }) } catch (e) {
       const m = (e as Error).message
       setMsg({ kind: 'error', text: m === 'permiso-denegado' ? 'Bloqueaste el permiso de ubicación. Actívalo en los ajustes del sitio, o usa la dirección.' : 'No pudimos obtener tu ubicación. Prueba con la dirección.' })
     }

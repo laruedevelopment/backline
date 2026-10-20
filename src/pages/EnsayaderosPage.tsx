@@ -51,8 +51,8 @@ export default function EnsayaderosPage() {
   if (!supabase) {
     return (
       <>
-        <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Ensayaderos</h1></div>
-        <p className="notice">Ingresa con tu cuenta para ver los ensayaderos y reservar.</p>
+        <div className="page-head"><span className="eyebrow">Modo demostración</span><h1 className="page-title">Salas de ensayos</h1></div>
+        <p className="notice">Ingresa con tu cuenta para ver las salas de ensayos y reservar.</p>
       </>
     )
   }
@@ -61,11 +61,11 @@ export default function EnsayaderosPage() {
     <>
       <div className="page-head">
         <span className="eyebrow">Ensayos</span>
-        <h1 className="page-title">Ensayaderos</h1>
-        <p className="page-sub">Encuentra un ensayadero, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda.</p>
+        <h1 className="page-title">Salas de ensayos</h1>
+        <p className="page-sub">Encuentra una sala de ensayos, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda.</p>
       </div>
       <AgendaNav />
-      {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando el ensayadero responda tu solicitud." />}
+      {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando la sala de ensayos responda tu solicitud." />}
 
       {upcoming.length > 0 && (
         <>
@@ -92,21 +92,21 @@ export default function EnsayaderosPage() {
       )}
       {msg && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{msg}</p>}
 
-      <div className="section-title">Ensayaderos</div>
+      <div className="section-title">Salas de ensayos</div>
       <label className="search">
         <Search size={18} aria-hidden />
-        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o ciudad" aria-label="Buscar ensayaderos" />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o ciudad" aria-label="Buscar salas de ensayos" />
       </label>
 
       {venuesQ.isLoading && <ListSkeleton rows={3} />}
-      {venuesQ.error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>No pudimos cargar los ensayaderos. Revisa tu conexión.</p>}
+      {venuesQ.error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>No pudimos cargar las salas de ensayos. Revisa tu conexión.</p>}
       {!venuesQ.isLoading && !venuesQ.error && (venues?.length ?? 0) === 0 && (
         <div className="empty">
-          <h3>Aún no hay ensayaderos publicados</h3>
-          <p>Los ensayaderos que se publiquen en Backline aparecen aquí con sus salas, horarios y precios. ¿Tienes o conoces uno? Pídele que lo publique.</p>
+          <h3>Aún no hay salas de ensayos publicadas</h3>
+          <p>Las salas de ensayos que se publiquen en Backline aparecen aquí con sus salas, horarios y precios. ¿Tienes o conoces una? Pídele que la publique.</p>
         </div>
       )}
-      {(venues?.length ?? 0) > 0 && shown.length === 0 && <p className="empty">Ningún ensayadero coincide con esa búsqueda.</p>}
+      {(venues?.length ?? 0) > 0 && shown.length === 0 && <p className="empty">Ninguna sala de ensayos coincide con esa búsqueda.</p>}
 
       <div className="list cols" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
         {shown.map((v) => (
@@ -122,11 +122,11 @@ export default function EnsayaderosPage() {
         ))}
       </div>
 
-      <div className="section-title">¿Tienes un ensayadero?</div>
+      <div className="section-title">¿Tienes una sala de ensayos?</div>
       <div className="notice">
         {mine.length > 0
           ? <>Administra tus salas, tus horarios y las reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></>
-          : <>Publica tu ensayadero en Backline: tus salas, horarios y precios, y recibe reservas de las bandas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Publicar mi ensayadero</Link></>}
+          : <>Publica tu sala de ensayos en Backline: tus salas, horarios y precios, y recibe reservas de las bandas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Publicar mi sala de ensayos</Link></>}
       </div>
     </>
   )

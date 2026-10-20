@@ -34,8 +34,8 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Confirmación automática (opcional por sala), reservas anotadas a mano por el dueño, botón Agregar a Google Calendar, actualización en vivo, insignia de pendientes y avisos push (migraciones 0010-0012; función `notify-booking`).
 - [x] Leer el Google Calendar de cada sala por su dirección iCal (migración 0013, función `sync-calendars`).
 - [x] Ficha técnica: medidas de cada sala, equipo incluido o de alquiler aparte (marca/referencia opcional) y ubicación en el mapa (migración 0014).
-- [x] Área «Mi negocio» con dos sombreros (Hoy, Reservas, Salas, Ensayadero).
-- [ ] Recordatorios automáticos, página pública de disponibilidad, plano y fotos por sala, mapa con todos los ensayaderos («cerca de mí») y filtros por equipo.
+- [x] Área «Mi negocio» con dos sombreros (Hoy, Reservas, Salas, Perfil).
+- [ ] Recordatorios automáticos, página pública de disponibilidad, plano y fotos por sala, mapa con todas las salas de ensayos («cerca de mí») y filtros por equipo.
 - [ ] Más tipos de negocio: estudio de grabación, luthier, tienda, profes.
 - [ ] Mapa OSM y mensajes dentro de la app.
 - [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.

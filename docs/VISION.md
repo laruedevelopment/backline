@@ -10,7 +10,7 @@ Cuadrar canciones con la banda es un caos: toca buscar en el chat de WhatsApp d�
 1. **Miembro de banda** (núcleo, se arranca por él): ve qué se toca, cuándo y cómo.
 2. **Líder / manager de banda**: arma repertorio, setlists, ensayos y toques; invita gente.
 3. **Músico independiente**: perfil, rig, busca banda; se ofrece como invitado/sesión.
-4. **Sala de ensayo / venue**: perfil, horarios, reservas, mensajes (piloto: el ensayadero del amigo de Javier).
+4. **Sala de ensayo / venue**: perfil, horarios, reservas, mensajes (piloto: la sala de ensayos del amigo de Javier).
 5. **Fan / público**: sigue bandas, ve fechas de toques, escucha.
 6. **Comprador/vendedor de equipo** (fase tardía).
 
@@ -47,9 +47,9 @@ Cuadrar canciones con la banda es un caos: toca buscar en el chat de WhatsApp d�
 - Primera versión: reserva sin pago en línea (pago en sitio). Pagos (Wompi/Mercado Pago/Stripe) después.
 - Para venues: solicitudes de toque (la banda propone fecha y setlist/EPK).
 
-### E2. Negocios musicales (ensayaderos, estudios, luthiers, tiendas)
+### E2. Negocios musicales (salas de ensayos, estudios, luthiers, tiendas)
 - Un usuario puede tener **dos sombreros**: sus bandas y su negocio. Se cambia desde la barra superior; cada uno tiene su navegación.
-- **Ensayadero** (hecho): salas con medidas, equipo (incluido o de alquiler aparte, con marca/referencia opcional), horario, precios, fotos y ubicación; reservas con confirmación manual o automática; lectura de su Google Calendar.
+- **Sala de ensayos** (hecho): salas con medidas, equipo (incluido o de alquiler aparte, con marca/referencia opcional), horario, precios, fotos y ubicación; reservas con confirmación manual o automática; lectura de su Google Calendar.
 - Mismo molde para otros negocios: **estudio de grabación** (salas de grabación, consola, microfonía), **luthier/taller** (servicios con precio y cita), **tienda** (productos), **profes**. Cada tipo define qué «artículos» lo componen.
 - Directorio con mapa en vivo de todos los negocios, «cerca de mí» y filtros por equipo.
 

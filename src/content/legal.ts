@@ -20,7 +20,7 @@ export const privacy: LegalDoc = {
         'Al registrarte: nombre (como te dicen en la banda), correo electrónico y contraseña (se guarda cifrada; nosotros no la vemos).',
         'En tu perfil, de forma opcional: foto, instrumentos que tocas, ciudad, una descripción corta y un número de WhatsApp. La foto se recorta y se reduce en tu dispositivo y se le quita la ubicación (EXIF) antes de subirla.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
-        'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de ese ensayadero para que pueda confirmarte. Si publicas tu propio ensayadero: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
+        'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de esa sala de ensayos para que pueda confirmarte. Si publicas tu propia sala de ensayos: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
         'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
         'Enlaces de YouTube o Spotify, notas y, si la banda los escribe, la letra y los acordes de sus canciones.',
         'Los códigos y enlaces de invitación que generen los administradores de una banda (vencen a los 7 días).',
@@ -121,10 +121,10 @@ export const terms: LegalDoc = {
       paragraphs: ['No uses Backline para acosar, suplantar, engañar, publicar contenido ilegal, violento, discriminatorio o sexual que involucre menores, ni para vulnerar la seguridad del servicio. Podemos suspender las cuentas que incumplan.'],
     },
     {
-      title: '6. Ensayaderos y reservas',
+      title: '6. Salas de ensayos y reservas',
       paragraphs: [
-        'Backline conecta bandas con ensayaderos y otros negocios musicales; no es parte del contrato entre ellos. Una solicitud solo se vuelve reserva cuando el ensayadero la confirma. Backline no cobra ni procesa pagos: el pago y las condiciones de uso de la sala se acuerdan directamente con ella.',
-        'Quien publica un ensayadero responde por la veracidad de sus datos, horarios y precios, y por atender o cancelar a tiempo las reservas que confirme. Quien reserva debe cancelar con anticipación si no puede asistir.',
+        'Backline conecta bandas con salas de ensayos y otros negocios musicales; no es parte del contrato entre ellos. Una solicitud solo se vuelve reserva cuando la sala de ensayos la confirma. Backline no cobra ni procesa pagos: el pago y las condiciones de uso de la sala se acuerdan directamente con ella.',
+        'Quien publica una sala de ensayos responde por la veracidad de sus datos, horarios y precios, y por atender o cancelar a tiempo las reservas que confirme. Quien reserva debe cancelar con anticipación si no puede asistir.',
       ],
     },
     {

@@ -59,7 +59,7 @@ export function buildNotice(b: BookingFacts, callerId: string): Notice | null {
       case 'rejected':
         return { to: b.requestedBy, tag, url: 'ensayaderos', title: 'Tu solicitud no fue aceptada', body: `${b.venueName} no puede el ${when(b)}. Mira el motivo y prueba otra franja.` }
       case 'cancelled':
-        return { to: b.requestedBy, tag, url: 'ensayaderos', title: 'El ensayadero canceló tu reserva', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
+        return { to: b.requestedBy, tag, url: 'ensayaderos', title: 'La sala de ensayos canceló tu reserva', body: `${b.venueName} · ${b.roomName}: ${when(b)}.` }
       default:
         return null
     }

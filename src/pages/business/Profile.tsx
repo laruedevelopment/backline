@@ -19,7 +19,7 @@ export default function BusinessProfile() {
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['my-venues'] }), qc.invalidateQueries({ queryKey: ['venue', venue.id] }), qc.invalidateQueries({ queryKey: ['venues'] })])
 
   const steps = [
-    { label: 'Datos del ensayadero (nombre, ciudad, contacto)', done: !!venue.name && !!venue.city },
+    { label: 'Datos de la sala de ensayos (nombre, ciudad, contacto)', done: !!venue.name && !!venue.city },
     { label: 'Al menos una sala con su precio', done: rooms.length > 0 },
     { label: 'Horario de atención', done: hours.length > 0 },
   ]
@@ -38,17 +38,17 @@ export default function BusinessProfile() {
   })
 
   async function destroy() {
-    if (!(await ask({ title: `¿Borrar ${venue.name}?`, body: 'Se borran el ensayadero, sus salas, horarios, fotos y reservas. No se puede deshacer.', confirmLabel: 'Borrar el ensayadero', typeToConfirm: venue.name }))) return
+    if (!(await ask({ title: `¿Borrar ${venue.name}?`, body: 'Se borran la sala de ensayos, sus salas, horarios, fotos y reservas. No se puede deshacer.', confirmLabel: 'Borrar la sala de ensayos', typeToConfirm: venue.name }))) return
     try {
       await purgeVenueMedia(venue.id).catch(() => {})
       await deleteVenue(venue.id)
       await refresh()
-    } catch { setErr('No pudimos borrar el ensayadero. Intenta de nuevo.') }
+    } catch { setErr('No pudimos borrar la sala de ensayos. Intenta de nuevo.') }
   }
 
   return (
     <>
-      <h1 className="sr-only">Perfil del ensayadero</h1>
+      <h1 className="sr-only">Perfil de la sala de ensayos</h1>
       <div className="section-title">Publicación</div>
       <div className="checklist">
         {steps.map((s) => (
@@ -60,10 +60,10 @@ export default function BusinessProfile() {
       </div>
       <div className="stack" style={{ marginTop: 12 }}>
         {venue.isPublished
-          ? <button className="btn" disabled={publish.isPending} onClick={() => publish.mutate(false)}>Dejar de publicar (ocultar el ensayadero)</button>
-          : <button className="btn primary" disabled={!ready || publish.isPending} onClick={() => publish.mutate(true)}>{ready ? 'Publicar mi ensayadero' : 'Completa los pasos para publicar'}</button>}
-        <p className="li-sub wrap">{venue.isPublished ? 'Tu ensayadero es visible para todas las personas con cuenta en Backline.' : 'Mientras no esté publicado, solo tú lo ves.'}</p>
-        <Link to={`/ensayaderos/${venue.id}`} className="link-btn" style={{ justifySelf: 'start' }}>Ver cómo lo ven las bandas</Link>
+          ? <button className="btn" disabled={publish.isPending} onClick={() => publish.mutate(false)}>Dejar de publicar (ocultar la sala de ensayos)</button>
+          : <button className="btn primary" disabled={!ready || publish.isPending} onClick={() => publish.mutate(true)}>{ready ? 'Publicar mi sala de ensayos' : 'Completa los pasos para publicar'}</button>}
+        <p className="li-sub wrap">{venue.isPublished ? 'Tu sala de ensayos es visible para todas las personas con cuenta en Backline.' : 'Mientras no esté publicada, solo tú la ves.'}</p>
+        <Link to={`/ensayaderos/${venue.id}`} className="link-btn" style={{ justifySelf: 'start' }}>Ver cómo la ven las bandas</Link>
       </div>
 
       <div className="section-title">Cómo reciben reservas</div>
@@ -90,7 +90,7 @@ export default function BusinessProfile() {
       <VenueMedia venue={venue} canEdit />
 
       <div className="section-title">Zona delicada</div>
-      <button className="btn danger" onClick={() => void destroy()}>Borrar mi ensayadero</button>
+      <button className="btn danger" onClick={() => void destroy()}>Borrar mi sala de ensayos</button>
       {err && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{err}</p>}
 
       {editing && <VenueForm venue={venue} onClose={() => setEditing(false)} onSave={async (d) => { await updateVenue(venue.id, d); await refresh() }} />}

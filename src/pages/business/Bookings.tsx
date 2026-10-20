@@ -5,7 +5,7 @@ import { useVenue } from './BusinessContext'
 import BookingRow from './BookingRow'
 import { useBookingBoard } from './useBookingBoard'
 
-/** Todas las reservas del ensayadero, agrupadas por día. */
+/** Todas las reservas de la sala de ensayos, agrupadas por día. */
 export default function BusinessBookings() {
   const venue = useVenue()
   const board = useBookingBoard(venue)

@@ -71,12 +71,12 @@ const tabs = [
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
 
-/** El otro sombrero: cuando el usuario administra su negocio (ensayadero), la navegación cambia. */
+/** El otro sombrero: cuando el usuario administra su negocio (sala de ensayos), la navegación cambia. */
 const businessTabs = [
   { to: '/mi-negocio', label: 'Hoy', icon: CalendarClock, match: (p: string) => p === '/mi-negocio' },
   { to: '/mi-negocio/reservas', label: 'Reservas', icon: CalendarDays, match: (p: string) => p.startsWith('/mi-negocio/reservas') },
   { to: '/mi-negocio/salas', label: 'Salas', icon: DoorOpen, match: (p: string) => p.startsWith('/mi-negocio/salas') },
-  { to: '/mi-negocio/perfil', label: 'Ensayadero', icon: Store, match: (p: string) => p.startsWith('/mi-negocio/perfil') },
+  { to: '/mi-negocio/perfil', label: 'Perfil', icon: Store, match: (p: string) => p.startsWith('/mi-negocio/perfil') },
   { to: '/', label: 'Mis bandas', icon: Users, match: () => false },
 ]
 

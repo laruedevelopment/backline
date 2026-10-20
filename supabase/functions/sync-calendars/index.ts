@@ -1,12 +1,12 @@
-// Edge Function `sync-calendars`: lee el Google Calendar (dirección secreta iCal) de cada sala de un ensayadero y guarda
-// solo las horas ocupadas. La llama la app cuando alguien abre la reserva de un ensayadero (si la última lectura tiene más de
+// Edge Function `sync-calendars`: lee el Google Calendar (dirección secreta iCal) de cada sala de una sala de ensayos y guarda
+// solo las horas ocupadas. La llama la app cuando alguien abre la reserva de una sala de ensayos (si la última lectura tiene más de
 // 5 minutos) y el dueño con «Sincronizar ahora».
 //
 // Seguridad:
 //  - exige sesión; quien llama no puede indicar URLs: se leen de la base y deben ser de calendar.google.com (también lo exige un CHECK en la tabla);
 //  - sin seguir redirecciones, con tiempo y tamaño máximos;
 //  - se guardan únicamente horas, nunca títulos ni descripciones;
-//  - solo se sincronizan ensayaderos publicados o propios; «forzar» solo lo puede el dueño.
+//  - solo se sincronizan salas de ensayos publicadas o propias; «forzar» solo lo puede el dueño.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { busyFromIcs } from './ics.ts'
 
