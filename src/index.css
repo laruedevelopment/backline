@@ -159,3 +159,8 @@ textarea { resize: vertical; }
 .rsvp .btn.on.yes { background: var(--sage); border-color: var(--sage); color: #06150d; }
 .rsvp .btn.on.maybe { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
 .rsvp .btn.on.no { background: var(--ember); border-color: var(--ember); color: #fff; }
+
+/* Reproductor */
+.player { margin-top: 12px; display: grid; gap: 6px; }
+.player iframe { width: 100%; border: 0; border-radius: 12px; background: var(--surface-2); }
+.player-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); min-height: 32px; }
