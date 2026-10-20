@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  createInvite, deleteBand, listMembers, purgeBandMedia, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
+  createInvite, deleteBand, listMembers, purgeBandMedia, setBandPublic, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
   type Member,
 } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
@@ -28,6 +29,7 @@ export default function BandPage() {
   const [member, setMember] = useState<Member | null>(null)
   const [code, setCode] = useState('')
   const [msg, setMsg] = useState('')
+  const [publicBusy, setPublicBusy] = useState(false)
 
   const bandId = band?.id
   const { data: members = [], isLoading } = useQuery({ queryKey: ['members', bandId], queryFn: () => listMembers(bandId!), enabled: !!bandId })
@@ -97,6 +99,24 @@ export default function BandPage() {
       {isAdmin && <button className="btn" style={{ marginTop: 16 }} onClick={() => setEditing(true)}>Editar datos de la banda</button>}
       {isAdmin && !band.bio && socials.length === 0 && (
         <p className="notice" style={{ marginTop: 14 }}>Completa la banda con una descripción y sus redes: es lo que verá la gente cuando haya perfil público.</p>
+      )}
+
+      {isAdmin && (
+        <>
+          <div className="section-title">Comunidad</div>
+          <label className="check-row" style={{ alignItems: 'start' }}>
+            <input type="checkbox" checked={band.isPublic} disabled={publicBusy} onChange={async (e) => {
+              setPublicBusy(true); setMsg('')
+              try { await setBandPublic(band.id, e.target.checked); await qc.invalidateQueries({ queryKey: ['bands'] }) } catch { setMsg('No pudimos cambiar la visibilidad. Intenta de nuevo.') }
+              setPublicBusy(false)
+            }} />
+            <span>
+              <b>Perfil público de la banda</b><br />
+              Las demás personas con cuenta podrán encontrarla en Comunidad y ver su logo, géneros, descripción, redes y fotos. El repertorio, los setlists, la agenda y las reservas siguen siendo solo de la banda. Los integrantes solo aparecen si ellos mismos activaron su perfil público.
+            </span>
+          </label>
+          {band.isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/bandas/${band.id}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo la ven los demás</Link></p>}
+        </>
       )}
 
       <BandMedia band={band} canEdit={isAdmin} />

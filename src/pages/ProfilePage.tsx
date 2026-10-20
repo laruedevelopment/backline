@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { deleteAccount, getProfile, listMembers, purgeBandMedia, updateProfile, type Profile } from '../lib/api'
+import { deleteAccount, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { initials, instrumentOptions } from '../lib/identity'
 import { lessons } from '../lib/learn'
 import { supabase } from '../lib/supabase'
@@ -46,6 +46,9 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
   const [instruments, setInstruments] = useState<string[]>(initial.instruments)
   const [city, setCity] = useState(initial.city)
   const [bio, setBio] = useState(initial.bio)
+  const [whatsapp, setWhatsapp] = useState(initial.whatsapp)
+  const [isPublic, setIsPublic] = useState(initial.isPublic)
+  const [pubMsg, setPubMsg] = useState('')
   const [status, setStatus] = useState<'' | 'saving' | 'saved' | 'error'>('')
   const [danger, setDanger] = useState('')
 
@@ -56,12 +59,26 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
     if (!name.trim()) return setStatus('error')
     setStatus('saving')
     try {
-      await updateProfile(userId, { displayName: name, instruments, city, bio })
+      await updateProfile(userId, { displayName: name, instruments, city, bio, whatsapp, isPublic })
       await qc.invalidateQueries({ queryKey: ['profile', userId] })
       await qc.invalidateQueries({ queryKey: ['members'] })
       setStatus('saved')
     } catch {
       setStatus('error')
+    }
+  }
+
+  const isMinor = useAuth.getState().session?.user.user_metadata?.age_declaration === 'minor_with_consent'
+
+  async function togglePublic(next: boolean) {
+    setPubMsg('')
+    setIsPublic(next)
+    try {
+      await setProfilePublic(next)
+      await qc.invalidateQueries({ queryKey: ['profile', userId] })
+    } catch (e) {
+      setIsPublic(!next)
+      setPubMsg(/mayores de edad/i.test(String((e as Error).message)) ? 'Solo las personas mayores de edad pueden tener perfil público.' : 'No pudimos cambiar la visibilidad. Intenta de nuevo.')
     }
   }
 
@@ -111,6 +128,9 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
           <label className="field">Ciudad
             <input value={city} onChange={(e) => { setCity(e.target.value); setStatus('') }} maxLength={80} autoComplete="address-level2" />
           </label>
+          <label className="field">WhatsApp (opcional, solo se muestra si tu perfil es público)
+            <input type="tel" inputMode="tel" value={whatsapp} onChange={(e) => { setWhatsapp(e.target.value); setStatus('') }} maxLength={20} placeholder="300 123 4567" autoComplete="tel" />
+          </label>
           <label className="field">Sobre ti
             <textarea rows={3} value={bio} onChange={(e) => { setBio(e.target.value); setStatus('') }} maxLength={300} placeholder="Qué tocas, qué escuchas, con quién has tocado. No pongas datos sensibles." />
           </label>
@@ -119,6 +139,18 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
           {status === 'error' && <p className="form-error" role="alert">No pudimos guardar. Revisa tu nombre e intenta de nuevo.</p>}
         </form>
       )}
+
+      <div className="section-title">Comunidad</div>
+      <label className="check-row" style={{ alignItems: 'start' }}>
+        <input type="checkbox" checked={isPublic} disabled={isMinor} onChange={(e) => void togglePublic(e.target.checked)} />
+        <span>
+          <b>Perfil público</b><br />
+          Otras personas con cuenta en Backline podrán encontrarte en Comunidad y ver tu nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Tu correo nunca se muestra. Puedes apagarlo cuando quieras.
+          {isMinor && ' Solo las personas mayores de edad pueden activarlo.'}
+        </span>
+      </label>
+      {pubMsg && <p className="form-error" role="alert">{pubMsg}</p>}
+      {isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/musicos/${userId}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo me ven los demás</Link></p>}
 
       <div className="section-title">Tu práctica</div>
       <div className="stats">

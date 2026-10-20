@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
-import { CalendarClock, CalendarDays, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
+import { CalendarClock, CalendarDays, Compass, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { persistOptions, queryClient } from './lib/queryClient'
@@ -24,6 +24,9 @@ import AgendaPage from './pages/AgendaPage'
 import EnsayaderosPage from './pages/EnsayaderosPage'
 import EnsayaderoPage from './pages/EnsayaderoPage'
 import BusinessLayout from './pages/business/BusinessLayout'
+import ExplorePage from './pages/ExplorePage'
+import PublicBandPage from './pages/PublicBandPage'
+import PublicMusicianPage from './pages/PublicMusicianPage'
 import LearnPage from './pages/LearnPage'
 import LessonPage from './pages/LessonPage'
 import BandPage from './pages/BandPage'
@@ -34,6 +37,7 @@ const tabs = [
   { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/ensayaderos') },
   { to: '/aprender', label: 'Aprender', icon: GraduationCap, match: (p: string) => p.startsWith('/aprender') },
+  { to: '/explorar', label: 'Comunidad', icon: Compass, match: (p: string) => p.startsWith('/explorar') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
 
@@ -148,6 +152,10 @@ function Shell() {
               <Route path="/ensayaderos" element={<EnsayaderosPage />} />
               <Route path="/ensayaderos/:id" element={<EnsayaderoPage />} />
               <Route path="/mi-negocio/*" element={<BusinessLayout />} />
+              <Route path="/explorar" element={<ExplorePage />} />
+              <Route path="/explorar/musicos" element={<ExplorePage />} />
+              <Route path="/explorar/bandas/:id" element={<PublicBandPage />} />
+              <Route path="/explorar/musicos/:id" element={<PublicMusicianPage />} />
               <Route path="/aprender" element={<LearnPage />} />
               <Route path="/aprender/:id" element={<LessonPage />} />
               <Route path="/banda" element={<BandPage />} />

@@ -1,6 +1,6 @@
 import type { Song } from './song'
 
-export type ParsedLine = { title: string; artist: string }
+export type ParsedLine = { title: string; artist: string; tuning?: string; notes?: string }
 export type ParsedSetlist = { name: string; lines: ParsedLine[] }
 
 /** Minúsculas, sin tildes ni signos: para comparar títulos escritos distinto. */

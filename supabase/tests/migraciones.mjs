@@ -65,7 +65,8 @@ const t = (n, hm) => `${day(n)}T${hm}:00-05:00`
 
 console.log('\nPerfil y trigger de registro')
 await ok('el trigger guardó la aceptación de términos', async () => {
-  const [p] = await as('owner', `select terms_version, age_declaration, accepted_terms_at is not null as at from public.profiles where id = $1`, [U.owner])
+  // Nadie (ni la propia persona) lee estos datos por la API: se verifican con acceso de administrador.
+  const p = (await pg.query(`select terms_version, age_declaration, accepted_terms_at is not null as at from public.profiles where id = $1`, [U.owner])).rows[0]
   eq([p.terms_version, p.age_declaration, p.at], ['0.2', 'adult', true], 'aceptación')
 })
 await rejects('el usuario no puede reescribir su aceptación', () => as('owner', `update public.profiles set terms_version = 'x' where id = $1`, [U.owner]), /permission denied/)
@@ -327,6 +328,62 @@ await ok('el dueño guarda la ubicación en el mapa (latitud y longitud juntas)'
   if (!failed) throw new Error('permitió latitud 200')
 })
 await rejects('otro no puede cambiar la ubicación', async () => { const r = await as('leader', `update public.venues set lat = 1, lng = 1 where id=$1 returning id`, [venue]); if (r.length) throw new Error('cambió'); throw new Error('0 filas (RLS)') }, /RLS|permission/)
+
+
+console.log('\nComunidad: perfiles y bandas públicos (opcionales)')
+await ok('por defecto nadie es público: otro usuario no ve ni perfiles ni bandas ajenas', async () => {
+  eq((await as('other', `select id from public.bands where id=$1`, [band])).length, 0, 'banda')
+  eq((await as('member', `select id from public.profiles where id=$1`, [U.leader])).length, 0, 'perfil')
+})
+await rejects('otra persona no puede hacer pública mi banda', async () => { const r = await as('other', `update public.bands set is_public = true where id=$1 returning id`, [band]); if (r.length) throw new Error('publicó'); throw new Error('0 filas (RLS)') }, /RLS|permission/)
+await ok('el líder publica su banda y entonces la ven las demás personas con cuenta', async () => {
+  await as('leader', `update public.bands set is_public = true where id=$1`, [band])
+  eq((await as('member', `select id, name from public.bands where id=$1`, [band])).length, 1, 'no la ve')
+})
+await ok('lo privado sigue privado aunque la banda sea pública (canciones, setlists, agenda, reservas)', async () => {
+  await as('leader', `insert into public.songs (band_id, title) values ($1,'Privada')`, [band])
+  eq((await as('member', `select id from public.songs where band_id=$1`, [band])).length, 0, 'canciones')
+  eq((await as('member', `select id from public.setlists where band_id=$1`, [band])).length, 0, 'setlists')
+  eq((await as('member', `select id from public.events where band_id=$1`, [band])).length, 0, 'eventos')
+  eq((await as('member', `select profile_id from public.band_members where band_id=$1`, [band])).length, 0, 'integrantes directos')
+  eq((await as('member', `select code from public.band_invites`)).length, 0, 'invitaciones')
+})
+await ok('los integrantes de una banda pública solo salen si hicieron público su perfil', async () => {
+  eq((await as('member', `select * from public.band_public_members($1)`, [band])).length, 0, 'salió alguien sin permiso')
+  await as('leader', `select public.set_profile_public(true)`)
+  const rows = await as('member', `select display_name, role from public.band_public_members($1)`, [band])
+  eq(rows.length, 1, 'integrantes'); eq(rows[0].role, 'owner', 'rol')
+})
+await ok('la persona pública se puede ver, pero sin datos internos', async () => {
+  eq((await as('member', `select id, display_name from public.profiles where id=$1`, [U.leader])).length, 1, 'perfil público')
+})
+await rejects('nadie puede leer la declaración de edad ni la aceptación de términos de otra persona', () => as('member', `select age_declaration from public.profiles where id=$1`, [U.leader]), /permission denied/)
+await rejects('ni siquiera la suya (no es un dato para mostrar)', () => as('leader', `select terms_version from public.profiles where id=$1`, [U.leader]), /permission denied/)
+await rejects('no se puede cambiar is_public del perfil directamente (solo por la función)', () => as('leader', `update public.profiles set is_public = true where id=$1`, [U.leader]), /permission denied/)
+await ok('un menor de edad no puede publicar su perfil', async () => {
+  await pg.query(`update public.profiles set age_declaration = 'minor_with_consent', is_public = false where id=$1`, [U.member])
+  let failed = false
+  try { await as('member', `select public.set_profile_public(true)`) } catch (e) { failed = /mayores de edad/.test(e.message) }
+  if (!failed) throw new Error('un menor pudo publicar su perfil')
+})
+await ok('las bandas públicas de una persona pública se listan; las privadas no', async () => {
+  const rows = await as('member', `select name from public.profile_public_bands($1)`, [U.leader])
+  eq(rows.length, 1, 'bandas')
+  await as('leader', `update public.bands set is_public = false where id=$1`, [band])
+  eq((await as('member', `select name from public.profile_public_bands($1)`, [U.leader])).length, 0, 'sigue saliendo una banda privada')
+})
+await ok('el conteo de integrantes solo funciona para bandas públicas', async () => {
+  eq((await as('member', `select public.band_member_count($1) as n`, [band]))[0].n, 0, 'contó una banda privada')
+  await as('leader', `update public.bands set is_public = true where id=$1`, [band])
+  eq((await as('member', `select public.band_member_count($1) as n`, [band]))[0].n >= 1, true, 'no contó')
+})
+await ok('las fotos de una banda pública las ven las demás personas con cuenta', async () => {
+  await pg.query(`insert into public.band_photos (band_id, path) values ($1, $2)`, [band, `${band}/photos/x.webp`])
+  eq((await as('member', `select id from public.band_photos where band_id=$1`, [band])).length, 1, 'no ve la foto')
+  await as('leader', `update public.bands set is_public = false where id=$1`, [band])
+  eq((await as('member', `select id from public.band_photos where band_id=$1`, [band])).length, 0, 've fotos de banda privada')
+  await as('leader', `update public.bands set is_public = true where id=$1`, [band])
+})
 
 console.log('\nFotos y límites')
 await rejects('una foto no puede apuntar a la carpeta de otra sala', () => as('owner', `insert into public.venue_photos (venue_id, path) values ($1,'otra/photos/x.webp')`, [venue]), /check/)

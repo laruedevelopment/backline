@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { Camera, Check, Link2, Plus } from 'lucide-react'
+import { Camera, Check, Link2, Plus, X } from 'lucide-react'
 import { fetchYoutubePlaylist, playlistIdFromUrl, youtubeEnabled } from '../lib/youtubePlaylist'
 import { readTextFromImage } from '../lib/ocr'
 import type { Song } from '../lib/song'
-import { matchSongs, parseSetlistText } from '../lib/importSetlist'
+import { matchSongs, parseSetlistText, type ParsedLine } from '../lib/importSetlist'
+import { parseSetlistLayout } from '../lib/setlistImage'
 import Sheet from './Sheet'
 
 type Props = {
@@ -23,12 +24,21 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
   const [link, setLink] = useState('')
   const [fetching, setFetching] = useState(false)
 
-  const parsed = useMemo(() => parseSetlistText(text), [text])
+  // Filas que salieron de una imagen diseñada (con afinación y notas); si hay, mandan sobre el texto.
+  const [imageRows, setImageRows] = useState<ParsedLine[]>([])
+  const [imageName, setImageName] = useState('')
+
+  const textParsed = useMemo(() => parseSetlistText(text), [text])
+  const parsed = useMemo(
+    () => (imageRows.length ? { name: imageName, lines: imageRows } : textParsed),
+    [imageRows, imageName, textParsed],
+  )
   const matches = useMemo(() => matchSongs(parsed.lines, songs), [parsed, songs])
   const fresh = matches.filter((m) => !m.song).length
   const title = name || parsed.name || 'Setlist importado'
 
-  const append = (more: string) => setText((t) => (t ? `${t}\n${more}` : more))
+  const append = (more: string) => { setImageRows([]); setText((t) => (t ? `${t}\n${more}` : more)) }
+  const removeRow = (i: number) => setImageRows((r) => r.filter((_, j) => j !== i))
 
   async function fromImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -38,8 +48,12 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
     setReading(0)
     try {
       const out = await readTextFromImage(file, setReading)
-      if (!out.trim()) setError('No pudimos leer texto en esa imagen. Prueba con una foto más nítida y de frente.')
-      else append(out)
+      const layout = parseSetlistLayout(out.lines, out.width)
+      if (layout && layout.rows.length >= 3) {
+        setImageRows(layout.rows.map((r) => ({ title: r.title, artist: r.artist, tuning: r.tuning, notes: r.notes })))
+        setImageName(layout.name)
+      } else if (!out.text.trim()) setError('No pudimos leer texto en esa imagen. Prueba con una foto más nítida y de frente.')
+      else append(out.text)
     } catch {
       setError('No pudimos leer la imagen. Revisa que sea una foto o captura de menos de 12 MB.')
     }
@@ -73,7 +87,8 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
         if (m.song) { ids.push(m.song.id); continue }
         const song: Song = {
           id: crypto.randomUUID(), title: m.line.title, artist: m.line.artist, key: '', bpm: 100, minutes: 4,
-          status: 'learning', tunings: [{ instrument: 'Todos', tuning: 'E estándar' }], keyChanges: [], links: {},
+          status: 'learning', tunings: [{ instrument: 'Todos', tuning: m.line.tuning || 'E estándar' }], keyChanges: [], links: {},
+          ...(m.line.notes ? { notes: m.line.notes } : {}),
         }
         await saveSong(song)
         ids.push(song.id)
@@ -115,9 +130,10 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
                   <div className="num">{i + 1}</div>
                   <div className="grow">
                     <div className="title">{m.line.title}</div>
-                    <div className="sub">{m.song?.artist || m.line.artist || 'Sin artista'}</div>
+                    <div className="sub">{[m.song?.artist || m.line.artist || 'Sin artista', m.line.tuning, m.line.notes].filter(Boolean).join(' · ')}</div>
                   </div>
                   {m.song ? <span className="chip ok"><Check size={12} aria-hidden /> En repertorio</span> : <span className="chip key"><Plus size={12} aria-hidden /> Nueva</span>}
+                  {imageRows.length > 0 && <button className="btn" aria-label={`Quitar ${m.line.title}`} onClick={() => removeRow(i)}><X size={16} aria-hidden /></button>}
                 </div>
               ))}
             </div>

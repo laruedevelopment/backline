@@ -4,7 +4,7 @@ import type { Song } from './song'
 export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
 export type Band = {
   id: string; name: string; city: string | null; role: string; genres: string[]; bio: string | null; links: BandLinks
-  logoPath: string | null; logoUrl: string | null
+  logoPath: string | null; logoUrl: string | null; isPublic: boolean
 }
 
 const BUCKET = 'band-media'
@@ -34,12 +34,12 @@ const toRow = (bandId: string, s: Song) => ({
 const publicUrl = (path: string) => db().storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 
 export async function myBands(userId: string): Promise<Band[]> {
-  const { data, error } = await db().from('band_members').select('role, bands(id, name, city, genres, bio, links, logo_path)').eq('profile_id', userId)
+  const { data, error } = await db().from('band_members').select('role, bands(id, name, city, genres, bio, links, logo_path, is_public)').eq('profile_id', userId)
   if (error) throw error
-  type Row = { role: string; bands: { id: string; name: string; city: string | null; genres: string[]; bio: string | null; links: BandLinks; logo_path: string | null } }
+  type Row = { role: string; bands: { id: string; name: string; city: string | null; genres: string[]; bio: string | null; links: BandLinks; logo_path: string | null; is_public: boolean } }
   return (data as unknown as Row[]).map(({ role, bands: b }) => ({
     id: b.id, name: b.name, city: b.city, role, genres: b.genres, bio: b.bio, links: b.links,
-    logoPath: b.logo_path, logoUrl: b.logo_path ? publicUrl(b.logo_path) : null,
+    logoPath: b.logo_path, logoUrl: b.logo_path ? publicUrl(b.logo_path) : null, isPublic: b.is_public,
   }))
 }
 
@@ -140,17 +140,17 @@ export async function setRsvp(eventId: string, userId: string, status: RsvpStatu
   if (error) throw error
 }
 
-export type Profile = { displayName: string; instruments: string[]; city: string; bio: string }
+export type Profile = { displayName: string; instruments: string[]; city: string; bio: string; whatsapp: string; isPublic: boolean }
 
 export async function getProfile(userId: string): Promise<Profile> {
-  const { data, error } = await db().from('profiles').select('display_name, instruments, city, bio').eq('id', userId).single()
+  const { data, error } = await db().from('profiles').select('display_name, instruments, city, bio, whatsapp, is_public').eq('id', userId).single()
   if (error) throw error
-  return { displayName: data.display_name, instruments: data.instruments ?? [], city: data.city ?? '', bio: data.bio ?? '' }
+  return { displayName: data.display_name, instruments: data.instruments ?? [], city: data.city ?? '', bio: data.bio ?? '', whatsapp: data.whatsapp ?? '', isPublic: data.is_public }
 }
 
 export async function updateProfile(userId: string, p: Profile) {
   const { error } = await db().from('profiles').update({
-    display_name: p.displayName.trim(), instruments: p.instruments, city: p.city.trim() || null, bio: p.bio.trim() || null,
+    display_name: p.displayName.trim(), instruments: p.instruments, city: p.city.trim() || null, bio: p.bio.trim() || null, whatsapp: p.whatsapp.trim() || null,
   }).eq('id', userId)
   if (error) throw error
 }
@@ -258,4 +258,16 @@ export async function purgeBandMedia(bandId: string) {
     ...(photos.data ?? []).filter((f) => f.id).map((f) => `${bandId}/photos/${f.name}`),
   ]
   await removeFiles(paths)
+}
+
+// ───────── Visibilidad (perfil público opcional) ─────────
+export async function setBandPublic(bandId: string, isPublic: boolean) {
+  const { error } = await db().from('bands').update({ is_public: isPublic }).eq('id', bandId)
+  if (error) throw error
+}
+
+/** Solo las personas mayores de edad pueden activarlo (lo exige la base de datos). */
+export async function setProfilePublic(isPublic: boolean) {
+  const { error } = await db().rpc('set_profile_public', { p_public: isPublic })
+  if (error) throw error
 }
