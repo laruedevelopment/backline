@@ -10,6 +10,7 @@ import { useAuth } from './store/useAuth'
 import { BandContext, BandsContext, useActiveBand } from './store/useBandSession'
 import TopBar from './components/TopBar'
 import OfflineBanner from './components/OfflineBanner'
+import ListSkeleton from './components/Skeleton'
 import { useLiveBookings, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
@@ -20,22 +21,40 @@ import LoginPage from './pages/LoginPage'
 import HomePage from './pages/HomePage'
 
 // Cada pantalla se descarga cuando se abre: el primer arranque es más liviano.
-const LegalPage = lazy(() => import('./pages/LegalPage'))
-const NewPasswordPage = lazy(() => import('./pages/NewPasswordPage'))
-const RepertoirePage = lazy(() => import('./pages/RepertoirePage'))
-const SetlistsPage = lazy(() => import('./pages/SetlistsPage'))
-const SetlistDetailPage = lazy(() => import('./pages/SetlistDetailPage'))
-const AgendaPage = lazy(() => import('./pages/AgendaPage'))
-const EnsayaderosPage = lazy(() => import('./pages/EnsayaderosPage'))
-const EnsayaderoPage = lazy(() => import('./pages/EnsayaderoPage'))
-const BusinessLayout = lazy(() => import('./pages/business/BusinessLayout'))
-const ExplorePage = lazy(() => import('./pages/ExplorePage'))
-const PublicBandPage = lazy(() => import('./pages/PublicBandPage'))
-const PublicMusicianPage = lazy(() => import('./pages/PublicMusicianPage'))
-const LearnPage = lazy(() => import('./pages/LearnPage'))
-const LessonPage = lazy(() => import('./pages/LessonPage'))
-const BandPage = lazy(() => import('./pages/BandPage'))
-const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const pageLoaders = {
+  LegalPage: () => import('./pages/LegalPage'),
+  NewPasswordPage: () => import('./pages/NewPasswordPage'),
+  RepertoirePage: () => import('./pages/RepertoirePage'),
+  SetlistsPage: () => import('./pages/SetlistsPage'),
+  SetlistDetailPage: () => import('./pages/SetlistDetailPage'),
+  AgendaPage: () => import('./pages/AgendaPage'),
+  EnsayaderosPage: () => import('./pages/EnsayaderosPage'),
+  EnsayaderoPage: () => import('./pages/EnsayaderoPage'),
+  BusinessLayout: () => import('./pages/business/BusinessLayout'),
+  ExplorePage: () => import('./pages/ExplorePage'),
+  PublicBandPage: () => import('./pages/PublicBandPage'),
+  PublicMusicianPage: () => import('./pages/PublicMusicianPage'),
+  LearnPage: () => import('./pages/LearnPage'),
+  LessonPage: () => import('./pages/LessonPage'),
+  BandPage: () => import('./pages/BandPage'),
+  ProfilePage: () => import('./pages/ProfilePage')
+}
+const LegalPage = lazy(pageLoaders.LegalPage)
+const NewPasswordPage = lazy(pageLoaders.NewPasswordPage)
+const RepertoirePage = lazy(pageLoaders.RepertoirePage)
+const SetlistsPage = lazy(pageLoaders.SetlistsPage)
+const SetlistDetailPage = lazy(pageLoaders.SetlistDetailPage)
+const AgendaPage = lazy(pageLoaders.AgendaPage)
+const EnsayaderosPage = lazy(pageLoaders.EnsayaderosPage)
+const EnsayaderoPage = lazy(pageLoaders.EnsayaderoPage)
+const BusinessLayout = lazy(pageLoaders.BusinessLayout)
+const ExplorePage = lazy(pageLoaders.ExplorePage)
+const PublicBandPage = lazy(pageLoaders.PublicBandPage)
+const PublicMusicianPage = lazy(pageLoaders.PublicMusicianPage)
+const LearnPage = lazy(pageLoaders.LearnPage)
+const LessonPage = lazy(pageLoaders.LessonPage)
+const BandPage = lazy(pageLoaders.BandPage)
+const ProfilePage = lazy(pageLoaders.ProfilePage)
 
 /** Pantallas de formulario o de lectura: no se estiran a todo el ancho de un monitor. */
 function Measure({ children }: { children: React.ReactNode }) { return <div className="measure">{children}</div> }
@@ -170,6 +189,13 @@ function Nav() {
 
 function Shell() {
   useLiveBookings()
+  // Con la app ya abierta, se descargan las demás pantallas en un momento libre: al navegar no hay espera.
+  useEffect(() => {
+    const warm = () => Object.values(pageLoaders).forEach((load) => void load().catch(() => {}))
+    const idle = typeof window.requestIdleCallback === 'function'
+    const id = idle ? window.requestIdleCallback(warm, { timeout: 4000 }) : window.setTimeout(warm, 2500)
+    return () => { if (idle) window.cancelIdleCallback(id); else window.clearTimeout(id) }
+  }, [])
   const band = useActiveBand()
   return (
     <div className="shell">
@@ -179,7 +205,7 @@ function Shell() {
           <OfflineBanner />
           <main className="content">
             {/* Al cambiar de banda se reinicia la pantalla: nada de lo escrito o generado (códigos, búsquedas, formularios) se arrastra de la anterior. */}
-            <Suspense key={band?.id ?? 'local'} fallback={<Splash />}>
+            <Suspense key={band?.id ?? 'local'} fallback={<ListSkeleton rows={3} />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/repertorio" element={<RepertoirePage />} />
