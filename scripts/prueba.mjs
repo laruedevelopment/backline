@@ -122,13 +122,13 @@ async function sembrar() {
   const bk = { pend: id(), conf: id(), manual: id(), past: id(), rej: id(), canc: id(), v2pend: id(), v2conf: id() }
 
   const script = `
-    update public.profiles set instruments = '{Bajo}', city = 'Bucaramanga' where id = ${q(U2)};
-    update public.profiles set instruments = '{Batería}', city = 'Bucaramanga' where id = ${q(U3)};
-    update public.profiles set instruments = '{Teclado,Voz}', city = 'Bucaramanga' where id = ${q(U1)};
+    update public.profiles set instruments = '{Bajo}', city = 'Bucaramanga', is_public = true where id = ${q(U2)};
+    update public.profiles set instruments = '{Batería}', city = 'Bucaramanga', is_public = true where id = ${q(U3)};
+    update public.profiles set instruments = '{Teclado,Voz}', city = 'Bucaramanga', is_public = true where id = ${q(U1)};
 
     -- Banda de prueba (tú eres admin)
-    insert into public.bands (id, name, city, genres, bio, links, created_by) values (${q(B1)}, 'Los Chinos (PRUEBA)', 'Bucaramanga', ${qa(['Rock', 'Funk'])},
-      'Banda de prueba para revisar la app: repertorio, setlists, agenda y reservas.', ${qj({ instagram: 'https://instagram.com/loschinos', youtube: 'https://youtube.com/@loschinos' })}, ${q(U2)});
+    insert into public.bands (id, name, city, genres, bio, links, created_by, is_public) values (${q(B1)}, 'Los Chinos (PRUEBA)', 'Bucaramanga', ${qa(['Rock', 'Funk'])},
+      'Banda de prueba para revisar la app: repertorio, setlists, agenda y reservas.', ${qj({ instagram: 'https://instagram.com/loschinos', youtube: 'https://youtube.com/@loschinos' })}, ${q(U2)}, true);
     insert into public.band_members (band_id, profile_id, role, instrument) values
       (${q(B1)}, ${q(U2)}, 'owner', 'Bajo'), (${q(B1)}, ${q(U3)}, 'member', 'Batería'), (${q(B1)}, ${q(J)}, 'admin', 'Guitarra');
 
