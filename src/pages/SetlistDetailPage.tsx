@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
-import { tuningLabel, tuningSignature } from '../lib/song'
+import { isStandard, tuningSignature, tuningSummary } from '../lib/song'
 import StageMode from '../components/StageMode'
 import ListSkeleton from '../components/Skeleton'
 
@@ -45,7 +45,7 @@ export default function SetlistDetailPage() {
         {items.length === 0 && <p style={{ padding: '18px 0' }}>Vacío. Agrega canciones de tu repertorio.</p>}
         {items.map((s, i) => (
           <div key={s.id} className="paper-row" style={editing ? { gridTemplateColumns: '32px 1fr auto auto' } : undefined}>
-            {differs(i) && <div className="retune">CAMBIAR A {tuningLabel(s).toUpperCase()}</div>}
+            {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
             <span className="n">{i + 1}</span>
             <div>
               <div className="t">{s.title}</div>
@@ -79,7 +79,7 @@ export default function SetlistDetailPage() {
               <button key={s.id} className="li" onClick={() => update([...ids, s.id])}>
                 <div className="li-main">
                   <div className="li-title">{s.title}</div>
-                  <div className="li-sub">{s.artist} · {tuningLabel(s)}</div>
+                  <div className="li-sub">{s.artist} · {tuningSummary(s)}</div>
                 </div>
                 <span className="tag">Agregar</span>
               </button>

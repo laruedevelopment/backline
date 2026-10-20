@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ExternalLink, Pause, Pencil, Play } from 'lucide-react'
 import { embedsFor } from '../lib/embed'
-import { isStandard, keyChangeLabel, statusLabel, tuningLabel, type Song } from '../lib/song'
+import { isStandard, keyChangeLabel, statusLabel, tuningSummary, type Song } from '../lib/song'
 
 type Props = { song: Song; onEdit?: () => void }
 
@@ -19,7 +19,7 @@ export default function SongRow({ song, onEdit }: Props) {
           <div className="li-title">{song.title}</div>
           <div className="li-sub">{song.artist || 'Sin artista'}</div>
           <div className="sub-row">
-            <span className={standard ? '' : 'flag'}>{tuningLabel(song)}</span>
+            <span className={standard ? '' : 'flag'}>{tuningSummary(song)}</span>
             {song.keyChanges.map((k, i) => <span key={i} className="flag">{keyChangeLabel(k)}</span>)}
             {song.guest && <span>{song.guest}</span>}
             {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}

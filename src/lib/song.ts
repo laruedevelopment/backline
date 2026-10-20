@@ -32,7 +32,17 @@ export function tuningLabel(song: Song): string {
 /** Firma para detectar cambios de afinación entre canciones de un setlist. */
 export const tuningSignature = (song: Song) => tuningLabel(song).toLowerCase()
 
-export const isStandard = (song: Song) => song.tunings.every((t) => !t.tuning.trim() || /est[aá]ndar/i.test(t.tuning))
+const standardTuning = (t: Tuning) => (!t.tuning.trim() || /est[aá]ndar/i.test(t.tuning)) && !t.capo
+
+export const isStandard = (song: Song) => song.tunings.every(standardTuning)
+
+/** Solo lo que se sale de lo normal: "Guitarra: Drop D" (el bajo en estándar no se menciona). */
+export function tuningSummary(song: Song): string {
+  const odd = song.tunings.filter((t) => !standardTuning(t))
+  if (odd.length === 0) return 'E estándar'
+  const single = song.tunings.length === 1 || /^(todos|todo)$/i.test(odd[0].instrument.trim())
+  return odd.map((t) => (single ? tuningText(t) : `${t.instrument || 'Instrumento'}: ${tuningText(t)}`)).join(' · ')
+}
 
 export const keyChangeLabel = (k: KeyChange) => `${k.from} → ${k.to}${k.section ? ` en ${k.section.toLowerCase()}` : ''}`
 

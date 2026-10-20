@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { keyChangeLabel, tuningLabel, tuningSignature, type Song } from '../lib/song'
+import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, type Song } from '../lib/song'
 
 /** Pantalla limpia para el toque: canción actual en grande, tono, afinación y la siguiente. */
 export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: () => void }) {
@@ -42,7 +42,7 @@ export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: 
         <div className="stage-chips">
           {cur.key && <span className="stage-chip key">{cur.key}</span>}
           <span className="stage-chip">{cur.bpm} bpm</span>
-          <span className="stage-chip">{tuningLabel(cur)}</span>
+          <span className="stage-chip">{tuningSummary(cur)}</span>
         </div>
         {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
         {cur.guest && <div className="stage-artist">{cur.guest}</div>}
@@ -51,7 +51,7 @@ export default function StageMode({ songs, onClose }: { songs: Song[]; onClose: 
       <div className="stage-next">
         {next ? (
           <>
-            {retune && <div className="stage-warn">Ojo: la siguiente va en {tuningLabel(next)}</div>}
+            {retune && <div className="stage-warn">{isStandard(next) ? 'Ojo: la siguiente vuelve a E estándar' : `Ojo: la siguiente va en ${tuningSummary(next)}`}</div>}
             <span>Sigue: <b>{next.title}</b></span>
           </>
         ) : <span>Última canción. ¡Gracias, Bucaramanga!</span>}
