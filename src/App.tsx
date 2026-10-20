@@ -14,6 +14,9 @@ import { useLiveBookings, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
 import JoinPage from './pages/JoinPage'
+
+/** Pantallas de formulario o de lectura: no se estiran a todo el ancho de un monitor. */
+function Measure({ children }: { children: React.ReactNode }) { return <div className="measure">{children}</div> }
 import { clearPendingInvite, readPendingInvite } from './lib/pendingInvite'
 import LegalPage from './pages/LegalPage'
 import LoginPage from './pages/LoginPage'
@@ -176,16 +179,16 @@ function Shell() {
               <Route path="/setlists/:id" element={<SetlistDetailPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
               <Route path="/ensayaderos" element={<EnsayaderosPage />} />
-              <Route path="/ensayaderos/:id" element={<EnsayaderoPage />} />
+              <Route path="/ensayaderos/:id" element={<Measure><EnsayaderoPage /></Measure>} />
               <Route path="/mi-negocio/*" element={<BusinessLayout />} />
               <Route path="/explorar" element={<ExplorePage />} />
               <Route path="/explorar/musicos" element={<ExplorePage />} />
-              <Route path="/explorar/bandas/:id" element={<PublicBandPage />} />
-              <Route path="/explorar/musicos/:id" element={<PublicMusicianPage />} />
+              <Route path="/explorar/bandas/:id" element={<Measure><PublicBandPage /></Measure>} />
+              <Route path="/explorar/musicos/:id" element={<Measure><PublicMusicianPage /></Measure>} />
               <Route path="/aprender" element={<LearnPage />} />
-              <Route path="/aprender/:id" element={<LessonPage />} />
-              <Route path="/banda" element={<BandPage />} />
-              <Route path="/perfil" element={<ProfilePage />} />
+              <Route path="/aprender/:id" element={<Measure><LessonPage /></Measure>} />
+              <Route path="/banda" element={<Measure><BandPage /></Measure>} />
+              <Route path="/perfil" element={<Measure><ProfilePage /></Measure>} />
             </Routes>
           </main>
         </div>

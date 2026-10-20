@@ -492,10 +492,11 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 @media (min-width: 1900px) { .main { max-width: 1440px; } }
 .list.cols { display: block; }
 @media (min-width: 1100px) {
-  .list.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; align-content: start; }
+  /* Dos columnas solo cuando hay suficientes elementos: con pocos, una fila a todo el ancho se ve mejor que media fila. */
+  .list.cols:has(> :nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; align-content: start; }
   .home-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0 48px; align-items: start; }
 }
-@media (min-width: 1700px) { .list.cols.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); } .explore-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1700px) { .list.cols.wide:has(> :nth-child(7)) { grid-template-columns: repeat(3, minmax(0, 1fr)); } .explore-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* Reordenar arrastrando */
 .paper-row.has-grip { grid-template-columns: 40px 32px 1fr auto; }
@@ -506,3 +507,11 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .paper .grip:hover { opacity: 1; background: color-mix(in srgb, var(--paper-ink) 10%, transparent); }
 .paper .grip:focus-visible { outline: 2px solid var(--paper-ink); opacity: 1; }
 .paper-row.dragging { position: relative; z-index: 5; background: var(--paper); box-shadow: 0 8px 24px rgb(0 0 0 / 0.35); border-radius: 4px; opacity: 0.96; }
+
+/* Formularios y pantallas de lectura: ancho cómodo, no todo el monitor. */
+.measure { max-width: 880px; }
+/* Setlist: la hoja a la izquierda y las acciones a la derecha cuando hay espacio. */
+@media (min-width: 1100px) {
+  .detail-split { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 32px; align-items: start; }
+  .detail-split .detail-side { position: sticky; top: calc(var(--bar-h) + 16px); margin-top: 6px !important; }
+}

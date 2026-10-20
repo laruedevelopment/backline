@@ -85,6 +85,7 @@ export default function SetlistDetailPage() {
     <>
       <Link to="/setlists" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Setlists</Link>
 
+      <div className="detail-split">
       <article className="paper" style={{ marginTop: 6 }}>
         <h2>{list.name}</h2>
         <div className="meta">{items.length} CANCIONES · {minutes} MIN · {changes} CAMBIO{changes === 1 ? '' : 'S'} DE AFINACIÓN</div>
@@ -119,7 +120,7 @@ export default function SetlistDetailPage() {
         </DndContext>
       </article>
 
-      <div className="stack" style={{ marginTop: 16 }}>
+      <div className="stack detail-side" style={{ marginTop: 16 }}>
         {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden. Toca una canción para editar su afinación por instrumento, tono, notas y letra.</p>}
         {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
@@ -127,6 +128,8 @@ export default function SetlistDetailPage() {
         {canEdit && (
           <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Quitar canciones'}</button>
         )}
+      </div>
+
       </div>
 
       {editing && (

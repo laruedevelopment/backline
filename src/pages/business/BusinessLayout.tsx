@@ -65,8 +65,8 @@ export default function BusinessLayout() {
       <Routes>
         <Route index element={<BusinessToday />} />
         <Route path="reservas" element={<BusinessBookings />} />
-        <Route path="salas" element={<BusinessRooms />} />
-        <Route path="perfil" element={<BusinessProfile />} />
+        <Route path="salas" element={<div className="measure"><BusinessRooms /></div>} />
+        <Route path="perfil" element={<div className="measure"><BusinessProfile /></div>} />
         <Route path="*" element={<BusinessToday />} />
       </Routes>
     </VenueContext.Provider>
