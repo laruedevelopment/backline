@@ -14,7 +14,7 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Repertorio completo (tono, BPM, afinación por instrumento, cambios de tono, links, notas) — local (`src/store/useBand.ts`, localStorage); falta conectarlo a Supabase.
 - [ ] Importar setlist pegando texto.
 - [x] Setlists con orden (subir/bajar), duración, avisos de cambio de afinación y modo escenario (migración 0002, sin aplicar). Falta: compartir, arrastrar.
-- [ ] Agenda: ensayos/toques + confirmación de asistencia.
+- [x] Agenda: ensayos/toques + confirmación de asistencia (migración 0005, sin aplicar).
 - [ ] Reproductor embebido YouTube/Spotify.
 - [ ] Offline básico (PWA).
 - Meta: la banda de Javier la usa 4 semanas en lugar del chat.

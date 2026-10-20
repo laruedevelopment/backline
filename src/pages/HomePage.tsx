@@ -2,15 +2,19 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { band as demoBand, events } from '../data/demo'
 import { listMembers } from '../lib/api'
+import { useAuth } from '../store/useAuth'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
+import { dayParts, isUpcoming, useEvents } from '../lib/useEvents'
 import EventCard from '../components/EventCard'
 
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
 
 export default function HomePage() {
   const band = useActiveBand()
+  const userId = useAuth((s) => s.session?.user.id)
   const { songs } = useSongs(band?.id)
+  const { events: bandEvents } = useEvents(band?.id, userId)
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band })
 
   // Sin Supabase: demostración local.
@@ -28,6 +32,10 @@ export default function HomePage() {
     )
   }
 
+  const next = bandEvents.find(isUpcoming)
+  const nextParts = next && dayParts(next.startsAt)
+  const going = next?.rsvps.filter((r) => r.status === 'yes').length ?? 0
+
   return (
     <>
       <h1 className="page-title">{band.name}</h1>
@@ -35,7 +43,21 @@ export default function HomePage() {
 
       <div className="hero">
         <div className="section-title" style={{ marginTop: 0 }}>Lo próximo</div>
-        <p>Todavía no hay ensayos ni toques agendados. La agenda llega pronto.</p>
+        {next && nextParts ? (
+          <Link to="/agenda" className="row">
+            <div className="date-badge"><b>{nextParts.day}</b>{nextParts.month}</div>
+            <div className="grow">
+              <div className="title">{next.title}</div>
+              <div className="sub">{nextParts.time}{next.place ? ` · ${next.place}` : ''}</div>
+              <div className="chips">
+                <span className={`chip ${next.kind === 'gig' ? 'warn' : ''}`}>{next.kind === 'gig' ? 'Toque' : next.kind === 'rehearsal' ? 'Ensayo' : 'Evento'}</span>
+                <span className="chip">{going}/{members.length || 1} confirmados</span>
+              </div>
+            </div>
+          </Link>
+        ) : (
+          <p>Todavía no hay ensayos ni toques agendados. <Link to="/agenda" style={{ color: 'var(--amber)' }}>Agenda el próximo</Link>.</p>
+        )}
       </div>
 
       {songs.length === 0 && (

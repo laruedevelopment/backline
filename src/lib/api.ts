@@ -92,3 +92,38 @@ export async function listMembers(bandId: string): Promise<Member[]> {
     profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument,
   }))
 }
+
+export type RsvpStatus = 'yes' | 'maybe' | 'no'
+export type BandEvent = {
+  id: string; kind: 'rehearsal' | 'gig' | 'other'; title: string; place: string; startsAt: string
+  setlistId: string | null; notes: string | null; rsvps: { profileId: string; status: RsvpStatus }[]
+}
+
+export async function listEvents(bandId: string): Promise<BandEvent[]> {
+  const { data, error } = await db().from('events')
+    .select('id, kind, title, place, starts_at, setlist_id, notes, event_rsvps(profile_id, status)')
+    .eq('band_id', bandId).order('starts_at')
+  if (error) throw error
+  type Row = { id: string; kind: BandEvent['kind']; title: string; place: string; starts_at: string; setlist_id: string | null; notes: string | null; event_rsvps: { profile_id: string; status: RsvpStatus }[] }
+  return (data as unknown as Row[]).map((r) => ({
+    id: r.id, kind: r.kind, title: r.title, place: r.place, startsAt: r.starts_at, setlistId: r.setlist_id, notes: r.notes,
+    rsvps: r.event_rsvps.map((x) => ({ profileId: x.profile_id, status: x.status })),
+  }))
+}
+
+export async function upsertEvent(bandId: string, e: Omit<BandEvent, 'rsvps'>) {
+  const { error } = await db().from('events').upsert({
+    id: e.id, band_id: bandId, kind: e.kind, title: e.title, place: e.place, starts_at: e.startsAt, setlist_id: e.setlistId, notes: e.notes,
+  })
+  if (error) throw error
+}
+
+export async function deleteEvent(id: string) {
+  const { error } = await db().from('events').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function setRsvp(eventId: string, userId: string, status: RsvpStatus) {
+  const { error } = await db().from('event_rsvps').upsert({ event_id: eventId, profile_id: userId, status, updated_at: new Date().toISOString() })
+  if (error) throw error
+}

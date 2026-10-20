@@ -152,3 +152,10 @@ textarea { resize: vertical; }
 .stage-nav { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
 .stage-nav .btn { min-height: 72px; font-size: 1.2rem; }
 .card.current { border-color: var(--amber); }
+
+/* Asistencia */
+.rsvp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
+.rsvp .btn { padding: 0 8px; }
+.rsvp .btn.on.yes { background: var(--sage); border-color: var(--sage); color: #06150d; }
+.rsvp .btn.on.maybe { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+.rsvp .btn.on.no { background: var(--ember); border-color: var(--ember); color: #fff; }
