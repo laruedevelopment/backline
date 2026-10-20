@@ -14,7 +14,7 @@ import { formatDay, formatTime, money, weekOrder, weekdayNames } from '../lib/sl
 import { supabase } from '../lib/supabase'
 import {
   bookingError, cancelBooking, createVenue, deleteRoom, deleteVenue, kindLabel, listHours, listRooms, myVenues, purgeVenueMedia,
-  respondBooking, saveHours, saveRoom, setPublished, updateVenue, venueBookings, type Booking, type Hours, type Room, type Venue,
+  respondBooking, saveHours, saveRoom, setAutoConfirm, setPublished, updateVenue, venueBookings, type Booking, type Hours, type Room, type Venue,
 } from '../lib/venues'
 import { useAuth } from '../store/useAuth'
 
@@ -335,6 +335,12 @@ function Profile({ venue }: { venue: Venue }) {
     onError: () => setErr('No pudimos cambiar la publicación. Intenta de nuevo.'),
   })
 
+  const auto = useMutation({
+    mutationFn: (on: boolean) => setAutoConfirm(venue.id, on),
+    onSuccess: refresh,
+    onError: () => setErr('No pudimos cambiar esa opción. Intenta de nuevo.'),
+  })
+
   async function destroy() {
     if (!(await ask({ title: `¿Borrar ${venue.name}?`, body: 'Se borran la sala, sus salitas, horarios, fotos y reservas. No se puede deshacer.', confirmLabel: 'Borrar la sala', typeToConfirm: venue.name }))) return
     try {
@@ -362,6 +368,16 @@ function Profile({ venue }: { venue: Venue }) {
         <p className="li-sub wrap">{venue.isPublished ? 'Tu sala es visible para todas las personas con cuenta en Backline.' : 'Mientras no esté publicada, solo tú la ves.'}</p>
         <Link to={`/salas/${venue.id}`} className="link-btn" style={{ justifySelf: 'start' }}>Ver cómo la ven las bandas</Link>
       </div>
+
+      <div className="section-title">Cómo reciben reservas</div>
+      <label className="check-row" style={{ alignItems: 'start' }}>
+        <input type="checkbox" checked={venue.autoConfirm} disabled={auto.isPending} onChange={(e) => auto.mutate(e.target.checked)} />
+        <span>
+          <b>Confirmar automáticamente</b><br />
+          Si la franja está libre y dentro de tu horario, la reserva queda confirmada al instante y el ensayo aparece solo en la agenda de la banda. Tú no tienes que hacer nada; puedes cancelar cuando quieras.
+          {!venue.autoConfirm && ' Ahora cada solicitud espera tu respuesta.'}
+        </span>
+      </label>
 
       <div className="section-title">Datos</div>
       <div className="kv">

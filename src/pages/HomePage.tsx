@@ -11,6 +11,7 @@ import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { dayParts, isUpcoming, useEvents } from '../lib/useEvents'
 import ListSkeleton from '../components/Skeleton'
+import { usePendingRequests } from '../lib/useLive'
 
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
 
@@ -38,6 +39,7 @@ export default function HomePage() {
   const { events: bandEvents, rsvp } = useEvents(band?.id, userId)
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band })
   const done = useProgress((s) => s.done)
+  const { count: pendingRequests, venue: myVenue } = usePendingRequests()
 
   const title = band?.name ?? demoBand.name
   const next = bandEvents.find(isUpcoming)
@@ -65,6 +67,12 @@ export default function HomePage() {
 
       <div className="home-grid">
       <div className="home-col">
+      {pendingRequests > 0 && (
+        <Link to="/mi-sala" className="notice" style={{ display: 'block', marginTop: 8 }}>
+          <b>{pendingRequests === 1 ? 'Tienes 1 solicitud de reserva' : `Tienes ${pendingRequests} solicitudes de reserva`}</b> por responder en {myVenue?.name ?? 'tu sala'}.
+        </Link>
+      )}
+
       <div className="section-title" style={{ marginTop: 8 }}>Lo próximo</div>
       {next && parts ? (
         <article>

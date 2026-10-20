@@ -71,12 +71,16 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
   if (done && slot) {
     return (
-      <Sheet title="Solicitud enviada" onClose={onClose} dismissOnBackdrop>
+      <Sheet title={venue.autoConfirm ? '¡Reservada!' : 'Solicitud enviada'} onClose={onClose} dismissOnBackdrop>
         <p><b>{venue.name} · {room?.name}</b></p>
         <p>{formatDay(slot.start)}, de {formatTime(slot.start)} a {formatTime(slot.end)}</p>
-        <p className="li-sub wrap">La sala responderá la solicitud. Verás el estado en «Mis reservas»{bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.</p>
-        {wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
-        {wa && <p className="li-sub wrap">Escríbeles para que sepan que hay una solicitud nueva: así la ven rápido.</p>}
+        <p className="li-sub wrap">
+          {venue.autoConfirm
+            ? `Tu franja ya está confirmada${bandId ? ' y el ensayo quedó en la agenda de tu banda' : ''}. La sala fue avisada.`
+            : `La sala responderá la solicitud. Verás el estado en «Mis reservas»${bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.`}
+        </p>
+        {!venue.autoConfirm && wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
+        {!venue.autoConfirm && wa && <p className="li-sub wrap">Escríbeles para que sepan que hay una solicitud nueva: así la ven rápido.</p>}
         <button className="btn" onClick={onClose}>Listo</button>
       </Sheet>
     )
@@ -136,11 +140,11 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
       <label className="field">Nota para la sala (opcional)
         <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="Somos 4. Llevamos nuestra batería." />
       </label>
-      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con la sala para que pueda confirmarte. No se hace ningún cobro en Backline.</p>
+      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con la sala para que pueda confirmarte. No se hace ningún cobro en Backline.{venue.autoConfirm ? ' Esta sala confirma al instante.' : ''}</p>
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary block" disabled={!slot || book.isPending || !userId}>{book.isPending ? 'Enviando…' : slot ? 'Pedir esta franja' : 'Elige una hora'}</button>
+        <button className="btn primary block" disabled={!slot || book.isPending || !userId}>{book.isPending ? 'Enviando…' : slot ? (venue.autoConfirm ? 'Reservar esta franja' : 'Pedir esta franja') : 'Elige una hora'}</button>
       </div>
     </Sheet>
   )

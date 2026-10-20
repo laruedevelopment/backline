@@ -24,17 +24,18 @@ await pg.exec(`
 
 const dir = path.join(here, '..', 'migrations')
 for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.sql')).sort()) {
+  const sql = fs.readFileSync(path.join(dir, f), 'utf8')
   try {
-    await pg.exec(fs.readFileSync(path.join(dir, f), 'utf8'))
+    await pg.exec(sql)
     console.log('OK  migración', f)
   } catch (e) {
     console.log('FALLA migración', f, '→', e.message)
     process.exit(1)
   }
-}
-// Repetibilidad: la 0008 y la 0009 deben poder correr dos veces.
-for (const f of ['20261020000008_logo_y_fotos.sql', '20261020000009_salas_y_reservas.sql']) {
-  try { await pg.exec(fs.readFileSync(path.join(dir, f), 'utf8')); console.log('OK  re-ejecución', f) } catch (e) { console.log('FALLA re-ejecución', f, '→', e.message) }
+  // Desde la 0008 las migraciones deben ser repetibles: se vuelve a ejecutar justo después de aplicarla.
+  if (Number(f.slice(12, 14)) >= 8) {
+    try { await pg.exec(sql); console.log('OK  re-ejecución', f) } catch (e) { console.log('FALLA re-ejecución', f, '→', e.message); process.exit(1) }
+  }
 }
 
 const U = { owner: crypto.randomUUID(), leader: crypto.randomUUID(), other: crypto.randomUUID(), member: crypto.randomUUID() }
@@ -174,6 +175,34 @@ await ok('el dueño puede cancelarla y la franja se libera', async () => {
   const [{ id }] = await as('owner', `select id from public.bookings where contact_name='Los Chinos'`)
   await as('owner', `select public.cancel_booking($1)`, [id])
   eq((await as('leader', `select * from public.room_busy($1,$2,$3)`, [room, t(7, '00:00'), t(7, '23:59')])).length, 0, 'sigue ocupada')
+})
+
+
+console.log('\nConfirmación automática')
+await ok('solo el dueño puede activarla', async () => {
+  let failed = false
+  try { const r = await as('other', `update public.venues set auto_confirm = true where id=$1 returning id`, [venue]); failed = r.length === 0 } catch { failed = true }
+  if (!failed) throw new Error('otro la activó')
+  await as('owner', `update public.venues set auto_confirm = true where id=$1`, [venue])
+})
+let auto1
+await ok('con confirmación automática la solicitud queda confirmada al instante y crea el ensayo', async () => {
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3,$4,'Auto') as id`, [room, t(12, '15:00'), t(12, '17:00'), band]); auto1 = r.id
+  const [row] = await as('leader', `select status, responded_at is not null as resp from public.bookings where id=$1`, [auto1])
+  eq([row.status, row.resp], ['confirmed', true], 'estado')
+  const ev = await as('leader', `select booking_id from public.events where band_id=$1 and booking_id=$2`, [band, auto1])
+  eq(ev.length, 1, 'ensayo en agenda')
+})
+await rejects('otra banda ya no puede pedir esa franja (queda ocupada de inmediato)', () => as('member', `select public.request_booking($1,$2,$3)`, [room, t(12, '16:00'), t(12, '18:00')]), /ocupada/)
+await ok('el dueño puede cancelar una confirmada automática', async () => {
+  await as('owner', `select public.cancel_booking($1)`, [auto1])
+  eq((await as('leader', `select id from public.events where booking_id=$1`, [auto1])).length, 0, 'evento sigue')
+})
+await ok('desactivarla vuelve al modo con aprobación', async () => {
+  await as('owner', `update public.venues set auto_confirm = false where id=$1`, [venue])
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3) as id`, [room, t(13, '15:00'), t(13, '16:00')])
+  const [row] = await as('leader', `select status from public.bookings where id=$1`, [r.id])
+  eq(row.status, 'requested', 'estado')
 })
 
 console.log('\nFotos y límites')

@@ -15,7 +15,7 @@ export const kindLabel: Record<VenueKind, string> = { rehearsal_room: 'Sala de e
 export type Venue = {
   id: string; ownerId: string; kind: VenueKind; name: string; city: string; address: string; description: string
   amenities: string[]; whatsapp: string; links: BandLinks; bookingUrl: string
-  logoPath: string | null; logoUrl: string | null; isPublished: boolean
+  logoPath: string | null; logoUrl: string | null; isPublished: boolean; autoConfirm: boolean
 }
 export type Room = { id: string; venueId: string; name: string; capacity: number; pricePerHour: number; description: string }
 export type Hours = { weekday: number; opens: string; closes: string }
@@ -30,14 +30,14 @@ export type Booking = {
 
 type VenueRow = {
   id: string; owner_id: string; kind: VenueKind; name: string; city: string; address: string; description: string | null
-  amenities: string[]; whatsapp: string | null; links: BandLinks; booking_url: string | null; logo_path: string | null; is_published: boolean
+  amenities: string[]; whatsapp: string | null; links: BandLinks; booking_url: string | null; logo_path: string | null; is_published: boolean; auto_confirm: boolean
 }
 const toVenue = (r: VenueRow): Venue => ({
   id: r.id, ownerId: r.owner_id, kind: r.kind, name: r.name, city: r.city, address: r.address, description: r.description ?? '',
   amenities: r.amenities, whatsapp: r.whatsapp ?? '', links: r.links, bookingUrl: r.booking_url ?? '',
-  logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published,
+  logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published, autoConfirm: r.auto_confirm,
 })
-const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published'
+const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm'
 
 export async function listVenues(): Promise<Venue[]> {
   const { data, error } = await db().from('venues').select(VENUE_COLS).eq('is_published', true).order('name')
@@ -76,6 +76,11 @@ export async function updateVenue(id: string, d: VenueDraft) {
 
 export async function setPublished(id: string, published: boolean) {
   const { error } = await db().from('venues').update({ is_published: published }).eq('id', id)
+  if (error) throw error
+}
+
+export async function setAutoConfirm(id: string, on: boolean) {
+  const { error } = await db().from('venues').update({ auto_confirm: on }).eq('id', id)
   if (error) throw error
 }
 

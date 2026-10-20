@@ -10,6 +10,7 @@ import { useAuth } from './store/useAuth'
 import { BandContext, BandsContext } from './store/useBandSession'
 import TopBar from './components/TopBar'
 import OfflineBanner from './components/OfflineBanner'
+import { useLiveBookings, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
 import LegalPage from './pages/LegalPage'
@@ -97,12 +98,16 @@ function Splash() {
 
 function Nav() {
   const { pathname } = useLocation()
+  const { count: pending } = usePendingRequests()
   return (
     <nav className="nav" aria-label="Principal">
       <div className="wordmark">back<span>line</span></div>
       {tabs.map(({ to, label, icon: Icon, match }) => (
         <NavLink key={to} to={to} className={match(pathname) ? 'active' : ''} aria-current={match(pathname) ? 'page' : undefined}>
-          <Icon size={22} strokeWidth={1.7} aria-hidden />
+          <span className="icon-wrap">
+            <Icon size={22} strokeWidth={1.7} aria-hidden />
+            {to === '/agenda' && pending > 0 && <span className="badge" aria-label={`${pending} solicitudes de reserva por responder`}>{pending}</span>}
+          </span>
           {label}
         </NavLink>
       ))}
@@ -116,6 +121,7 @@ function Nav() {
 }
 
 function Shell() {
+  useLiveBookings()
   return (
     <div className="shell">
         <Nav />
