@@ -7,6 +7,7 @@ import { useAuth } from '../store/useAuth'
 import { useActiveBand } from '../store/useBandSession'
 import { useSetlists } from '../lib/useSetlists'
 import { dayParts, isUpcoming, useEvents } from '../lib/useEvents'
+import AgendaNav from '../components/AgendaNav'
 import EventForm from '../components/EventForm'
 import ListSkeleton from '../components/Skeleton'
 
@@ -49,7 +50,8 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
         <h1 className="page-title">Agenda</h1>
         <p className="page-sub">Confirma si vas para que nadie tenga que preguntar en el chat.</p>
       </div>
-      <div className="seg" role="group" aria-label="Rango">
+      <AgendaNav />
+      <div className="seg" role="group" aria-label="Rango" style={{ marginTop: 12 }}>
         <button aria-pressed={!showPast} onClick={() => setShowPast(false)}>Próximos{upcoming.length ? ` · ${upcoming.length}` : ''}</button>
         <button aria-pressed={showPast} onClick={() => setShowPast(true)}>Pasados</button>
       </div>
@@ -76,7 +78,7 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
               <div className={`ticket ${showPast ? 'past' : ''}`}>
                 <div className="ticket-date"><b>{day}</b><span>{month}</span></div>
                 <div className="ticket-body">
-                  <span className="eyebrow" style={{ textTransform: 'capitalize' }}>{kindLabel[e.kind]} · {long}</span>
+                  <span className="eyebrow">{kindLabel[e.kind]} · {long}</span>
                   <div className="ticket-title">{e.title}</div>
                   <div className="li-sub">{time}{e.place ? ` · ${e.place}` : ''}</div>
                   <div className="sub-row">

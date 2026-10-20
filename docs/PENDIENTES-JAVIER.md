@@ -31,3 +31,10 @@ Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas d
 4. Región de Supabase y hosting: confirmarlos para declararlos en la política.
 5. Revisar las plantillas de correo de Supabase Auth (Authentication → Emails): remitente y texto claros, en español.
 6. Antes de subir logos y fotos: política de contenido, reporte de abuso y borrado de archivos al borrar la cuenta.
+
+## Salas de ensayo: piloto con tu amigo
+1. **Aplicar la migración** `20261020000009_salas_y_reservas.sql` en el SQL Editor (la app nueva la necesita; no publicar antes).
+2. Pedirle a tu amigo lo que necesita cargar: nombre, dirección, WhatsApp, cuántas salitas tiene y qué equipo hay en cada una, precio por hora, horario de atención y 3-5 fotos.
+3. Que cree su cuenta, entre a **Agenda → Salas de ensayo → Publicar mi sala** y la deje lista. Tú reservas con tu banda para probar el flujo completo (pedir, confirmar, ver el ensayo en la agenda).
+4. Ver cómo reserva hoy (WhatsApp, cuaderno, llamadas) para medir si Backline le quita trabajo. Esa fricción decide qué sigue (avisos, pagos, Slothy).
+5. Cuando Slothy esté desplegado: poner el enlace de su chat en el campo "Enlace para reservar en otro sistema" de la sala.

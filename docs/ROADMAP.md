@@ -27,8 +27,12 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - Perfil de músico, rig con pedalboard, perfil público de banda + EPK, **banda verificada**. (Hecho: logo y galería de fotos de banda con Storage, migración 0008; redes y bio en Banda.)
 
 ## Fase 3 — Salas de ensayo (piloto con el amigo)
-- Integración con Slothy (reservas del ensayadero + chatbot de horarios). Perfil de sala, disponibilidad, reservas con confirmación del dueño, mensajes, mapa OSM.
-- Piloto real con una sala; medir fricción antes de generalizar.
+- [x] Perfil de sala (varias salitas, precios, horario semanal, fotos y logo), publicación y administración por su dueño. *(migración 0009)*
+- [x] Reservas: la banda pide una franja libre, el dueño confirma o rechaza; sin dobles reservas (restricción en la base); al confirmar, el ensayo aparece solo en la agenda de la banda.
+- [x] Pruebas de seguridad de las migraciones y RLS en CI (`npm run test:db`).
+- [ ] Piloto real con una sala; medir fricción antes de generalizar.
+- [ ] Mapa OSM, mensajes dentro de la app, avisos (push/WhatsApp) al dueño cuando llega una solicitud.
+- [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.
 
 ## Fase 4 — Comunidad
 - Feed, seguir, subir demos/videos, buscar/ofrecer miembros, cartelera de la ciudad, notificaciones push (web push).

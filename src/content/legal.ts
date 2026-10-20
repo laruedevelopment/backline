@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.2'
+export const TERMS_VERSION = '0.3'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -20,6 +20,7 @@ export const privacy: LegalDoc = {
         'Al registrarte: nombre (como te dicen en la banda), correo electrónico y contraseña (se guarda cifrada; nosotros no la vemos).',
         'En tu perfil, de forma opcional: instrumentos que tocas, ciudad y una descripción corta.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
+        'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de esa sala para que pueda confirmarte. Si publicas tu propia sala: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
         'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
         'Enlaces de YouTube o Spotify que agregues a canciones.',
         'Al registrarte guardamos la fecha y la versión de los términos que aceptaste, y tu declaración de edad.',
@@ -112,23 +113,30 @@ export const terms: LegalDoc = {
       paragraphs: ['No uses Backline para acosar, suplantar, engañar, publicar contenido ilegal, violento, discriminatorio o sexual que involucre menores, ni para vulnerar la seguridad del servicio. Podemos suspender las cuentas que incumplan.'],
     },
     {
-      title: '6. Líderes de banda',
+      title: '6. Salas de ensayo y reservas',
+      paragraphs: [
+        'Backline conecta bandas con salas de ensayo; no es parte del contrato entre ellas. Una solicitud solo se vuelve reserva cuando la sala la confirma. Backline no cobra ni procesa pagos: el pago y las condiciones de uso de la sala se acuerdan directamente con ella.',
+        'Quien publica una sala responde por la veracidad de sus datos, horarios y precios, y por atender o cancelar a tiempo las reservas que confirme. Quien reserva debe cancelar con anticipación si no puede asistir.',
+      ],
+    },
+    {
+      title: '7. Líderes de banda',
       paragraphs: ['Quien crea una banda la administra, invita integrantes y puede traspasar el liderazgo. Si una banda se queda sin integrantes, se elimina.'],
     },
     {
-      title: '7. Borrado y suspensión',
+      title: '8. Borrado y suspensión',
       paragraphs: ['Puedes borrar tu cuenta cuando quieras desde tu perfil. Podemos suspender o cerrar cuentas que incumplan estos términos o por razones de seguridad.'],
     },
     {
-      title: '8. Responsabilidad',
+      title: '9. Responsabilidad',
       paragraphs: ['El servicio se ofrece "como está" y no garantizamos que esté libre de errores. Respondemos en los términos que la ley colombiana no permita excluir.'],
     },
     {
-      title: '9. Datos personales',
+      title: '10. Datos personales',
       paragraphs: ['Se tratan según la Política de tratamiento de datos personales.'],
     },
     {
-      title: '10. Ley aplicable y contacto',
+      title: '11. Ley aplicable y contacto',
       paragraphs: [`Ley colombiana. Dudas o reclamos: ${CONTACT_EMAIL}. Hoy el servicio es gratuito; si más adelante hay cobros, se aplicarán también los derechos de la Ley 1480 de 2011.`],
     },
   ],

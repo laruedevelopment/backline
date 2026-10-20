@@ -29,7 +29,7 @@ export const dayParts = (iso: string) => {
   return {
     day: d.toLocaleDateString('es-CO', { day: 'numeric' }),
     month: d.toLocaleDateString('es-CO', { month: 'short' }).replace('.', ''),
-    long: d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }),
+    long: ((t) => t.charAt(0).toUpperCase() + t.slice(1))(d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })),
     time: d.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }),
   }
 }

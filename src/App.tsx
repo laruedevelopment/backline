@@ -20,6 +20,9 @@ import RepertoirePage from './pages/RepertoirePage'
 import SetlistsPage from './pages/SetlistsPage'
 import SetlistDetailPage from './pages/SetlistDetailPage'
 import AgendaPage from './pages/AgendaPage'
+import SalasPage from './pages/SalasPage'
+import SalaPage from './pages/SalaPage'
+import MiSalaPage from './pages/MiSalaPage'
 import LearnPage from './pages/LearnPage'
 import LessonPage from './pages/LessonPage'
 import BandPage from './pages/BandPage'
@@ -28,7 +31,7 @@ import ProfilePage from './pages/ProfilePage'
 const tabs = [
   { to: '/', label: 'Inicio', icon: Home, match: (p: string) => p === '/' },
   { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') },
-  { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') },
+  { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/salas') || p.startsWith('/mi-sala') },
   { to: '/aprender', label: 'Aprender', icon: GraduationCap, match: (p: string) => p.startsWith('/aprender') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
@@ -126,6 +129,9 @@ function Shell() {
               <Route path="/setlists" element={<SetlistsPage />} />
               <Route path="/setlists/:id" element={<SetlistDetailPage />} />
               <Route path="/agenda" element={<AgendaPage />} />
+              <Route path="/salas" element={<SalasPage />} />
+              <Route path="/salas/:id" element={<SalaPage />} />
+              <Route path="/mi-sala" element={<MiSalaPage />} />
               <Route path="/aprender" element={<LearnPage />} />
               <Route path="/aprender/:id" element={<LessonPage />} />
               <Route path="/banda" element={<BandPage />} />
