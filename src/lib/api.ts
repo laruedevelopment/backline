@@ -25,8 +25,8 @@ const toRow = (bandId: string, s: Song) => ({
   updated_at: new Date().toISOString(),
 })
 
-export async function myBands(): Promise<Band[]> {
-  const { data, error } = await db().from('band_members').select('role, bands(id, name, city)')
+export async function myBands(userId: string): Promise<Band[]> {
+  const { data, error } = await db().from('band_members').select('role, bands(id, name, city)').eq('profile_id', userId)
   if (error) throw error
   return (data as unknown as { role: string; bands: { id: string; name: string; city: string | null } }[]).map((m) => ({ ...m.bands, role: m.role }))
 }

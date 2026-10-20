@@ -28,7 +28,8 @@ const tabs = [
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
 
 function WithBand() {
-  const { data: bands, isLoading, error } = useQuery({ queryKey: ['bands'], queryFn: myBands })
+  const userId = useAuth((s) => s.session?.user.id)
+  const { data: bands, isLoading, error } = useQuery({ queryKey: ['bands', userId], queryFn: () => myBands(userId!), enabled: !!userId })
   if (isLoading) return <p className="empty">Cargando tu banda…</p>
   if (error) return <p className="empty">No pudimos cargar tu banda. Revisa tu conexión y recarga.</p>
   if (!bands?.length) return <OnboardingPage />
