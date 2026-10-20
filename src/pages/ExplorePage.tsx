@@ -56,17 +56,17 @@ export default function ExplorePage() {
         <NavLink to="/explorar/musicos" className={({ isActive }) => (isActive ? 'active' : '')}>Músicos</NavLink>
       </div>
 
-      <div className="stack" style={{ marginTop: 16 }}>
+      <div className="explore-filters">
         <label className="search">
           <Search size={18} aria-hidden />
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={musicians ? 'Buscar músico por nombre' : 'Buscar banda por nombre'} aria-label="Buscar" />
         </label>
         <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad" aria-label="Filtrar por ciudad" autoComplete="off" />
-        <div className="tabs" role="group" aria-label={musicians ? 'Filtrar por instrumento' : 'Filtrar por género'}>
-          {options.map((o) => (
-            <button key={o} aria-pressed={tag === o} className={tag === o ? 'active' : ''} onClick={() => setTag(tag === o ? '' : o)}>{o}</button>
-          ))}
-        </div>
+      </div>
+      <div className="filter-chips" role="group" aria-label={musicians ? 'Filtrar por instrumento' : 'Filtrar por género'}>
+        {options.map((o) => (
+          <button key={o} aria-pressed={tag === o} className={tag === o ? 'active' : ''} onClick={() => setTag(tag === o ? '' : o)}>{o}</button>
+        ))}
       </div>
 
       {query.isLoading && <ListSkeleton rows={4} />}
@@ -80,7 +80,7 @@ export default function ExplorePage() {
         </div>
       )}
 
-      <div className="list" style={{ marginTop: 14, borderTop: rows.length ? undefined : 0 }}>
+      <div className="explore-grid">
         {rows.map((r) => musicians
           ? <MusicianRow key={r.id} m={r as PublicMusician} />
           : <BandRow key={r.id} b={r as PublicBand} />)}
@@ -103,12 +103,13 @@ export default function ExplorePage() {
 
 function BandRow({ b }: { b: PublicBand }) {
   return (
-    <Link to={`/explorar/bandas/${b.id}`} className="li" style={{ minHeight: 72 }}>
+    <Link to={`/explorar/bandas/${b.id}`} className="explore-card">
       <BandMark name={b.name} logoUrl={b.logoUrl} />
-      <div className="li-main">
+      <div className="explore-card-main">
         <div className="li-title">{b.name}</div>
-        <div className="li-sub">{[b.city, b.genres.slice(0, 3).join(' · ')].filter(Boolean).join(' · ') || 'Sin datos todavía'}</div>
-        {b.bio && <div className="li-sub">{b.bio}</div>}
+        <div className="li-sub">{b.city || 'Sin ciudad'}</div>
+        {b.genres.length > 0 && <div className="chips" style={{ marginTop: 6 }}>{b.genres.slice(0, 3).map((g) => <span key={g} className="tag">{g}</span>)}</div>}
+        {b.bio && <p className="explore-bio">{b.bio}</p>}
       </div>
     </Link>
   )
@@ -116,12 +117,13 @@ function BandRow({ b }: { b: PublicBand }) {
 
 function MusicianRow({ m }: { m: PublicMusician }) {
   return (
-    <Link to={`/explorar/musicos/${m.id}`} className="li" style={{ minHeight: 72 }}>
+    <Link to={`/explorar/musicos/${m.id}`} className="explore-card">
       <span className="avatar" style={{ marginLeft: 0 }} aria-hidden>{initials(m.name)}</span>
-      <div className="li-main">
+      <div className="explore-card-main">
         <div className="li-title">{m.name}</div>
-        <div className="li-sub">{[m.instruments.slice(0, 3).join(' · '), m.city].filter(Boolean).join(' · ') || 'Sin datos todavía'}</div>
-        {m.bio && <div className="li-sub">{m.bio}</div>}
+        <div className="li-sub">{m.city || 'Sin ciudad'}</div>
+        {m.instruments.length > 0 && <div className="chips" style={{ marginTop: 6 }}>{m.instruments.slice(0, 3).map((i) => <span key={i} className="tag key">{i}</span>)}</div>}
+        {m.bio && <p className="explore-bio">{m.bio}</p>}
       </div>
     </Link>
   )

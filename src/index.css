@@ -404,3 +404,16 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 /* Las hojas nunca se salen de la pantalla por contenido largo */
 .sheet > * { min-width: 0; }
 .sheet { overflow-x: hidden; }
+
+/* Comunidad: filtros y tarjetas */
+.explore-filters { display: grid; gap: 10px; margin-top: 18px; }
+@media (min-width: 640px) { .explore-filters { grid-template-columns: 2fr 1fr; } }
+.filter-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.filter-chips button { min-height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line-2); background: none; color: var(--muted); font-weight: 600; font-size: 0.85rem; }
+.filter-chips button.active, .filter-chips button[aria-pressed=true] { background: var(--amber); border-color: var(--amber); color: #1a1205; }
+.explore-grid { display: grid; gap: 12px; margin-top: 20px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .explore-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.explore-card { display: flex; gap: 14px; align-items: flex-start; padding: 16px; background: var(--raise); border: 1px solid var(--line); border-radius: var(--r-m); min-width: 0; }
+.explore-card:hover { border-color: var(--line-2); }
+.explore-card-main { min-width: 0; flex: 1; }
+.explore-bio { margin: 8px 0 0; color: var(--muted); font-size: 0.875rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
