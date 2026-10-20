@@ -160,6 +160,8 @@ export default function HomePage() {
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>
       </p>
       </div>
+      <div className="section-title">¿Tienes un ensayadero?</div>
+      <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
       </div>
     </>
   )

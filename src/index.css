@@ -560,3 +560,14 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .avatar-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
 .avatar-link { margin-left: auto; display: inline-flex; border-radius: 50%; }
 .avatar-link .avatar { margin-left: 0 !important; }
+
+/* Celulares angostos: las seis pestañas deben verse completas */
+@media (max-width: 400px) {
+  .nav a { font-size: 0.62rem; letter-spacing: -0.01em; min-width: 0; padding: 0 1px; }
+  .nav a svg { width: 20px; height: 20px; }
+}
+@media (max-width: 340px) { .nav a { font-size: 0.58rem; } }
+
+/* Notch y barras del sistema en el modo escenario */
+.stage { padding-top: max(16px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+@media (max-height: 520px) { .stage { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } }

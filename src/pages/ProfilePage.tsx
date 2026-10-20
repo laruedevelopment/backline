@@ -12,6 +12,7 @@ import { useAuth } from '../store/useAuth'
 import { useBands } from '../store/useBandSession'
 import { useProgress } from '../store/useProgress'
 import { ask } from '../lib/confirm'
+import InstallApp from '../components/InstallApp'
 import { PushSettings } from '../components/PushControls'
 import ListSkeleton from '../components/Skeleton'
 import CityInput from '../components/CityInput'
@@ -220,12 +221,18 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       {pubMsg && <p className="form-error" role="alert">{pubMsg}</p>}
       {isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/musicos/${userId}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo me ven los demás</Link></p>}
 
+      <div className="section-title">Mi negocio</div>
+      <p className="li-sub wrap">¿Tienes un ensayadero, estudio u otro negocio musical? Publica tus salas, horarios y precios, y recibe reservas de las bandas.</p>
+      <Link className="btn" to="/mi-negocio" style={{ marginTop: 8 }}>Ir a mi negocio</Link>
+
       <div className="section-title">Tu práctica</div>
       <div className="stats">
         <div className="stat"><b>{done.length}</b><span>Lecciones hechas</span></div>
         <div className="stat"><b>{lessons.length - done.length}</b><span>Por hacer</span></div>
         <div className="stat"><b>{lessons.filter((l) => done.includes(l.id)).reduce((t, l) => t + l.minutes, 0)}</b><span>Minutos</span></div>
       </div>
+
+      <InstallApp />
 
       <PushSettings />
 

@@ -18,6 +18,16 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Song[
   const [locked, setLocked] = useState(false)
   const cur = songs[i]
   const next = songs[i + 1]
+  // Deslizar a los lados cambia de canción (en el celular no hay teclado). Se ignora si el dedo empezó sobre la letra y fue un desplazamiento vertical.
+  const [touch, setTouch] = useState<{ x: number; y: number } | null>(null)
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    const t = e.changedTouches[0]
+    if (touch && t) {
+      const dx = t.clientX - touch.x, dy = t.clientY - touch.y
+      if (Math.abs(dx) > 80 && Math.abs(dy) < 50) { if (dx < 0 && i < songs.length - 1) go(i + 1); else if (dx > 0 && i > 0) go(i - 1) }
+    }
+    setTouch(null)
+  }
   const view = mine && instrument ? instrument : null
   const kind = view ? instrumentKind(view) : 'melodic'
   // La batería no lee acordes ni letra; la voz lee la letra sin acordes.
@@ -80,7 +90,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Song[
   const retune = next && tuningSignature(forView(next)) !== tuningSignature(forView(cur))
 
   return (
-    <div className={`stage ${forced ? 'rotated' : ''}`} role="dialog" aria-modal="true" aria-label="Modo escenario">
+    <div className={`stage ${forced ? 'rotated' : ''}`} role="dialog" aria-modal="true" aria-label="Modo escenario"
+      onTouchStart={(e) => setTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={onSwipeEnd}>
       <div className="stage-top">
         <span>{i + 1} / {songs.length}</span>
         <div className="row" style={{ gap: 8 }}>

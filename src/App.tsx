@@ -159,6 +159,7 @@ function Nav() {
         </NavLink>
       ))}
       <div className="nav-foot">
+        <NavLink to="/mi-negocio">Mi negocio</NavLink>
         <NavLink to="/perfil">Mi perfil</NavLink>
         <NavLink to="/privacidad">Privacidad</NavLink>
         <NavLink to="/terminos">Términos</NavLink>
