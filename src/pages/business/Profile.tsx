@@ -48,6 +48,7 @@ export default function BusinessProfile() {
 
   return (
     <>
+      <h1 className="sr-only">Perfil del ensayadero</h1>
       <div className="section-title">Publicación</div>
       <div className="checklist">
         {steps.map((s) => (

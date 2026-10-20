@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
 import { CalendarClock, CalendarDays, Compass, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -15,27 +15,31 @@ import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
 import JoinPage from './pages/JoinPage'
 
+import { clearPendingInvite, readPendingInvite } from './lib/pendingInvite'
+import LoginPage from './pages/LoginPage'
+import HomePage from './pages/HomePage'
+
+// Cada pantalla se descarga cuando se abre: el primer arranque es más liviano.
+const LegalPage = lazy(() => import('./pages/LegalPage'))
+const NewPasswordPage = lazy(() => import('./pages/NewPasswordPage'))
+const RepertoirePage = lazy(() => import('./pages/RepertoirePage'))
+const SetlistsPage = lazy(() => import('./pages/SetlistsPage'))
+const SetlistDetailPage = lazy(() => import('./pages/SetlistDetailPage'))
+const AgendaPage = lazy(() => import('./pages/AgendaPage'))
+const EnsayaderosPage = lazy(() => import('./pages/EnsayaderosPage'))
+const EnsayaderoPage = lazy(() => import('./pages/EnsayaderoPage'))
+const BusinessLayout = lazy(() => import('./pages/business/BusinessLayout'))
+const ExplorePage = lazy(() => import('./pages/ExplorePage'))
+const PublicBandPage = lazy(() => import('./pages/PublicBandPage'))
+const PublicMusicianPage = lazy(() => import('./pages/PublicMusicianPage'))
+const LearnPage = lazy(() => import('./pages/LearnPage'))
+const LessonPage = lazy(() => import('./pages/LessonPage'))
+const BandPage = lazy(() => import('./pages/BandPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+
 /** Pantallas de formulario o de lectura: no se estiran a todo el ancho de un monitor. */
 function Measure({ children }: { children: React.ReactNode }) { return <div className="measure">{children}</div> }
-import { clearPendingInvite, readPendingInvite } from './lib/pendingInvite'
-import LegalPage from './pages/LegalPage'
-import LoginPage from './pages/LoginPage'
-import NewPasswordPage from './pages/NewPasswordPage'
-import HomePage from './pages/HomePage'
-import RepertoirePage from './pages/RepertoirePage'
-import SetlistsPage from './pages/SetlistsPage'
-import SetlistDetailPage from './pages/SetlistDetailPage'
-import AgendaPage from './pages/AgendaPage'
-import EnsayaderosPage from './pages/EnsayaderosPage'
-import EnsayaderoPage from './pages/EnsayaderoPage'
-import BusinessLayout from './pages/business/BusinessLayout'
-import ExplorePage from './pages/ExplorePage'
-import PublicBandPage from './pages/PublicBandPage'
-import PublicMusicianPage from './pages/PublicMusicianPage'
-import LearnPage from './pages/LearnPage'
-import LessonPage from './pages/LessonPage'
-import BandPage from './pages/BandPage'
-import ProfilePage from './pages/ProfilePage'
+
 
 const tabs = [
   { to: '/', label: 'Inicio', icon: Home, match: (p: string) => p === '/' },
@@ -172,6 +176,7 @@ function Shell() {
           <TopBar />
           <OfflineBanner />
           <main className="content">
+            <Suspense fallback={<Splash />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/repertorio" element={<RepertoirePage />} />
@@ -190,6 +195,7 @@ function Shell() {
               <Route path="/banda" element={<Measure><BandPage /></Measure>} />
               <Route path="/perfil" element={<Measure><ProfilePage /></Measure>} />
             </Routes>
+            </Suspense>
           </main>
         </div>
     </div>
@@ -199,6 +205,7 @@ function Shell() {
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+      <Suspense fallback={<Splash />}>
       <Routes>
         {/* Públicas: se pueden leer antes de registrarse. */}
         <Route path="/privacidad" element={<LegalPage doc="privacy" />} />
@@ -206,6 +213,7 @@ export default function App() {
         <Route path="/unirse/:code" element={<JoinPage />} />
         <Route path="*" element={<AuthGate />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

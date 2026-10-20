@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.3'
+export const TERMS_VERSION = '0.4'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -18,11 +18,13 @@ export const privacy: LegalDoc = {
       title: '2. Datos que recogemos',
       bullets: [
         'Al registrarte: nombre (como te dicen en la banda), correo electrónico y contraseña (se guarda cifrada; nosotros no la vemos).',
-        'En tu perfil, de forma opcional: instrumentos que tocas, ciudad y una descripción corta.',
+        'En tu perfil, de forma opcional: instrumentos que tocas, ciudad, una descripción corta y un número de WhatsApp.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
         'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de ese ensayadero para que pueda confirmarte. Si publicas tu propio ensayadero: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
         'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
-        'Enlaces de YouTube o Spotify que agregues a canciones.',
+        'Enlaces de YouTube o Spotify, notas y, si la banda los escribe, la letra y los acordes de sus canciones.',
+        'Los códigos y enlaces de invitación que generen los administradores de una banda (vencen a los 7 días).',
+        'Tu decisión de hacer público, o no, tu perfil, y la de los administradores de tu banda sobre el perfil de la banda (ver sección 4).',
         'Al registrarte guardamos la fecha y la versión de los términos que aceptaste, y tu declaración de edad.',
         'Tu progreso de práctica, la banda activa y una copia de lo último que viste (para que la app funcione sin señal) se guardan en tu propio dispositivo.',
       ],
@@ -35,7 +37,8 @@ export const privacy: LegalDoc = {
       title: '3. Para qué los usamos',
       bullets: [
         'Crear y gestionar tu cuenta y verificar que eres tú.',
-        'Permitir que tu banda comparta repertorio, setlists y agenda.',
+        'Permitir que tu banda comparta repertorio, setlists, letras y agenda.',
+        'Mostrar tu perfil o el de tu banda en Comunidad, solo si tú o los administradores lo activan.',
         'Enviarte correos del servicio (confirmar la cuenta, recuperar la contraseña).',
         'Mantener la seguridad y prevenir abusos.',
         'Cumplir obligaciones legales.',
@@ -44,7 +47,11 @@ export const privacy: LegalDoc = {
     },
     {
       title: '4. Quién ve tus datos',
-      paragraphs: ['Tu nombre, instrumentos, ciudad y descripción los ven las personas que integran las bandas de las que haces parte. Tus datos no son visibles para personas que no comparten banda contigo. El logo y las fotos de una banda se guardan en un espacio público de solo lectura: cualquier persona que tenga el enlace de la imagen puede verla.'],
+      paragraphs: [
+        'Por defecto, tu nombre, instrumentos, ciudad y descripción los ven solo las personas que integran las bandas de las que haces parte. El repertorio, los setlists, las letras, la agenda y las reservas de una banda son siempre privados de esa banda.',
+        'Comunidad es opcional y está apagada por defecto. Si eres mayor de edad y activas «Perfil público», las demás personas con cuenta en Backline podrán ver tu nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Si los administradores de una banda activan su perfil público, las personas con cuenta podrán ver su nombre, logo, ciudad, géneros, descripción, redes, fotos y los integrantes que hayan hecho público su perfil. Puedes apagarlo cuando quieras. Tu correo nunca se muestra. Quienes no tienen cuenta no ven estos perfiles.',
+        'El logo y las fotos de una banda se guardan en un espacio público de solo lectura: cualquier persona que tenga el enlace de la imagen puede verla.',
+      ],
     },
     {
       title: '5. Terceros y transferencia internacional',
@@ -100,12 +107,12 @@ export const terms: LegalDoc = {
     },
     {
       title: '3. Tu contenido',
-      paragraphs: ['Lo que escribes (nombres, notas, descripciones, setlists) sigue siendo tuyo. Nos autorizas a guardarlo y mostrarlo a los integrantes de tu banda para que el servicio funcione. Garantizas que tienes derecho a publicarlo, que las fotos y el logo que subas son tuyos o tienes permiso de quienes aparecen en ellos, y que no subes contenido de otras personas sin permiso. Podemos retirar imágenes que incumplan estos términos.'],
+      paragraphs: ['Lo que escribes (nombres, notas, descripciones, setlists, letras y acordes) sigue siendo tuyo. Nos autorizas a guardarlo y mostrarlo a los integrantes de tu banda para que el servicio funcione. Garantizas que tienes derecho a publicarlo, que las fotos y el logo que subas son tuyos o tienes permiso de quienes aparecen en ellos, y que no subes contenido de otras personas sin permiso. Podemos retirar imágenes que incumplan estos términos.'],
     },
     {
       title: '4. Música de terceros',
       paragraphs: [
-        'Backline no aloja ni distribuye música, letras ni videos de terceros. Solo guarda enlaces a YouTube y Spotify y muestra sus reproductores oficiales. La música sigue sujeta a las condiciones de esas plataformas y a los derechos de sus titulares.',
+        'Backline no aloja ni distribuye música ni videos de terceros: solo guarda enlaces a YouTube y Spotify y muestra sus reproductores oficiales. No ofrecemos un catálogo de letras. Lo que una banda escribe en «Letra y acordes» es contenido de la banda, visible solo para sus integrantes, y cada banda es responsable de usar solo textos que tenga derecho a copiar y compartir entre sus miembros. La música y las letras siguen sujetas a las condiciones de las plataformas y a los derechos de sus titulares.',
         `Si eres titular de derechos y crees que hay una infracción, escribe a ${CONTACT_EMAIL} con la información del contenido y tu legitimación; lo revisaremos y retiraremos lo que corresponda.`,
       ],
     },

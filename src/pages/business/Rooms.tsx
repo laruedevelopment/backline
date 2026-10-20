@@ -35,6 +35,7 @@ export default function BusinessRooms() {
 
   return (
     <>
+      <h1 className="sr-only">Salas</h1>
       <div className="section-title">Salas de ensayo</div>
       {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && rooms.length === 0 && <p className="li-sub wrap">Agrega al menos una sala para poder publicar tu ensayadero: cada una se reserva por separado.</p>}

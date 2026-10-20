@@ -48,3 +48,9 @@ Convenciones: `uuid` PK, `created_at`, RLS en todas las tablas, acceso por perte
 - RLS: un miembro solo lee/escribe filas de sus bandas; públicas solo si `is_public`.
 - Storage: buckets con límite de tamaño y tipo MIME; rutas `band_id/...`.
 - Nunca guardar medios con derechos de terceros; solo links/embeds.
+
+## Estado actual (migraciones 0015–0016)
+- `songs.lyrics` (≤ 12.000 caracteres): letra y acordes que escribe la banda; solo la ve su banda (RLS de `songs`).
+- `bands.is_public`, `profiles.is_public` (por defecto `false`) y `profiles.whatsapp`: perfil público opcional (Comunidad). `profiles` ya no se lee entera: `select` por columnas (sin `age_declaration` ni datos de términos). Funciones `band_public_members`, `band_member_count`, `profile_public_bands`, `set_profile_public` (solo mayores de edad).
+- Invitaciones: `band_invites.code` (24 hex, vence a los 7 días); el link `/unirse/<código>` lo guarda en el navegador hasta crear la cuenta y entra solo (`join_band`).
+- Pendiente de decidir: `whatsapp` es legible por compañeros de banda vía API aunque el perfil no sea público (la app no lo muestra); si se quiere estricto, moverlo a una tabla `profile_contacts` con RLS propia.

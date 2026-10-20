@@ -87,7 +87,7 @@ export default function SetlistDetailPage() {
 
       <div className="detail-split">
       <article className="paper" style={{ marginTop: 6 }}>
-        <h2>{list.name}</h2>
+        <h1>{list.name}</h1>
         <div className="meta">{items.length} CANCIONES · {minutes} MIN · {changes} CAMBIO{changes === 1 ? '' : 'S'} DE AFINACIÓN</div>
         {items.length === 0 && <p style={{ padding: '18px 0' }}>Vacío. Agrega canciones de tu repertorio.</p>}
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
