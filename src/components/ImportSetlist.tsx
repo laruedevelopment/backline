@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Camera, Check, Plus, X } from 'lucide-react'
+import { Camera, Check, Link2, Plus, X } from 'lucide-react'
+import { fetchYoutubePlaylist, playlistIdFromUrl, youtubeEnabled } from '../lib/youtubePlaylist'
 import { readTextFromImage } from '../lib/ocr'
 import type { Song } from '../lib/song'
 import { matchSongs, parseSetlistText } from '../lib/importSetlist'
@@ -18,11 +19,15 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [reading, setReading] = useState<number | null>(null)
+  const [link, setLink] = useState('')
+  const [fetching, setFetching] = useState(false)
 
   const parsed = useMemo(() => parseSetlistText(text), [text])
   const matches = useMemo(() => matchSongs(parsed.lines, songs), [parsed, songs])
   const fresh = matches.filter((m) => !m.song).length
   const title = name || parsed.name || 'Setlist importado'
+
+  const append = (more: string) => setText((t) => (t ? `${t}\n${more}` : more))
 
   async function fromImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -33,12 +38,28 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
     try {
       const out = await readTextFromImage(file, setReading)
       if (!out.trim()) setError('No pudimos leer texto en esa imagen. Prueba con una foto más nítida y de frente.')
-      else setText((t) => (t ? `${t}
-${out}` : out))
+      else append(out)
     } catch {
       setError('No pudimos leer la imagen. Revisa que sea una foto o captura de menos de 12 MB.')
     }
     setReading(null)
+  }
+
+  async function fromLink() {
+    const { kind, id } = playlistIdFromUrl(link)
+    setError('')
+    if (kind === 'spotify') return setError('Spotify no deja leer playlists de otras personas. Toma una captura de la lista y súbela con "Foto o captura de pantalla".')
+    if (kind !== 'youtube' || !id) return setError('Pega el link de una playlist de YouTube (debe incluir "list=").')
+    setFetching(true)
+    try {
+      const lines = await fetchYoutubePlaylist(id)
+      if (!lines.length) setError('La playlist está vacía.')
+      else append(lines.join('\n'))
+      setLink('')
+    } catch (e) {
+      setError((e as Error).message === 'privada' ? 'No pudimos abrir esa playlist. Debe ser pública o "no listada".' : 'No pudimos leer la playlist de YouTube. Intenta de nuevo en un rato.')
+    }
+    setFetching(false)
   }
 
   async function create() {
@@ -74,6 +95,14 @@ ${out}` : out))
         </div>
         <p className="sub note">Pega la lista del chat, de tus notas o de un documento, o sube una foto o captura (se lee en tu celular). Revisa el texto antes de crear: el reconocimiento de letra a mano falla más que el texto impreso. Una canción por línea. Funciona con "Canción - Artista", "Canción (Artista)" o solo el nombre.</p>
         <textarea rows={8} value={text} onChange={(e) => setText(e.target.value)} placeholder={'Setlist Bar La Esquina:\n1. Seven Nation Army - The White Stripes\n2. Come Together (Beatles)\n3. Black Hole Sun'} aria-label="Lista de canciones" />
+        {youtubeEnabled && (
+          <div className="row">
+            <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Link de playlist de YouTube o Spotify" aria-label="Link de playlist" inputMode="url" />
+            <button className="btn" disabled={fetching || !link.trim()} onClick={() => void fromLink()}>
+              <Link2 size={18} aria-hidden /> {fetching ? 'Leyendo…' : 'Traer'}
+            </button>
+          </div>
+        )}
         <label className="btn" style={reading === null ? undefined : { opacity: 0.6 }}>
           <Camera size={18} aria-hidden /> {reading === null ? 'Foto o captura de pantalla' : `Leyendo imagen… ${reading}%`}
           <input type="file" accept="image/*" hidden disabled={reading !== null} onChange={(e) => void fromImage(e)} />

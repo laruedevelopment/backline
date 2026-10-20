@@ -16,3 +16,9 @@
 4. Pégalas en `.env.local` (copia de `.env.example`) como `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. Nunca la `service_role`.
 5. Authentication → Providers: deja Email activo. (Google se agrega después.) Authentication → URL Configuration: pon `http://localhost:5173` como Site URL.
 6. Avísame y aplico la migración `supabase/migrations/20261020000001_banda_base.sql` (te la muestro antes).
+
+## Importar playlists de YouTube (opcional, $0)
+1. https://console.cloud.google.com → proyecto nuevo `backline` → "APIs y servicios" → habilitar **YouTube Data API v3**.
+2. Credenciales → Crear credencial → **Clave de API**. Restringirla: *Referentes HTTP* (`localhost:5173/*` y el dominio final) y *Restricción de API* = solo YouTube Data API v3.
+3. Pegarla en `.env.local` como `VITE_YOUTUBE_API_KEY`. Cuota gratis: 10.000 unidades/día (1 unidad por 50 canciones).
+- Spotify no permite leer playlists ajenas con claves de app (restricciones 2026): se usa captura de pantalla + lector de imagen.
