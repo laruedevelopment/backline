@@ -63,7 +63,7 @@ export default function PublicBandPage() {
 
       <div className="section-title">Integrantes visibles{members.length ? ` · ${members.length}` : ''}</div>
       {members.length === 0 && <p className="li-sub wrap">Los integrantes aparecen aquí cuando hacen público su propio perfil.</p>}
-      <div className="list" style={{ borderTop: members.length ? undefined : 0 }}>
+      <div className="list cols" style={{ borderTop: members.length ? undefined : 0 }}>
         {members.map((m) => (
           <Link key={m.profileId} to={`/explorar/musicos/${m.profileId}`} className="li" style={{ minHeight: 60 }}>
             <span className="avatar" style={{ marginLeft: 0 }} aria-hidden>{initials(m.name)}</span>

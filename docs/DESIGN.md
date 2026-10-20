@@ -44,3 +44,11 @@ Base cálida de noche y **un solo acento** (ámbar de luz de escenario). Verde y
 - **Modo escenario**: contraste máximo, texto grande, aviso de afinación arriba, pantalla siempre encendida.
 - Movimiento solo con propósito (respuesta de botones, hoja que sube) y respetando `prefers-reduced-motion`.
 - Microcopy en español colombiano neutro: "Agregar canción", no "Añadir elemento".
+
+## Dispositivos y ancho (regla para toda pantalla nueva)
+Se diseña para tres clases de pantalla, no solo celular:
+- **Celular (< 640 px):** una columna a lo ancho, navegación inferior.
+- **Tableta (640–959 px):** columna de hasta 720 px, navegación inferior.
+- **Escritorio (≥ 960 px):** menú lateral y el contenido usa el espacio restante (hasta 1040 px; 1240 desde 1500 px; 1440 desde 1900 px). Listas y tarjetas pasan a 2 columnas desde 1100 px y a 3 desde 1700 px (`.list.cols`, `.explore-grid`).
+- El ancho y el gutter salen de `.main` (`--gutter`); no fijar anchos máximos pequeños en cada página. El texto largo se limita con `ch`, no con el contenedor.
+- Al revisar una pantalla, mirar 390, 768, 1366 y 1920 px (y celular de lado si tiene modo horizontal).

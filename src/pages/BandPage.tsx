@@ -125,7 +125,7 @@ export default function BandPage() {
 
       <div className="section-title">Integrantes · {members.length}</div>
       {isLoading ? <ListSkeleton rows={3} /> : (
-        <div className="list">
+        <div className="list cols">
           {members.map((m) => {
             const me = m.profileId === userId
             return (

@@ -108,7 +108,7 @@ export default function EnsayaderosPage() {
       )}
       {(venues?.length ?? 0) > 0 && shown.length === 0 && <p className="empty">Ningún ensayadero coincide con esa búsqueda.</p>}
 
-      <div className="list" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
+      <div className="list cols" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
         {shown.map((v) => (
           <Link key={v.id} to={`/ensayaderos/${v.id}`} className="li" style={{ minHeight: 76 }}>
             <BandMark name={v.name} logoUrl={v.logoUrl} />

@@ -43,7 +43,7 @@ export default function SetlistsPage() {
         </div>
       )}
 
-      <div className="list" style={{ marginTop: 16, borderTop: setlists.length ? undefined : 0 }}>
+      <div className="list cols" style={{ marginTop: 16, borderTop: setlists.length ? undefined : 0 }}>
         {setlists.map((l) => {
           const items = l.songIds.flatMap((id) => songs.find((s) => s.id === id) ?? [])
           return (

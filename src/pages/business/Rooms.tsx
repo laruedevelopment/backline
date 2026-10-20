@@ -38,7 +38,7 @@ export default function BusinessRooms() {
       <div className="section-title">Salas de ensayo</div>
       {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && rooms.length === 0 && <p className="li-sub wrap">Agrega al menos una sala para poder publicar tu ensayadero: cada una se reserva por separado.</p>}
-      <div className="list" style={{ borderTop: rooms.length ? undefined : 0 }}>
+      <div className="list cols" style={{ borderTop: rooms.length ? undefined : 0 }}>
         {rooms.map((r) => {
           const items = equipByRoom.get(r.id) ?? []
           const dims = dimensionsLabel(r)

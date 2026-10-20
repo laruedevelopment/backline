@@ -31,7 +31,7 @@ export default function LearnPage() {
         return (
           <section key={lv}>
             <h2 className="section-title">{levelName[lv]}</h2>
-            <div className="list">
+            <div className="list cols">
               {items.map((l) => (
                 <Link key={l.id} to={`/aprender/${l.id}`} className="li">
                   <span className={`dot ${done.includes(l.id) ? 'ready' : 'paused'}`} role="img" aria-label={done.includes(l.id) ? 'Completada' : 'Pendiente'} />

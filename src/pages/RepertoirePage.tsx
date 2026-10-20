@@ -79,7 +79,7 @@ export default function RepertoirePage() {
       )}
       {!loading && songs.length > 0 && shown.length === 0 && <p className="empty">Ninguna canción coincide con esa búsqueda.</p>}
 
-      <div className="list" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
+      <div className="list cols" style={{ marginTop: 14, borderTop: shown.length ? undefined : 0 }}>
         {shown.map((s) => <SongRow key={s.id} song={s} onEdit={canEdit ? () => setEditing(s) : undefined} />)}
       </div>
 
