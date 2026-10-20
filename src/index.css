@@ -441,3 +441,42 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .dot.busy { background: var(--ember); }
 .dot.pending { background: repeating-linear-gradient(45deg, var(--amber) 0 3px, transparent 3px 6px); }
 .dot.chosen { background: var(--amber); }
+
+/* Modo escenario: letra y acordes, giro de pantalla */
+.stage-main.has-chart { align-content: start; overflow-y: auto; text-align: left; gap: 10px; min-height: 0; }
+.stage-main.has-chart .stage-chips, .stage-main.has-chart .stage-artist { justify-content: flex-start; }
+.stage-title.compact { font-size: clamp(1.6rem, 6vw, 2.6rem); }
+.stage-main.has-chart .stage-chip { font-size: 1rem; padding: 3px 10px; }
+.stage-main.has-chart .stage-notes { margin: 0; font-size: 1rem; max-width: none; color: var(--muted); }
+.stage-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-family: var(--mono); font-size: 0.9rem; }
+.stage-tools .btn { min-height: 44px; min-width: 44px; padding: 0 10px; }
+.stage-tools .sep { width: 1px; height: 28px; background: var(--line-2); margin: 0 6px; }
+.chart { font-family: var(--mono); line-height: 1.35; white-space: pre; overflow-x: auto; padding: 8px 0 24px; outline: none; }
+.chart-chords { color: var(--amber); font-weight: 700; }
+.chart-lyric { color: #fff; }
+.chart-section { margin-top: 10px; color: var(--muted); font-size: 0.8em; letter-spacing: 0.08em; text-transform: uppercase; }
+.chart-gap { height: 0.8em; }
+.chart-input { font-family: var(--mono); font-size: 0.9rem; }
+/* Giro por CSS (iPhone y navegadores que no permiten bloquear la orientación). */
+.stage.rotated { inset: auto; top: 0; left: 100vw; width: 100dvh; height: 100dvw; transform: rotate(90deg); transform-origin: top left; }
+@media (orientation: landscape) { .stage.rotated { inset: 0; width: auto; height: auto; transform: none; } }
+
+.stage-tools { gap: 6px; }
+.stage-tools .btn { min-width: 40px; padding: 0 8px; }
+/* Pantalla baja (celular de lado): más espacio para la letra */
+@media (max-height: 520px) {
+  .stage { padding: 8px 12px; gap: 6px; }
+  .stage-next { display: none; }
+  .stage-nav .btn { min-height: 48px; font-size: 1rem; }
+  .stage-top .btn { min-height: 40px; }
+  .stage-title.compact { font-size: 1.4rem; }
+  .stage-main.has-chart .stage-artist { font-size: 1rem; }
+  .stage-main.has-chart { gap: 6px; }
+}
+/* De lado: datos y controles a la izquierda, letra a la derecha con su propio desplazamiento. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .stage { min-height: 0; }
+  .stage-main.has-chart { display: grid; grid-template-columns: minmax(190px, 34%) 1fr; grid-template-rows: repeat(6, min-content) 1fr; column-gap: 18px; overflow: hidden; align-content: stretch; }
+  .stage-main.has-chart > * { grid-column: 1; }
+  .stage-main.has-chart > .chart { grid-column: 2; grid-row: 1 / -1; min-height: 0; overflow-y: auto; align-self: stretch; }
+}

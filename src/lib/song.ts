@@ -15,6 +15,8 @@ export type Song = {
   guest?: string
   links: { youtube?: string; spotify?: string }
   notes?: string
+  /** Letra y acordes que se muestran en el modo escenario. */
+  lyrics?: string
 }
 
 export const statusLabel: Record<SongStatus, string> = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }

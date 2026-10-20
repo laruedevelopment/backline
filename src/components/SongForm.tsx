@@ -147,6 +147,11 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       <label className="field">Notas
         <textarea rows={3} value={s.notes ?? ''} onChange={(e) => patch({ notes: e.target.value || undefined })} maxLength={2000} />
       </label>
+      <label className="field">Letra y acordes (opcional)
+        <textarea rows={8} className="chart-input" value={s.lyrics ?? ''} onChange={(e) => patch({ lyrics: e.target.value || undefined })} maxLength={12000} spellCheck={false}
+          placeholder={'[Verso]\nAm        F\nHoy vuelvo a casa\n\nO así: Hoy [Am]vuelvo a [F]casa'} />
+        <span className="li-sub wrap">Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella.</span>
+      </label>
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}

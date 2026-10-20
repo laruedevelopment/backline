@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowLeft, ArrowUp, X } from 'lucide-react'
+import { ArrowDown, ArrowLeft, ArrowUp, Check, Plus, X } from 'lucide-react'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { isStandard, tuningSignature, tuningSummary } from '../lib/song'
 import { ask } from '../lib/confirm'
+import { norm } from '../lib/importSetlist'
+import Sheet from '../components/Sheet'
 import StageMode from '../components/StageMode'
 import ListSkeleton from '../components/Skeleton'
 
@@ -18,6 +20,9 @@ export default function SetlistDetailPage() {
   const [editing, setEditing] = useState(false)
   const [stage, setStage] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [adding, setAdding] = useState(false)
+  const [picked, setPicked] = useState<string[]>([])
+  const [q, setQ] = useState('')
   const canEdit = band ? band.role !== 'guest' : true
 
   const list = setlists.find((l) => l.id === id)
@@ -44,6 +49,10 @@ export default function SetlistDetailPage() {
     } catch { /* sin permiso de portapapeles */ }
   }
   const available = songs.filter((s) => !ids.includes(s.id))
+  const shown = available.filter((s) => !q.trim() || norm(`${s.title} ${s.artist}`).includes(norm(q)))
+  const closeAdd = () => { setAdding(false); setPicked([]); setQ('') }
+  const addPicked = () => { update([...ids, ...picked]); closeAdd() }
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]))
 
   return (
     <>
@@ -74,6 +83,7 @@ export default function SetlistDetailPage() {
       </article>
 
       <div className="stack" style={{ marginTop: 16 }}>
+        {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
@@ -101,6 +111,33 @@ export default function SetlistDetailPage() {
             Borrar setlist
           </button>
         </>
+      )}
+      {adding && (
+        <Sheet title="Agregar canciones" onClose={closeAdd}>
+          {available.length === 0 ? (
+            <p className="li-sub wrap">Ya están todas las canciones del repertorio en este setlist. <Link to="/repertorio" style={{ color: 'var(--amber)' }}>Agregar más al repertorio</Link></p>
+          ) : (
+            <>
+              <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por título o artista" aria-label="Buscar canción" />
+              <div className="list" role="group" aria-label="Canciones del repertorio">
+                {shown.map((s) => (
+                  <button key={s.id} type="button" className="li" aria-pressed={picked.includes(s.id)} onClick={() => toggle(s.id)}>
+                    <div className="li-main">
+                      <div className="li-title">{s.title}</div>
+                      <div className="li-sub">{[s.artist, tuningSummary(s)].filter(Boolean).join(' · ')}</div>
+                    </div>
+                    <span className={`tag ${picked.includes(s.id) ? 'key' : ''}`}>{picked.includes(s.id) ? <Check size={12} aria-hidden /> : <Plus size={12} aria-hidden />}</span>
+                  </button>
+                ))}
+                {shown.length === 0 && <p className="li-sub wrap">Nada con esa búsqueda.</p>}
+              </div>
+              <p className="li-sub wrap"><Link to="/repertorio" style={{ color: 'var(--amber)' }}>¿No está? Agrégala al repertorio primero.</Link></p>
+              <div className="sheet-foot">
+                <button className="btn primary block" disabled={!picked.length} onClick={addPicked}>{picked.length ? `Agregar ${picked.length} canción${picked.length === 1 ? '' : 'es'}` : 'Elige canciones'}</button>
+              </div>
+            </>
+          )}
+        </Sheet>
       )}
       {stage && <StageMode songs={items} onClose={() => setStage(false)} />}
     </>

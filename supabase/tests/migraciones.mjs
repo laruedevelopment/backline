@@ -343,11 +343,16 @@ await ok('el líder publica su banda y entonces la ven las demás personas con c
 await ok('lo privado sigue privado aunque la banda sea pública (canciones, setlists, agenda, reservas)', async () => {
   await as('leader', `insert into public.songs (band_id, title) values ($1,'Privada')`, [band])
   eq((await as('member', `select id from public.songs where band_id=$1`, [band])).length, 0, 'canciones')
+  await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, '[Verso]\nAm  F\nLetra de prueba'])
+  eq((await as('member', `select lyrics from public.songs where band_id=$1`, [band])).length, 0, 'letra visible a ajenos')
   eq((await as('member', `select id from public.setlists where band_id=$1`, [band])).length, 0, 'setlists')
   eq((await as('member', `select id from public.events where band_id=$1`, [band])).length, 0, 'eventos')
   eq((await as('member', `select profile_id from public.band_members where band_id=$1`, [band])).length, 0, 'integrantes directos')
   eq((await as('member', `select code from public.band_invites`)).length, 0, 'invitaciones')
 })
+await rejects('la letra no puede pasar de 12000 caracteres', async () => {
+  await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, 'a'.repeat(12001)])
+}, /check|lyrics/)
 await ok('los integrantes de una banda pública solo salen si hicieron público su perfil', async () => {
   eq((await as('member', `select * from public.band_public_members($1)`, [band])).length, 0, 'salió alguien sin permiso')
   await as('leader', `select public.set_profile_public(true)`)
