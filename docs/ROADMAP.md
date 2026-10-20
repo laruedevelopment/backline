@@ -31,7 +31,9 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Reservas: la banda pide una franja libre, el dueño confirma o rechaza; sin dobles reservas (restricción en la base); al confirmar, el ensayo aparece solo en la agenda de la banda.
 - [x] Pruebas de seguridad de las migraciones y RLS en CI (`npm run test:db`).
 - [ ] Piloto real con una sala; medir fricción antes de generalizar.
-- [ ] Mapa OSM, mensajes dentro de la app, avisos (push/WhatsApp) al dueño cuando llega una solicitud.
+- [x] Confirmación automática (opcional por sala), reservas anotadas a mano por el dueño, botón Agregar a Google Calendar, actualización en vivo, insignia de pendientes y avisos push (migraciones 0010-0012; función `notify-booking`).
+- [ ] Leer el Google Calendar de la sala (iCal), recordatorios automáticos, página pública de disponibilidad.
+- [ ] Mapa OSM y mensajes dentro de la app.
 - [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.
 
 ## Fase 4 — Comunidad

@@ -205,6 +205,28 @@ await ok('desactivarla vuelve al modo con aprobación', async () => {
   eq(row.status, 'requested', 'estado')
 })
 
+
+console.log('\nNotificaciones push (suscripciones)')
+await ok('cada quien guarda su suscripción y solo ve las suyas', async () => {
+  await as('leader', `select public.save_push_subscription('https://push.example/abc','p256','auth','Chrome')`)
+  eq((await as('leader', `select endpoint from public.push_subscriptions`)).length, 1, 'propias')
+  eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 0, 'ajenas')
+})
+await rejects('no se pueden insertar suscripciones directo (ni a nombre de otro)', () => as('owner', `insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1,'https://x.example/1','a','b')`, [U.leader]), /permission denied/)
+await rejects('el endpoint debe ser https', () => as('leader', `select public.save_push_subscription('http://push.example/x','p','a')`), /check/)
+await ok('si el dispositivo cambia de cuenta, la suscripción pasa a la cuenta actual', async () => {
+  await as('owner', `select public.save_push_subscription('https://push.example/abc','p256b','authb','Chrome')`)
+  eq((await as('leader', `select endpoint from public.push_subscriptions`)).length, 0, 'sigue en la anterior')
+  eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 1, 'no pasó a la nueva')
+})
+await ok('cada quien puede borrar la suya, no la ajena', async () => {
+  await as('leader', `delete from public.push_subscriptions`)
+  eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 1, 'borró la de otro')
+  await as('owner', `delete from public.push_subscriptions`)
+  eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 0, 'no borró la propia')
+})
+await rejects('máximo 10 dispositivos por persona', async () => { for (let i = 0; i < 11; i++) await as('member', `select public.save_push_subscription($1,'p','a')`, [`https://push.example/m${i}`]) }, /demasiados/)
+
 console.log('\nFotos y límites')
 await rejects('una foto no puede apuntar a la carpeta de otra sala', () => as('owner', `insert into public.venue_photos (venue_id, path) values ($1,'otra/photos/x.webp')`, [venue]), /check/)
 await ok('el dueño sube hasta 12 fotos y la 13 se rechaza', async () => {

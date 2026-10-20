@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import AgendaNav from '../components/AgendaNav'
+import { PushPrompt } from '../components/PushControls'
 import BandMark from '../components/BandMark'
 import ListSkeleton from '../components/Skeleton'
 import { ask } from '../lib/confirm'
@@ -64,6 +65,7 @@ export default function SalasPage() {
         <p className="page-sub">Encuentra una sala, mira sus horarios y pide tu franja. Si la reservas a nombre de la banda, el ensayo aparece solo en la agenda.</p>
       </div>
       <AgendaNav />
+      {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando la sala responda tu solicitud." />}
 
       {upcoming.length > 0 && (
         <>

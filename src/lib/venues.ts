@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import type { BandLinks } from './api'
+import { notifyBooking } from './push'
 import type { Busy } from './slots'
 
 const db = () => {
@@ -196,12 +197,14 @@ export async function requestBooking(v: { roomId: string; start: Date; end: Date
     p_room: v.roomId, p_start: v.start.toISOString(), p_end: v.end.toISOString(), p_band: v.bandId, p_note: v.note || null, p_phone: v.phone || null,
   })
   if (error) throw error
+  void notifyBooking(data as string)
   return data as string
 }
 
 export async function respondBooking(id: string, status: 'confirmed' | 'rejected', note: string) {
   const { error } = await db().rpc('respond_booking', { p_id: id, p_status: status, p_note: note || null })
   if (error) throw error
+  void notifyBooking(id)
 }
 
 /** El dueño registra una reserva que le llegó por WhatsApp o llamada: queda confirmada y la franja se bloquea. */
@@ -216,6 +219,7 @@ export async function ownerBooking(v: { roomId: string; start: Date; end: Date; 
 export async function cancelBooking(id: string) {
   const { error } = await db().rpc('cancel_booking', { p_id: id })
   if (error) throw error
+  void notifyBooking(id)
 }
 
 type BookingRow = {

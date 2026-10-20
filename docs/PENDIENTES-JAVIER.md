@@ -33,7 +33,7 @@ Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas d
 6. Antes de subir logos y fotos: política de contenido, reporte de abuso y borrado de archivos al borrar la cuenta.
 
 ## Salas de ensayo: piloto con tu amigo
-1. **Aplicar las migraciones** `20261020000009_salas_y_reservas.sql` (ya aplicada) y `20261020000010_reserva_manual.sql` en el SQL Editor (la app nueva necesita la 0010; no publicar antes).
+1. **Aplicar las migraciones** en el SQL Editor, en orden: `…0010_reserva_manual.sql`, `…0011_confirmacion_automatica.sql` y `…0012_notificaciones_push.sql` (la 0009 ya está). No publicar la app antes.
 2. Pedirle a tu amigo lo que necesita cargar: nombre, dirección, WhatsApp, cuántas salitas tiene y qué equipo hay en cada una, precio por hora, horario de atención y 3-5 fotos.
 3. Que cree su cuenta, entre a **Agenda → Salas de ensayo → Publicar mi sala** y la deje lista. Tú reservas con tu banda para probar el flujo completo (pedir, confirmar, ver el ensayo en la agenda).
 4. Ver cómo reserva hoy (WhatsApp, cuaderno, llamadas) para medir si Backline le quita trabajo. Esa fricción decide qué sigue (avisos, pagos, Slothy).
@@ -41,3 +41,21 @@ Ya están en la app: páginas `/privacidad` y `/terminos` (borrador), casillas d
 
 ### Cómo reserva hoy el amigo (dato del piloto)
 Las bandas le escriben por WhatsApp y él anota a mano en su Google Calendar. Por eso Backline le ofrece: (1) **Anotar una reserva** que le llegó por WhatsApp o llamada, para que las bandas vean la disponibilidad real; (2) botón **Agregar a Google Calendar** en cada reserva confirmada (un toque, sin escribir); (3) el aviso por WhatsApp que manda la banda al pedir una franja, con el enlace para confirmarla. Pendiente si el piloto lo pide: aviso automático al dueño (correo/WhatsApp), página pública sin cuenta para compartir su disponibilidad, y feed `.ics` para suscribir su Google Calendar.
+
+## Avisos automáticos (notificaciones push, $0)
+La app avisa sola al dueño cuando llega una solicitud y a la banda cuando la confirman o cancelan, sin depender de WhatsApp. Se hace una vez:
+1. **Generar las llaves** (en esta carpeta): `npx web-push generate-vapid-keys`. Imprime una llave pública y una privada. **La privada no se comparte ni se sube a git.**
+2. **Llave pública en la app:** `gh variable set VITE_VAPID_PUBLIC_KEY --repo laruedevelopment/backline --body "<pública>"` y, para probar en tu computador, agrégala a `.env.local` como `VITE_VAPID_PUBLIC_KEY=<pública>`.
+3. **Subir la función a Supabase** (una sola vez; la primera vez abre el navegador para iniciar sesión):
+   - `npx supabase login`
+   - `npx supabase functions deploy notify-booking --project-ref xmhwgdqcjvpsfezxnjuz` (si pide Docker, agrega `--use-api`).
+4. **Guardar las llaves como secretos de la función:**
+   `npx supabase secrets set VAPID_PUBLIC_KEY="<pública>" VAPID_PRIVATE_KEY="<privada>" VAPID_SUBJECT="mailto:javieruedase@gmail.com" --project-ref xmhwgdqcjvpsfezxnjuz`
+5. Publicar la app (push a `main`). Cada persona activa los avisos una vez en **Perfil → Avisos en este dispositivo** (el dueño también ve una invitación en «Mi sala»). En iPhone hay que instalar la app primero (Compartir → Agregar a pantalla de inicio).
+Sin los pasos 1–4 la app funciona igual, solo sin avisos.
+
+## Siguiente nivel de automatización (cuando el piloto lo pida)
+- **Leer su Google Calendar** (dirección secreta iCal por salita) para bloquear solo la disponibilidad con lo que él ya escribe. Misma infraestructura de funciones de Supabase.
+- **Recordatorios** el día anterior al ensayo (tarea programada + push).
+- **Página pública sin cuenta** para compartir la disponibilidad por WhatsApp.
+- **Bot de WhatsApp** con Slothy (tiene costo de WhatsApp Business).

@@ -5,6 +5,7 @@ import AgendaNav from '../components/AgendaNav'
 import ListSkeleton from '../components/Skeleton'
 import Sheet from '../components/Sheet'
 import ManualBookingSheet from '../components/ManualBookingSheet'
+import { PushPrompt } from '../components/PushControls'
 import { RoomForm, VenueForm } from '../components/VenueForms'
 import VenueMedia from '../components/VenueMedia'
 import { ask } from '../lib/confirm'
@@ -71,6 +72,7 @@ function Manage({ venue }: { venue: Venue }) {
   const pending = bookings.filter((b) => b.status === 'requested' && new Date(b.endsAt) > now).length
   return (
     <>
+      <PushPrompt text="Activa los avisos para enterarte al instante cuando una banda pida o cancele una reserva." />
       <div className="seg" role="group" aria-label="Secciones" style={{ marginTop: 18 }}>
         <button aria-pressed={tab === 'requests'} onClick={() => setTab('requests')}>Solicitudes{pending ? ` · ${pending}` : ''}</button>
         <button aria-pressed={tab === 'rooms'} onClick={() => setTab('rooms')}>Salitas y horario</button>

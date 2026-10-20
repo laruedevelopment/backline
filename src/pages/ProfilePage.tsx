@@ -10,6 +10,7 @@ import { useAuth } from '../store/useAuth'
 import { useBands } from '../store/useBandSession'
 import { useProgress } from '../store/useProgress'
 import { ask } from '../lib/confirm'
+import { PushSettings } from '../components/PushControls'
 import ListSkeleton from '../components/Skeleton'
 
 /** Al borrar la cuenta no queda nada de Backline guardado en el dispositivo. */
@@ -125,6 +126,8 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         <div className="stat"><b>{lessons.length - done.length}</b><span>Por hacer</span></div>
         <div className="stat"><b>{lessons.filter((l) => done.includes(l.id)).reduce((t, l) => t + l.minutes, 0)}</b><span>Minutos</span></div>
       </div>
+
+      <PushSettings />
 
       <div className="section-title">Legal y datos</div>
       <div className="list">
