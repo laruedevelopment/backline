@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, Upload } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
@@ -41,23 +41,26 @@ export default function RepertoirePage() {
         <span className="eyebrow">Música</span>
         <h1 className="page-title">Repertorio</h1>
       </div>
-      <MusicNav />
+      <MusicNav>
+        {canEdit && songs.length > 0 && (
+          <>
+            <button className="btn sm" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={16} aria-hidden /><span className="hide-sm">Canción</span></button>
+            <Link className="btn sm" to="/setlists?importar=1" aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span className="hide-sm">Importar</span></Link>
+          </>
+        )}
+      </MusicNav>
 
       {songs.length > 0 && (
         <>
-          <div className="stats" style={{ marginTop: 18 }}>
-            <div className="stat"><b>{songs.length}</b><span>Canciones</span></div>
-            <div className="stat"><b>{ready}</b><span>Listas</span></div>
-            <div className="stat"><b>{minutes}</b><span>Minutos</span></div>
-          </div>
-          <div className="meter" role="img" aria-label={`${ready} de ${songs.length} canciones listas`}><i style={{ width: `${(ready / songs.length) * 100}%` }} /></div>
+          <p className="rep-summary"><b>{songs.length}</b> canciones · <b>{ready}</b> {ready === 1 ? "lista" : "listas"} · <b>{minutes}</b> min</p>
+          <div className="meter thin" role="img" aria-label={`${ready} de ${songs.length} canciones listas`}><i style={{ width: `${(ready / songs.length) * 100}%` }} /></div>
 
-          <div className="stack" style={{ marginTop: 18 }}>
+          <div className="stack" style={{ marginTop: 14 }}>
             <label className="search">
               <Search size={18} aria-hidden />
               <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por canción o artista" aria-label="Buscar canciones" />
             </label>
-            <div className="tabs" role="group" aria-label="Filtrar por estado">
+            <div className="filter-chips" role="group" aria-label="Filtrar por estado" style={{ marginTop: 0 }}>
               {filters.map((f) => (
                 <button key={f.v} aria-pressed={status === f.v} className={status === f.v ? 'active' : ''} onClick={() => setStatus(f.v)}>{f.label}</button>
               ))}
@@ -83,11 +86,6 @@ export default function RepertoirePage() {
         {shown.map((s) => <SongRow key={s.id} song={s} onEdit={canEdit ? () => setEditing(s) : undefined} />)}
       </div>
 
-      {canEdit && songs.length > 0 && (
-        <button className="btn primary fab" onClick={() => setEditing('new')}>
-          <Plus size={20} aria-hidden /> Agregar canción
-        </button>
-      )}
       {editing && (
         <SongForm
           song={editing === 'new' ? undefined : editing}
