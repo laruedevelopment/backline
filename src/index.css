@@ -423,3 +423,21 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .combo-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; max-height: 260px; overflow-y: auto; background: var(--raise); border: 1px solid var(--line-2); border-radius: var(--r-m); box-shadow: 0 10px 30px rgb(0 0 0 / 0.5); }
 .combo-list li { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
 .combo-list li.active, .combo-list li:hover { background: var(--sunk); }
+
+/* Línea de tiempo del día (disponibilidad de una sala) */
+.timeline { display: grid; gap: 6px; margin-top: 6px; }
+.timeline-bar { position: relative; height: 34px; border-radius: var(--r-s); background: color-mix(in srgb, var(--sage) 38%, var(--sunk)); border: 1px solid var(--line-2); overflow: hidden; }
+.timeline-tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line-2); }
+.timeline-block { position: absolute; top: 0; bottom: 0; }
+.timeline-block.busy { background: color-mix(in srgb, var(--ember) 70%, var(--bg)); border-left: 1px solid var(--ember); border-right: 1px solid var(--ember); }
+.timeline-block.pending { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--amber) 45%, transparent) 0 6px, transparent 6px 12px); }
+.timeline-block.chosen { top: 3px; bottom: 3px; background: var(--amber); border-radius: 4px; box-shadow: 0 0 0 2px var(--bg); }
+.timeline-scale { position: relative; height: 16px; font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+.timeline-scale span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.timeline-scale span:first-child { transform: none; }
+.timeline-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.8rem; color: var(--muted); }
+.timeline-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.dot.free { background: color-mix(in srgb, var(--sage) 55%, var(--sunk)); }
+.dot.busy { background: var(--ember); }
+.dot.pending { background: repeating-linear-gradient(45deg, var(--amber) 0 3px, transparent 3px 6px); }
+.dot.chosen { background: var(--amber); }

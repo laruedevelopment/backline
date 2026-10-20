@@ -40,7 +40,7 @@ export function useBookingBoard(venue: Venue) {
 
   const sheets = (
     <>
-      {manual && <ManualBookingSheet rooms={rooms} onClose={() => setManual(false)} onSaved={refresh} />}
+      {manual && <ManualBookingSheet venueId={venue.id} bookings={bookings} rooms={rooms} onClose={() => setManual(false)} onSaved={refresh} />}
       {rejecting && (
         <RejectSheet booking={rejecting} onClose={() => setRejecting(null)}
           onReject={(note) => { setMsg(''); respond.mutate({ id: rejecting.id, status: 'rejected', note }); setRejecting(null) }} />
