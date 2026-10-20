@@ -360,7 +360,7 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
   .nav-foot { display: grid; gap: 0; margin-top: auto; padding: 12px; font-size: 0.8rem; }
   .nav .nav-foot a { flex-direction: row; padding: 6px 0; min-height: 32px; font-size: 0.8rem; color: var(--muted); }
   .nav .nav-foot a.active::before { display: none; }
-  .nav { grid-template-rows: auto repeat(5, auto) 1fr; }
+  .nav { display: flex; flex-direction: column; align-content: normal; }
 }
 
 /* Logo y galería */
@@ -417,3 +417,9 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .explore-card:hover { border-color: var(--line-2); }
 .explore-card-main { min-width: 0; flex: 1; }
 .explore-bio { margin: 8px 0 0; color: var(--muted); font-size: 0.875rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Selector de ciudad con sugerencias */
+.combo { position: relative; }
+.combo-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; max-height: 260px; overflow-y: auto; background: var(--raise); border: 1px solid var(--line-2); border-radius: var(--r-m); box-shadow: 0 10px 30px rgb(0 0 0 / 0.5); }
+.combo-list li { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+.combo-list li.active, .combo-list li:hover { background: var(--sunk); }

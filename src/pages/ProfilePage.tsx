@@ -12,6 +12,7 @@ import { useProgress } from '../store/useProgress'
 import { ask } from '../lib/confirm'
 import { PushSettings } from '../components/PushControls'
 import ListSkeleton from '../components/Skeleton'
+import CityInput from '../components/CityInput'
 
 /** Al borrar la cuenta no queda nada de Backline guardado en el dispositivo. */
 function clearDeviceData() {
@@ -126,7 +127,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
             </div>
           </fieldset>
           <label className="field">Ciudad
-            <input value={city} onChange={(e) => { setCity(e.target.value); setStatus('') }} maxLength={80} autoComplete="address-level2" />
+            <CityInput value={city} onChange={(c) => { setCity(c); setStatus('') }} />
           </label>
           <label className="field">WhatsApp (opcional, solo se muestra si tu perfil es público)
             <input type="tel" inputMode="tel" value={whatsapp} onChange={(e) => { setWhatsapp(e.target.value); setStatus('') }} maxLength={20} placeholder="300 123 4567" autoComplete="tel" />

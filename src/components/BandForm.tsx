@@ -3,6 +3,7 @@ import type { Band, BandLinks } from '../lib/api'
 import { genreOptions } from '../lib/identity'
 import { cleanSocial, socialKinds, socialLabels } from '../lib/links'
 import Sheet from './Sheet'
+import CityInput from './CityInput'
 
 type Draft = { name: string; city: string; genres: string[]; bio: string; links: BandLinks }
 type Props = { band: Band; onSave: (d: Draft) => Promise<unknown>; onClose: () => void }
@@ -50,7 +51,7 @@ export default function BandForm({ band, onSave, onClose }: Props) {
           <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required />
         </label>
         <label className="field">Ciudad
-          <input value={city} onChange={(e) => setCity(e.target.value)} maxLength={80} />
+          <CityInput value={city} onChange={setCity} />
         </label>
         <fieldset style={{ border: 0, padding: 0 }}>
           <legend className="field" style={{ marginBottom: 6 }}>Géneros (hasta 6)</legend>

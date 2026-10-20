@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { createBand, joinBand } from '../lib/api'
 import { useBands } from '../store/useBandSession'
+import CityInput from '../components/CityInput'
 
 type Props = { onCancel?: () => void }
 
@@ -55,7 +56,7 @@ export default function OnboardingPage({ onCancel }: Props) {
               <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} required autoFocus />
             </label>
             <label className="field">Ciudad
-              <input value={city} onChange={(e) => setCity(e.target.value)} maxLength={80} />
+              <CityInput value={city} onChange={setCity} />
             </label>
           </>
         ) : (

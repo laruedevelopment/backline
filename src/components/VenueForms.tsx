@@ -3,6 +3,7 @@ import { amenityOptions } from '../lib/identity'
 import { cleanSocial } from '../lib/links'
 import { kindLabel, type Room, type Venue, type VenueDraft, type VenueKind } from '../lib/venues'
 import Sheet from './Sheet'
+import CityInput from './CityInput'
 
 const emptyDraft: VenueDraft = { kind: 'rehearsal_room', name: '', city: '', address: '', description: '', amenities: [], whatsapp: '', links: {}, bookingUrl: '' }
 
@@ -51,7 +52,7 @@ export function VenueForm({ venue, onSave, onClose }: { venue?: Venue; onSave: (
       </label>
       <div className="grid-row">
         <label className="field grow">Ciudad
-          <input value={d.city} onChange={(e) => patch({ city: e.target.value })} maxLength={80} required placeholder="Bucaramanga" />
+          <CityInput value={d.city} onChange={(city) => patch({ city })} required placeholder="Bucaramanga" />
         </label>
         <label className="field grow">WhatsApp
           <input type="tel" inputMode="tel" value={d.whatsapp} onChange={(e) => patch({ whatsapp: e.target.value })} maxLength={20} placeholder="300 123 4567" />

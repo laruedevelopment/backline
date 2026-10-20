@@ -7,6 +7,7 @@ import ListSkeleton from '../components/Skeleton'
 import { exploreBands, exploreMusicians, PAGE, type PublicBand, type PublicMusician } from '../lib/community'
 import { genreOptions, initials, instrumentOptions } from '../lib/identity'
 import { supabase } from '../lib/supabase'
+import CityInput from '../components/CityInput'
 
 function useDebounced<T>(value: T, ms = 350): T {
   const [v, setV] = useState(value)
@@ -61,7 +62,7 @@ export default function ExplorePage() {
           <Search size={18} aria-hidden />
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={musicians ? 'Buscar músico por nombre' : 'Buscar banda por nombre'} aria-label="Buscar" />
         </label>
-        <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ciudad" aria-label="Filtrar por ciudad" autoComplete="off" />
+        <CityInput live value={city} onChange={setCity} ariaLabel="Filtrar por ciudad" />
       </div>
       <div className="filter-chips" role="group" aria-label={musicians ? 'Filtrar por instrumento' : 'Filtrar por género'}>
         {options.map((o) => (
