@@ -44,7 +44,7 @@ export default function RepertoirePage() {
       <MusicNav>
         {canEdit && songs.length > 0 && (
           <>
-            <button className="btn sm" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={16} aria-hidden /><span className="hide-sm">Canción</span></button>
+            <button className="btn sm" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={16} aria-hidden /><span>Canción</span></button>
             <Link className="btn sm" to="/setlists?importar=1" aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span className="hide-sm">Importar</span></Link>
           </>
         )}

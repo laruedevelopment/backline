@@ -527,7 +527,7 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .music-actions { display: flex; gap: 6px; }
 .btn.sm { min-height: 40px; padding: 0 12px; font-size: 0.875rem; color: var(--muted); border-color: var(--line); }
 .btn.sm:hover { color: var(--text); }
-@media (max-width: 520px) { .btn.sm .hide-sm { display: none; } .btn.sm { min-width: 44px; padding: 0 10px; } }
+@media (max-width: 520px) { .btn.sm .hide-sm { display: none; } .btn.sm { min-width: 44px; padding: 0 10px; } .music-actions { margin-left: auto; } }
 .setlist-grid { display: grid; gap: 14px; margin-top: 18px; grid-template-columns: 1fr; }
 @media (min-width: 720px) { .setlist-grid { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); } }
 .setlist-card { display: grid; gap: 6px; padding: 18px 18px 16px; background: var(--raise); border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: var(--r-m); min-width: 0; }

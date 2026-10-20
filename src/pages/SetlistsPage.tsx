@@ -37,7 +37,7 @@ export default function SetlistsPage() {
       <MusicNav>
         {canEdit && (
           <>
-            <button className="btn sm" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={16} aria-hidden /><span className="hide-sm">Nuevo</span></button>
+            <button className="btn sm" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={16} aria-hidden /><span>Nuevo</span></button>
             <button className="btn sm" onClick={() => setImporting(true)} aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span className="hide-sm">Importar</span></button>
           </>
         )}
