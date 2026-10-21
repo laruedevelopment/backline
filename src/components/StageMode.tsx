@@ -85,6 +85,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   // En «mi vista» solo lo mío; las notas de los demás instrumentos se ven en «Todo».
   const others = view ? [] : otherNotes(cur, null)
   const hasChords = chart.some((l) => l.kind === 'chords')
+  // Girar la pantalla solo tiene sentido en celulares y tabletas (táctiles o de pantalla angosta), no en un computador.
+  const canRotate = forced || locked || window.matchMedia('(pointer: coarse)').matches || vw < 900
   const folded = chart.length > 0 && foldId === cur.id && peekId !== cur.id
   // Estructura de la canción (para quien no lee la letra, como la batería).
   const sections = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics).filter((l) => l.kind === 'section').map((l) => l.text) : []), [cur.lyrics])
@@ -159,7 +161,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           <button className="btn" onClick={() => setPicking((v) => !v)} aria-expanded={picking} aria-label={view ? `Vista de ${view}. Cambiar de instrumento` : 'Elegir mi instrumento'}>
             {view ?? 'Mi vista'}
           </button>
-          <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>
+          {canRotate && <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>}
           <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
         </div>
       </div>
