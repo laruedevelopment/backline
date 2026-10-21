@@ -5,11 +5,37 @@ import { VitePWA } from 'vite-plugin-pwa'
 // En GitHub Pages el sitio vive en /backline/ (el workflow define VITE_BASE); en Cloudflare/Vercel o local es /.
 const base = process.env.VITE_BASE ?? '/'
 
+// Política de contenido: GitHub Pages no deja poner cabeceras, así que va como <meta>. Solo en el build (en desarrollo Vite inyecta scripts en línea).
+// Lista exacta de lo que la app usa: Supabase (datos, fotos, tiempo real), YouTube/Spotify/OpenStreetMap (reproductores y mapa),
+// la API de YouTube para importar listas, Nominatim (buscar direcciones) y jsDelivr (motor del lector de fotos, Tesseract).
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org https://www.openstreetmap.org https://i.ytimg.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googleapis.com https://nominatim.openstreetmap.org https://cdn.jsdelivr.net",
+  "frame-src https://www.youtube-nocookie.com https://www.youtube.com https://open.spotify.com https://www.openstreetmap.org",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ')
+
 // https://vite.dev/config/
 export default defineConfig({
   base,
   plugins: [
     react(),
+    {
+      name: 'backline-csp',
+      apply: 'build',
+      transformIndexHtml: () => [
+        { tag: 'meta', attrs: { 'http-equiv': 'Content-Security-Policy', content: csp }, injectTo: 'head-prepend' },
+        { tag: 'meta', attrs: { name: 'referrer', content: 'strict-origin-when-cross-origin' }, injectTo: 'head-prepend' },
+      ],
+    },
     VitePWA({
       // Service worker propio (sw/sw.ts): además de funcionar sin conexión, recibe las notificaciones push.
       strategies: 'injectManifest',

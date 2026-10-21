@@ -8,15 +8,16 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [x] Esqueleto de UI móvil con datos de demo (Inicio, Repertorio, Setlists, Agenda, Perfil).
 - [x] Repo público en GitHub (laruedevelopment/backline) y deploy gratis: https://laruedevelopment.github.io/backline/
 
-## Fase 1 — Banda MVP (el dolor real de Javier)
-- [ ] Supabase: proyecto, Auth (email + Google), migraciones, RLS por banda. *(migración 0001 escrita en `supabase/migrations/`, sin aplicar; falta proyecto — ver PENDIENTES)*
-- [ ] Crear banda, invitar miembros por link/código.
-- [x] Repertorio completo (tono, BPM, afinación por instrumento, cambios de tono, links, notas) — local (`src/store/useBand.ts`, localStorage); falta conectarlo a Supabase.
-- [x] Importar setlist pegando texto o desde foto/captura (OCR local, $0). Link de playlist de YouTube (requiere clave, ver PENDIENTES). Spotify: no viable para playlists ajenas; usar captura.
-- [x] Setlists con orden (subir/bajar), duración, avisos de cambio de afinación y modo escenario (migración 0002, sin aplicar). Falta: compartir, arrastrar.
-- [x] Agenda: ensayos/toques + confirmación de asistencia (migración 0005, sin aplicar).
-- [ ] Reproductor embebido YouTube/Spotify.
-- [ ] Offline básico (PWA).
+## Fase 1 — Banda MVP (el dolor real de Javier) — hecha; falta probarla en un ensayo real
+- [x] Supabase: proyecto, Auth por correo, migraciones 0001–0022 aplicadas en producción, RLS por banda, pruebas de base de datos en CI (`npm run test:db`).
+- [x] Crear banda, invitar por código o por link (`/unirse/<código>`: quien no tiene cuenta la crea y entra sola a la banda). Varias bandas por persona y cambio rápido.
+- [x] Repertorio completo: tono, BPM, afinación por instrumento, cambios de tono, links, notas, **letra y acordes**, **notas por instrumento** y **anotaciones personales por músico** (migraciones 0016, 0017, 0022).
+- [x] Importar setlist pegando texto o desde foto/captura (OCR local, $0); la lectura reconstruye filas, afinación y notas de listas diseñadas. Link de playlist de YouTube (requiere clave, ver PENDIENTES). Spotify no permite leer listas ajenas.
+- [x] Setlists: reordenar arrastrando, **etiquetas sueltas entre canciones y etiquetas por canción** (migración 0021), nombre editable, link de Spotify (migración 0018), duración y avisos de cambio de afinación.
+- [x] **Modo escenario**: vista personal por instrumento, letra grande y centrada, transponer acordes, ajustar a la pantalla, dos páginas en horizontal, desplazamiento automático, pedal/teclado, pantalla encendida, girar pantalla, deslizar entre canciones.
+- [x] Agenda: ensayos/toques + confirmación de asistencia (migración 0005).
+- [x] Reproductor embebido YouTube/Spotify en las canciones.
+- [x] Offline básico (PWA con caché local de lo útil sin señal).
 - Meta: la banda de Javier la usa 4 semanas en lugar del chat.
 
 ## Fase 1b — Aprender (en curso)
@@ -24,6 +25,7 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [ ] Más lecciones por nivel, afinador, racha de práctica, progreso en Supabase.
 
 ## Fase 2 — Perfiles y rig
+- [x] Perfil de músico con foto, instrumentos, ciudad y descripción; perfil público opcional y solo para mayores de edad (migraciones 0015, 0019, 0020).
 - Perfil de músico, rig con pedalboard, perfil público de banda + EPK, **banda verificada**. (Hecho: logo y galería de fotos de banda con Storage, migración 0008; redes y bio en Banda.)
 
 ## Fase 3 — Salas de ensayo (piloto con el amigo)
@@ -52,6 +54,8 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - Clasificados de equipo → reputación → pagos/escrow (revisión legal previa).
 
 ## Fase 6 — Escala
+- [x] Auditorías de seguridad y arquitectura sobre lo construido (ver `docs/AUDITORIA-2026-10.md`).
+- [x] Rendimiento básico: carga de pantallas bajo demanda, caché persistente solo de lo útil sin señal.
 - Monitoreo (Sentry), pruebas de carga, plan de pago de Supabase, CDN de medios, moderación, métricas de monetización (premium de banda, destacados, comisión de reservas/ventas).
 
 ## Monetización (luego)
