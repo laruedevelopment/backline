@@ -652,3 +652,30 @@ div.paper-label { cursor: default; }
 .speed { font-family: var(--mono); font-size: 0.85rem; min-width: 2.6em; text-align: center; }
 .stage-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-left: 3px solid var(--ember); background: #1a0f0e; border-radius: 0 var(--r-m) var(--r-m) 0; font-size: 0.85rem; }
 .chart.cols2.fitted { column-fill: balance; }
+
+/* La información va dentro del mismo desplazamiento que la letra: sale al bajar, sin saltos ni líneas cortadas */
+.stage-info.in-scroll { display: grid; gap: 14px; width: 100%; justify-items: center; text-align: center; padding: 6px 0 12px; }
+.stage-main.has-chart > .stage-info { display: contents; }
+.chart > .stage-info.in-scroll > * { max-width: 100%; }
+.stage-mini.sticky { position: sticky; top: 0; z-index: 3; width: 100%; background: #000; padding-top: 6px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.stage-mini .mini-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stage-mini .aa { font-size: 0.8rem; color: var(--muted); }
+.chart { scroll-padding-top: 52px; }
+/* El aviso de cambio de afinación queda siempre a la vista, junto a «Sigue». */
+.stage > .stage-banner { flex: none; }
+/* Celular de lado: el grid de dos columnas ya no hace falta (la letra empieza a la vista por sí sola) */
+@media (max-height: 520px) and (orientation: landscape) {
+  .stage-main.has-chart { display: flex; flex-direction: column; }
+  .stage-main.has-chart > .chart { grid-column: auto; grid-row: auto; }
+}
+
+/* Barra fina de una sola fila y letra que siempre se detiene en una línea completa (nunca cortada bajo la barra) */
+.chart { padding-top: 0; scroll-padding-top: 48px; scroll-snap-type: y proximity; }
+.chart.auto, .chart.cols2 { scroll-snap-type: none; }
+.stage-mini + .chart { padding-top: 8px; scroll-padding-top: 8px; }
+.chart > .chart-pair, .chart > .chart-lyric, .chart > .chart-section, .chart > .chart-gap { scroll-snap-align: start; }
+.stage-mini { flex-wrap: nowrap; }
+.stage-mini .mini-actions { flex-wrap: nowrap; margin-left: auto; gap: 4px; }
+.stage-mini .btn.sm { min-width: 38px; min-height: 36px; padding: 0 8px; }
+@media (max-width: 560px) { .stage-mini .mini-title { display: none; } }
+.chart > .stage-info.in-scroll { scroll-snap-align: start; }

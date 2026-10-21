@@ -42,10 +42,6 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<string | null>(readInstrument)
   const [picking, setPicking] = useState(false)
-  // Al bajar por la letra la información de la canción se oculta (lo único relevante es la letra); «Info» la muestra un momento.
-  // Se guardan por canción: al pasar a otra, vuelve a mostrarse la información completa.
-  const [foldId, setFoldId] = useState<string | null>(null)
-  const [peekId, setPeekId] = useState<string | null>(null)
   const who = instrument || picked // lo que toca esta persona: el de la banda o el que eligió aquí
   const [mine, setMine] = useState(true)
   const [vw, setVw] = useState(() => window.innerWidth)
@@ -77,16 +73,6 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     }
     setTouch(null)
   }
-  useEffect(() => {
-    if (!peekId) return
-    const t = window.setTimeout(() => setPeekId(null), 8000)
-    return () => window.clearTimeout(t)
-  }, [peekId])
-  const onChartScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const top = e.currentTarget.scrollTop
-    if (top > 40) setFoldId(cur.id)
-    else if (top <= 8) { setFoldId(null); setPeekId(null) }
-  }
   const view = mine && who ? who : null
   const kind = view ? instrumentKind(view) : 'melodic'
   // La batería no lee acordes ni letra; la voz lee la letra sin acordes.
@@ -103,8 +89,10 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const canRotate = forced || locked || window.matchMedia('(pointer: coarse)').matches || vw < 900
   const columns: 1 | 2 = cols === 2 && vw >= 700 ? 2 : 1
   const playing = autoId === cur.id
-  // Con letra a pantalla completa (ajustada, en dos páginas o desplazándose sola) la información de la canción se pliega.
-  const folded = chart.length > 0 && (fit || columns === 2 || playing || foldId === cur.id) && peekId !== cur.id
+  // Con la letra ajustada o en dos páginas no hay desplazamiento: se muestra solo una línea con lo esencial y la letra ocupa todo.
+  // En el modo normal la información va dentro del mismo desplazamiento que la letra: sale sola al bajar, sin saltos ni líneas cortadas.
+  const compact = chart.length > 0 && (fit || columns === 2)
+  const infoRef = useRef<HTMLDivElement>(null)
   // Estructura de la canción (para quien no lee la letra, como la batería).
   const sections = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics).filter((l) => l.kind === 'section').map((l) => l.text) : []), [cur.lyrics])
   const blocks = useMemo(() => toBlocks(chart, (t) => transposeChordLine(t, shift), hasChords), [chart, shift, hasChords])
@@ -130,7 +118,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       if (fits(mid)) { best = mid; lo = mid + 1 } else hi = mid - 1
     }
     el.style.fontSize = `${Math.max(12, best)}px`
-  }, [fit, columns, cur.id, blocks, vw, folded, stageW, longest, hasChords])
+  }, [fit, columns, cur.id, blocks, vw, compact, stageW, longest, hasChords])
 
   // Desplazamiento automático: recorre la letra durante lo que dura la canción (con la velocidad elegida). En dos páginas cambia de página a ese ritmo.
   useEffect(() => {
@@ -149,12 +137,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     }
     let raf = 0
     let last = performance.now()
-    let pos = el.scrollTop
+    const start = infoRef.current?.offsetHeight ?? 0 // la letra empieza debajo de la información de la canción
+    let pos = Math.max(el.scrollTop, start)
+    el.scrollTop = pos
     const tick = (now: number) => {
       const total = el.scrollHeight - el.clientHeight
       if (total <= 0) return
       if (Math.abs(el.scrollTop - pos) > 3) pos = el.scrollTop // la persona movió la letra: se sigue desde ahí
-      pos += (total / seconds) * speed * ((now - last) / 1000)
+      pos += (Math.max(1, total - start) / seconds) * speed * ((now - last) / 1000)
       last = now
       if (pos >= total) { el.scrollTop = total; setAutoId(null); return }
       el.scrollTop = pos
@@ -163,6 +153,12 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
   }, [playing, columns, cur.id, cur.minutes, speed])
+
+  useLayoutEffect(() => {
+    const el = chartRef.current, info = infoRef.current
+    if (!el || !info || !window.matchMedia('(max-height: 520px)').matches) return
+    el.scrollTop = info.offsetHeight
+  }, [cur.id, compact])
 
   const pickInstrument = (name: string | null) => {
     setPicked(name)
@@ -248,6 +244,59 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     </>
   )
 
+  const showInfo = () => {
+    if (compact) { setFit(false); setCols(1); remember(FIT_KEY, '0'); remember(COLS_KEY, '1') }
+    chartRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Lo que va arriba de la letra: se desplaza junto con ella y sale solo al bajar.
+  const infoNode = (
+    <>
+      {cur.before?.map((t) => <div key={t} className="stage-label" role="note"><b>Antes</b>{t}</div>)}
+      <h1 className={`stage-title ${chart.length ? 'compact' : ''}`}>{cur.title}</h1>
+      <div className="stage-artist">{cur.artist}</div>
+      {cur.tags && cur.tags.length > 0 && <div className="stage-tags">{cur.tags.map((t) => <span key={t}>{t}</span>)}</div>}
+      <div className="stage-chips">
+        {cur.key && <span className="stage-chip key">{cur.key}</span>}
+        <span className="stage-chip">{cur.bpm} bpm</span>
+        <span className="stage-chip">{tuningSummary(forView(cur))}</span>
+      </div>
+      {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
+      {cur.guest && <div className="stage-artist">{cur.guest}</div>}
+      {kind === 'rhythm' && sections.length > 0 && <p className="stage-structure"><b>Estructura</b>{sections.join(' · ')}</p>}
+      {cur.personal && <p className="stage-mynote personal"><b>Mi anotación</b>{cur.personal}</p>}
+      {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
+      {cur.notes && <p className="stage-notes">{cur.notes}</p>}
+      {cur.after?.map((t) => <div key={t} className="stage-label" role="note"><b>Al terminar</b>{t}</div>)}
+      {others.length > 0 && (
+        <ul className="stage-others" aria-label="Notas de los demás instrumentos">
+          {others.map(([k, v]) => <li key={k}><b>{k}</b> {v}</li>)}
+        </ul>
+      )}
+      {chart.length > 0 && hasChords && (
+        <div className="stage-tools" role="group" aria-label="Tono de los acordes">
+          <button className="btn" onClick={() => setShift((v) => Math.max(-11, v - 1))} aria-label="Bajar un semitono"><Minus size={18} aria-hidden /></button>
+          <span aria-live="polite" aria-label={`Tono ${transposeLabel(shift)}`}>Tono {transposeLabel(shift)}</span>
+          <button className="btn" onClick={() => setShift((v) => Math.min(11, v + 1))} aria-label="Subir un semitono"><Plus size={18} aria-hidden /></button>
+        </div>
+      )}
+    </>
+  )
+
+  // Barra fina siempre a la vista junto a la letra: lo esencial de la canción y los controles de lectura.
+  const miniBar = (
+    <div className={`stage-mini ${compact ? '' : 'sticky'}`}>
+      <span className="mini-title"><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
+      <span className="mini-actions">
+        <button type="button" className="btn sm" onClick={() => resize(-3)} aria-label="Letra más pequeña"><Minus size={14} aria-hidden /></button>
+        <span aria-hidden className="aa">Aa</span>
+        <button type="button" className="btn sm" onClick={() => resize(3)} aria-label="Letra más grande"><Plus size={14} aria-hidden /></button>
+        {layoutControls}
+        <button type="button" className="btn sm" onClick={showInfo} aria-label="Volver a la información de la canción">Info</button>
+      </span>
+    </div>
+  )
+
   const retune = next && tuningSignature(forView(next)) !== tuningSignature(forView(cur))
 
   return (
@@ -278,69 +327,27 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           <button type="button" className={`tag ${!view && who ? 'key' : ''}`} onClick={() => { setMine(false); setPicking(false) }}>Todo</button>
         </div>
       )}
-      <div className={`stage-main ${chart.length ? 'has-chart' : ''} ${folded ? 'folded' : ''}`}>
-        {folded && (
-          <div className="stage-mini">
-            <span><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
-            <span className="mini-actions">{layoutControls}<button type="button" className="btn sm" onClick={() => setPeekId(cur.id)} aria-label="Mostrar la información de la canción">Info</button></span>
+      <div className={`stage-main ${chart.length ? 'has-chart' : ''}`}>
+        {chart.length === 0 && <div className="stage-info">{infoNode}</div>}
+        {chart.length > 0 && compact && miniBar}
+        {chart.length > 0 && (
+          <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit ? 'fitted' : ''} ${playing ? 'auto' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes">
+            {!compact && <div ref={infoRef} className="stage-info in-scroll">{infoNode}</div>}
+            {!compact && miniBar}
+            {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
+              : b.kind === 'section' ? <div key={n} className="chart-section">{b.text}</div>
+              : b.kind === 'line' ? <div key={n} className="chart-lyric">{b.text}</div>
+              : (
+                <div key={n} className="chart-pair">
+                  {b.lines.map((l, k) => <div key={k} className={l.chords ? 'chart-chords' : 'chart-lyric'}>{l.text || ' '}</div>)}
+                </div>
+              ))}
           </div>
         )}
-        <div className={`stage-info ${folded ? 'is-folded' : ''}`}>
-        {retune && next && (
-          <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
-        )}
-        {cur.before?.map((t) => <div key={t} className="stage-label" role="note"><b>Antes</b>{t}</div>)}
-        <h1 className={`stage-title ${chart.length ? 'compact' : ''}`}>{cur.title}</h1>
-        <div className="stage-artist">{cur.artist}</div>
-        {cur.tags && cur.tags.length > 0 && <div className="stage-tags">{cur.tags.map((t) => <span key={t}>{t}</span>)}</div>}
-        <div className="stage-chips">
-          {cur.key && <span className="stage-chip key">{cur.key}</span>}
-          <span className="stage-chip">{cur.bpm} bpm</span>
-          <span className="stage-chip">{tuningSummary(forView(cur))}</span>
-        </div>
-        {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
-        {cur.guest && <div className="stage-artist">{cur.guest}</div>}
-        {kind === 'rhythm' && sections.length > 0 && <p className="stage-structure"><b>Estructura</b>{sections.join(' · ')}</p>}
-        {cur.personal && <p className="stage-mynote personal"><b>Mi anotación</b>{cur.personal}</p>}
-        {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
-        {cur.notes && <p className="stage-notes">{cur.notes}</p>}
-        {cur.after?.map((t) => <div key={t} className="stage-label" role="note"><b>Al terminar</b>{t}</div>)}
-        {others.length > 0 && (
-          <ul className="stage-others" aria-label="Notas de los demás instrumentos">
-            {others.map(([k, v]) => <li key={k}><b>{k}</b> {v}</li>)}
-          </ul>
-        )}
-        {chart.length > 0 && (
-            <div className="stage-tools" role="group" aria-label="Letra y acordes">
-              <button className="btn" onClick={() => resize(-2)} aria-label="Letra más pequeña"><Minus size={18} aria-hidden /></button>
-              <span aria-hidden>Aa</span>
-              <button className="btn" onClick={() => resize(2)} aria-label="Letra más grande"><Plus size={18} aria-hidden /></button>
-              <span className="sep" aria-hidden />
-              {layoutControls}
-              {hasChords && (
-                <>
-                  <span className="sep" aria-hidden />
-                  <button className="btn" onClick={() => setShift((v) => Math.max(-11, v - 1))} aria-label="Bajar un semitono"><Minus size={18} aria-hidden /></button>
-                  <span aria-live="polite" aria-label={`Tono ${transposeLabel(shift)}`}>{transposeLabel(shift)}</span>
-                  <button className="btn" onClick={() => setShift((v) => Math.min(11, v + 1))} aria-label="Subir un semitono"><Plus size={18} aria-hidden /></button>
-                </>
-              )}
-            </div>
-        )}
-        </div>
-        {chart.length > 0 && (
-            <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit ? 'fitted' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={onChartScroll}>
-              {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
-                : b.kind === 'section' ? <div key={n} className="chart-section">{b.text}</div>
-                : b.kind === 'line' ? <div key={n} className="chart-lyric">{b.text}</div>
-                : (
-                  <div key={n} className="chart-pair">
-                    {b.lines.map((l, k) => <div key={k} className={l.chords ? 'chart-chords' : 'chart-lyric'}>{l.text || ' '}</div>)}
-                  </div>
-                ))}
-            </div>
-        )}
       </div>
+      {retune && next && (
+        <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
+      )}
       <div className="stage-next">
         {next ? (
           <>
