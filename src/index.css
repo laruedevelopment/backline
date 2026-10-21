@@ -633,3 +633,9 @@ div.paper-label { cursor: default; }
   .stage-main.has-chart.folded > .stage-mini { grid-column: 1; }
   .stage-main.has-chart.folded > .chart { grid-column: 1; grid-row: 2; }
 }
+
+.member-notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.member-notes li { padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--sunk); font-size: 0.95rem; }
+.member-notes b { color: var(--amber); font-weight: 600; margin-right: 4px; }
+.stage-mynote.personal { border-left-color: var(--sage); background: color-mix(in srgb, var(--sage) 16%, #000); }
+.stage-mynote.personal b { color: var(--sage); }

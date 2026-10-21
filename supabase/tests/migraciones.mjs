@@ -473,6 +473,31 @@ await ok('la función de integrantes públicos devuelve la foto', async () => {
   eq(cols.rows.length, 1, 'falta la columna')
 })
 
+console.log('Anotaciones por músico')
+let noteSong
+await ok('el integrante escribe su anotación de una canción y toda la banda la lee', async () => {
+  await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+  const [sg] = await as('leader', `insert into public.songs (band_id, title) values ($1,'Con anotaciones') returning id`, [band]); noteSong = sg.id
+  await as('member', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Les Paul')`, [noteSong, band, U.member])
+  eq((await as('leader', `select note from public.song_member_notes where song_id=$1`, [noteSong])).length, 1, 'el líder no la ve')
+})
+await rejects('nadie escribe la anotación de otra persona', () => as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Falsa')`, [noteSong, band, U.member]), /row-level|violates/)
+await ok('nadie edita ni borra la anotación de otra persona', async () => {
+  eq((await as('leader', `update public.song_member_notes set note = 'cambiada' where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.member])).length, 0, 'editó la de otro')
+  eq((await as('leader', `delete from public.song_member_notes where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.member])).length, 0, 'borró la de otro')
+})
+await ok('quien no es de la banda no ve las anotaciones', async () => {
+  eq((await as('other', `select note from public.song_member_notes where song_id=$1`, [noteSong])).length, 0, 'las ve un ajeno')
+})
+await rejects('la anotación no puede quedar vacía ni pasar de 500 caracteres', () => as('member', `update public.song_member_notes set note = $2 where song_id=$1`, [noteSong, 'a'.repeat(501)]), /check|note/)
+await ok('el integrante actualiza y borra la suya; al borrar la canción se borran las anotaciones', async () => {
+  await as('member', `update public.song_member_notes set note = 'Strat', updated_at = now() where song_id=$1 and profile_id=$2`, [noteSong, U.member])
+  eq((await as('member', `select note from public.song_member_notes where song_id=$1 and profile_id=$2`, [noteSong, U.member]))[0].note, 'Strat', 'no se actualizó')
+  await as('leader', `delete from public.songs where id=$1`, [noteSong])
+  eq((await pg.query(`select 1 from public.song_member_notes where song_id=$1`, [noteSong])).rows.length, 0, 'quedó huérfana')
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+})
+
 console.log('\nBorrar cuenta (Ley 1581)')
 await ok('al borrar la cuenta del solicitante se anonimizan sus datos de contacto', async () => {
   await as('other', `select public.delete_account()`)

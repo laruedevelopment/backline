@@ -109,6 +109,30 @@ export async function listMembers(bandId: string): Promise<Member[]> {
   }))
 }
 
+// ───────── Anotaciones por músico (de cada canción) ─────────
+export type MemberNote = { songId: string; profileId: string; note: string }
+
+export async function listMemberNotes(bandId: string): Promise<MemberNote[]> {
+  const { data, error } = await db().from('song_member_notes').select('song_id, profile_id, note').eq('band_id', bandId)
+  if (error) throw error
+  return (data as { song_id: string; profile_id: string; note: string }[]).map((r) => ({ songId: r.song_id, profileId: r.profile_id, note: r.note }))
+}
+
+/** Guarda la anotación propia; vacía = borrarla. (Actualiza y, si no existía, inserta: solo se puede cambiar el texto de la propia.) */
+export async function saveMyNote(bandId: string, songId: string, userId: string, text: string) {
+  const note = text.trim().slice(0, 500)
+  if (!note) {
+    const { error } = await db().from('song_member_notes').delete().eq('song_id', songId).eq('profile_id', userId)
+    if (error) throw error
+    return
+  }
+  const { data, error } = await db().from('song_member_notes').update({ note, updated_at: new Date().toISOString() }).eq('song_id', songId).eq('profile_id', userId).select('song_id')
+  if (error) throw error
+  if (data.length) return
+  const { error: insErr } = await db().from('song_member_notes').insert({ song_id: songId, band_id: bandId, profile_id: userId, note })
+  if (insErr) throw insErr
+}
+
 export type RsvpStatus = 'yes' | 'maybe' | 'no'
 export type BandEvent = {
   id: string; kind: 'rehearsal' | 'gig' | 'other'; title: string; place: string; startsAt: string

@@ -3,6 +3,8 @@ import { Plus, Trash2 } from 'lucide-react'
 import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
+import { useActiveBand } from '../store/useBandSession'
+import MemberNotes from './MemberNotes'
 import Sheet from './Sheet'
 
 const empty = (): Song => ({
@@ -22,6 +24,7 @@ type Props = { song?: Song; onSave: (s: Song) => Promise<unknown>; onDelete?: ()
 
 export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
   const [s, setS] = useState<Song>(() => song ?? empty())
+  const band = useActiveBand()
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
   const [minutes, setMinutes] = useState(String(song?.minutes ?? 4))
@@ -163,6 +166,8 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       <button type="button" className="btn" onClick={() => setNoteRows((r) => [...r, { instrument: instrumentOptions.find((o) => !r.some((x) => x.instrument === o)) ?? 'Otro', text: '' }])}>
         <Plus size={16} aria-hidden /> Agregar nota por instrumento
       </button>
+
+      {song && band && <MemberNotes songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} />}
 
       <h3 className="section-title">Escuchar y notas</h3>
       <label className="field">Link de YouTube

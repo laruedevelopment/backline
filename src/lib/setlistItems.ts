@@ -6,7 +6,7 @@ export type SetlistItem =
 import type { Song } from './song'
 
 /** Canción con lo que le toca en el modo escenario: etiquetas sueltas que van antes y después, y sus etiquetas propias. */
-export type StageSong = Song & { before?: string[]; after?: string[]; tags?: string[] }
+export type StageSong = Song & { before?: string[]; after?: string[]; tags?: string[]; personal?: string }
 
 export const MAX_TAGS = 6
 export const TAG_MAX_LEN = 24

@@ -197,6 +197,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
         {cur.guest && <div className="stage-artist">{cur.guest}</div>}
         {kind === 'rhythm' && sections.length > 0 && <p className="stage-structure"><b>Estructura</b>{sections.join(' · ')}</p>}
+        {cur.personal && <p className="stage-mynote personal"><b>Mi anotación</b>{cur.personal}</p>}
         {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
         {cur.notes && <p className="stage-notes">{cur.notes}</p>}
         {cur.after?.map((t) => <div key={t} className="stage-label" role="note"><b>Al terminar</b>{t}</div>)}

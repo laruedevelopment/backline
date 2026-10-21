@@ -6,7 +6,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities'
 import { useActiveBand } from '../store/useBandSession'
 import { useQuery } from '@tanstack/react-query'
-import { listMembers } from '../lib/api'
+import { listMemberNotes, listMembers } from '../lib/api'
 import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
@@ -78,6 +78,7 @@ export default function SetlistDetailPage() {
   const canEdit = band ? band.role !== 'guest' : true
   const userId = useAuth((s) => s.session?.user.id)
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band && !!userId })
+  const { data: memberNotes = [] } = useQuery({ queryKey: ['song-notes', band?.id], queryFn: () => listMemberNotes(band!.id), enabled: !!band && !!userId })
   // Lo que toca quien abre el modo escenario: el instrumento que eligió en esta banda o, si no, el primero de su perfil.
   const me = members.find((m) => m.profileId === userId)
   const myInstrument = me?.instrument || me?.instruments[0] || null
@@ -122,7 +123,8 @@ export default function SetlistDetailPage() {
     } catch { /* sin permiso de portapapeles */ }
   }
   const marks = stageMarks(entries)
-  const stageSongs = items.map((x) => ({ ...x, ...marks.get(x.id) }))
+  // Cada quien lleva al escenario solo su propia anotación de cada canción.
+  const stageSongs = items.map((x) => ({ ...x, ...marks.get(x.id), personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
   const saveName = () => {
     const n = (nameDraft ?? '').trim()
     if (nameDraft !== null && n && n !== list.name) void save({ ...list, name: n.slice(0, 80) })
