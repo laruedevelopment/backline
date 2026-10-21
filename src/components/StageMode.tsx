@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Minus, Plus, RotateCw, X } from 'lucide-react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, X } from 'lucide-react'
+import { useKeepAwake } from '../lib/keepAwake'
 import { parseChart, transposeChordLine, transposeLabel, type ChartLine } from '../lib/chart'
 import { instrumentOptions } from '../lib/identity'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
@@ -11,6 +12,12 @@ const INSTR_KEY = 'backline-stage-instrument'
 const MIN_SIZE = 16, MAX_SIZE = 72, DEFAULT_SIZE = 32
 const readSize = () => { try { const n = Number(localStorage.getItem(SIZE_KEY)); return n >= MIN_SIZE && n <= MAX_SIZE ? n : DEFAULT_SIZE } catch { return DEFAULT_SIZE } }
 const readInstrument = () => { try { return localStorage.getItem(INSTR_KEY) } catch { return null } }
+const COLS_KEY = 'backline-stage-cols'
+const FIT_KEY = 'backline-stage-fit'
+const COLUMN_GAP = 48 // px; igual que en el CSS de .chart.cols2
+const readCols = (): 1 | 2 => { try { return localStorage.getItem(COLS_KEY) === '2' ? 2 : 1 } catch { return 1 } }
+const readFit = () => { try { return localStorage.getItem(FIT_KEY) === '1' } catch { return false } }
+const remember = (k: string, v: string) => { try { localStorage.setItem(k, v) } catch { /* solo en memoria */ } }
 
 /** Letra y acordes en bloques centrados: cada línea de acordes va pegada a su letra (se alinean por columna). */
 type Block = { kind: 'pair'; lines: { text: string; chords: boolean }[] } | { kind: 'section'; text: string } | { kind: 'line'; text: string } | { kind: 'gap' }
@@ -49,6 +56,13 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   }, [])
   const [shift, setShift] = useState(0)
   const [size, setSize] = useState(readSize)
+  const [cols, setCols] = useState<1 | 2>(readCols)
+  const [fit, setFit] = useState(readFit)
+  const [autoId, setAutoId] = useState<string | null>(null) // canción que se desplaza sola (se detiene al cambiar de canción)
+  const [speed, setSpeed] = useState(1)
+  const [awakeNote, setAwakeNote] = useState(true)
+  const chartRef = useRef<HTMLDivElement>(null)
+  const awake = useKeepAwake(true)
   const [forced, setForced] = useState(false) // giro por CSS cuando el navegador no deja bloquear la orientación
   const [locked, setLocked] = useState(false)
   const cur = songs[i]
@@ -87,14 +101,69 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const hasChords = chart.some((l) => l.kind === 'chords')
   // Girar la pantalla solo tiene sentido en celulares y tabletas (táctiles o de pantalla angosta), no en un computador.
   const canRotate = forced || locked || window.matchMedia('(pointer: coarse)').matches || vw < 900
-  const folded = chart.length > 0 && foldId === cur.id && peekId !== cur.id
+  const columns: 1 | 2 = cols === 2 && vw >= 700 ? 2 : 1
+  const playing = autoId === cur.id
+  // Con letra a pantalla completa (ajustada, en dos páginas o desplazándose sola) la información de la canción se pliega.
+  const folded = chart.length > 0 && (fit || columns === 2 || playing || foldId === cur.id) && peekId !== cur.id
   // Estructura de la canción (para quien no lee la letra, como la batería).
   const sections = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics).filter((l) => l.kind === 'section').map((l) => l.text) : []), [cur.lyrics])
   const blocks = useMemo(() => toBlocks(chart, (t) => transposeChordLine(t, shift), hasChords), [chart, shift, hasChords])
   // Con acordes la letra va en monoespaciada (para alinear) y se reduce lo justo para que cada línea quepa sin desplazarse de lado.
-  const stageW = (forced ? window.innerHeight : vw) - 40
+  const stageW = ((forced ? window.innerHeight : vw) - 40 - (columns === 2 ? COLUMN_GAP : 0)) / columns
   const longest = Math.max(1, ...blocks.flatMap((b) => (b.kind === 'pair' ? b.lines.map((l) => l.text.length) : [])))
   const chartSize = hasChords ? Math.max(14, Math.min(size, Math.floor(stageW / (longest * 0.62)))) : size
+  const toggleCols = () => setCols((c) => { const n = c === 2 ? 1 : 2; remember(COLS_KEY, String(n)); return n })
+  const toggleFit = () => setFit((f) => { remember(FIT_KEY, f ? '0' : '1'); return !f })
+  const togglePlay = () => setAutoId((a) => (a === cur.id ? null : cur.id))
+
+  // «Ajustar»: el mayor tamaño de letra con el que toda la canción cabe en pantalla sin desplazarse (en una o en dos páginas).
+  useLayoutEffect(() => {
+    const el = chartRef.current
+    if (!el || !fit) return
+    const fits = (n: number) => {
+      el.style.fontSize = `${n}px`
+      return columns === 2 ? el.scrollWidth <= el.clientWidth + 2 : el.scrollHeight <= el.clientHeight + 2
+    }
+    let lo = MIN_SIZE, hi = hasChords ? Math.min(MAX_SIZE, Math.floor(stageW / (longest * 0.62))) : MAX_SIZE, best = MIN_SIZE
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1
+      if (fits(mid)) { best = mid; lo = mid + 1 } else hi = mid - 1
+    }
+    el.style.fontSize = `${Math.max(12, best)}px`
+  }, [fit, columns, cur.id, blocks, vw, folded, stageW, longest, hasChords])
+
+  // Desplazamiento automático: recorre la letra durante lo que dura la canción (con la velocidad elegida). En dos páginas cambia de página a ese ritmo.
+  useEffect(() => {
+    const el = chartRef.current
+    if (!playing || !el) return
+    const seconds = Math.max(40, (cur.minutes || 4) * 60) * 0.92
+    if (columns === 2) {
+      const page = el.clientWidth + COLUMN_GAP
+      const pages = Math.max(1, Math.ceil((el.scrollWidth + COLUMN_GAP) / page))
+      if (pages <= 1) return
+      const timer = window.setInterval(() => {
+        if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) { setAutoId(null); return }
+        el.scrollBy({ left: page, behavior: 'smooth' })
+      }, (seconds / pages / speed) * 1000)
+      return () => window.clearInterval(timer)
+    }
+    let raf = 0
+    let last = performance.now()
+    let pos = el.scrollTop
+    const tick = (now: number) => {
+      const total = el.scrollHeight - el.clientHeight
+      if (total <= 0) return
+      if (Math.abs(el.scrollTop - pos) > 3) pos = el.scrollTop // la persona movió la letra: se sigue desde ahí
+      pos += (total / seconds) * speed * ((now - last) / 1000)
+      last = now
+      if (pos >= total) { el.scrollTop = total; setAutoId(null); return }
+      el.scrollTop = pos
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [playing, columns, cur.id, cur.minutes, speed])
+
   const pickInstrument = (name: string | null) => {
     setPicked(name)
     setMine(!!name)
@@ -130,25 +199,54 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => {})
   }, [])
 
-  // Mantiene la pantalla encendida mientras se toca.
-  useEffect(() => {
-    let lock: WakeLockSentinel | undefined
-    const ask = () => navigator.wakeLock?.request('screen').then((l) => { lock = l }).catch(() => {})
-    void ask()
-    const onVisible = () => document.visibilityState === 'visible' && void ask()
-    document.addEventListener('visibilitychange', onVisible)
-    return () => { document.removeEventListener('visibilitychange', onVisible); void lock?.release() }
-  }, [])
-
+  // Adelante / atrás: baja o cambia de página; al llegar al final pasa a la siguiente canción (así un pedal de página o las flechas bastan para todo el toque).
+  const move = (dir: 1 | -1) => {
+    const el = chartRef.current
+    if (el && chart.length > 0) {
+      if (columns === 2) {
+        const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 4
+        const atStart = el.scrollLeft <= 4
+        if (dir === 1 ? !atEnd : !atStart) { el.scrollBy({ left: dir * (el.clientWidth + COLUMN_GAP), behavior: 'smooth' }); return }
+      } else {
+        const atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 4
+        const atStart = el.scrollTop <= 4
+        if (dir === 1 ? !atEnd : !atStart) { el.scrollBy({ top: dir * el.clientHeight * 0.85, behavior: 'smooth' }); return }
+      }
+    }
+    if (dir === 1 && i < songs.length - 1) go(i + 1)
+    else if (dir === -1 && i > 0) go(i - 1)
+  }
+  const moveRef = useRef(move)
+  useEffect(() => { moveRef.current = move })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight') { setI((v) => Math.min(songs.length - 1, v + 1)); setShift(0) }
-      if (e.key === 'ArrowLeft') { setI((v) => Math.max(0, v - 1)); setShift(0) }
-      if (e.key === 'Escape') onClose()
+      if (e.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); moveRef.current(1) }
+      else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); moveRef.current(-1) }
+      else if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [songs.length, onClose])
+  }, [onClose])
+
+  const layoutControls = chart.length > 0 && (
+    <>
+      {vw >= 700 && (
+        <button type="button" className={`btn sm ${columns === 2 ? 'on' : ''}`} aria-pressed={columns === 2} onClick={toggleCols} aria-label="Mostrar la letra en dos páginas"><Columns2 size={16} aria-hidden /> <span className="hide-sm">2 págs</span></button>
+      )}
+      <button type="button" className={`btn sm ${fit ? 'on' : ''}`} aria-pressed={fit} onClick={toggleFit} aria-label="Ajustar toda la letra a la pantalla"><Scan size={16} aria-hidden /> <span className="hide-sm">Ajustar</span></button>
+      <button type="button" className={`btn sm ${playing ? 'on' : ''}`} aria-pressed={playing} onClick={togglePlay} aria-label={playing ? 'Pausar el desplazamiento automático' : 'Desplazar la letra sola, al ritmo de la canción'}>
+        {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />} <span className="hide-sm">Auto</span>
+      </button>
+      {playing && (
+        <>
+          <button type="button" className="btn sm" onClick={() => setSpeed((v) => Math.max(0.5, Math.round((v - 0.25) * 100) / 100))} aria-label="Más lento"><Minus size={14} aria-hidden /></button>
+          <span className="speed" aria-live="polite">{speed}×</span>
+          <button type="button" className="btn sm" onClick={() => setSpeed((v) => Math.min(2, Math.round((v + 0.25) * 100) / 100))} aria-label="Más rápido"><Plus size={14} aria-hidden /></button>
+        </>
+      )}
+    </>
+  )
 
   const retune = next && tuningSignature(forView(next)) !== tuningSignature(forView(cur))
 
@@ -156,7 +254,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     <div className={`stage ${forced ? 'rotated' : ''}`} role="dialog" aria-modal="true" aria-label="Modo escenario"
       onTouchStart={(e) => setTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY })} onTouchEnd={onSwipeEnd}>
       <div className="stage-top">
-        <span>{i + 1} / {songs.length}</span>
+        <span>{i + 1} / {songs.length}{awake !== 'off' && <Sun size={13} aria-label="Pantalla encendida" style={{ marginLeft: 8, verticalAlign: -1, color: 'var(--amber)' }} />}</span>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn" onClick={() => setPicking((v) => !v)} aria-expanded={picking} aria-label={view ? `Vista de ${view}. Cambiar de instrumento` : 'Elegir mi instrumento'}>
             {view ?? 'Mi vista'}
@@ -165,6 +263,12 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
         </div>
       </div>
+      {awake === 'off' && awakeNote && (
+        <div className="stage-note" role="status">
+          <span>Este navegador no dejó mantener la pantalla encendida. Sube el tiempo de apagado de pantalla en los ajustes del teléfono.</span>
+          <button type="button" className="btn sm" onClick={() => setAwakeNote(false)}>Entendido</button>
+        </div>
+      )}
       {(picking || !who) && (
         <div className="stage-pick" role="group" aria-label="Qué tocas">
           <span>{who ? 'Ver lo mío:' : '¿Qué tocas? Así ves solo lo tuyo:'}</span>
@@ -178,7 +282,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         {folded && (
           <div className="stage-mini">
             <span><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
-            <button type="button" className="btn sm" onClick={() => setPeekId(cur.id)} aria-label="Mostrar la información de la canción">Info</button>
+            <span className="mini-actions">{layoutControls}<button type="button" className="btn sm" onClick={() => setPeekId(cur.id)} aria-label="Mostrar la información de la canción">Info</button></span>
           </div>
         )}
         <div className={`stage-info ${folded ? 'is-folded' : ''}`}>
@@ -211,6 +315,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
               <button className="btn" onClick={() => resize(-2)} aria-label="Letra más pequeña"><Minus size={18} aria-hidden /></button>
               <span aria-hidden>Aa</span>
               <button className="btn" onClick={() => resize(2)} aria-label="Letra más grande"><Plus size={18} aria-hidden /></button>
+              <span className="sep" aria-hidden />
+              {layoutControls}
               {hasChords && (
                 <>
                   <span className="sep" aria-hidden />
@@ -223,7 +329,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         )}
         </div>
         {chart.length > 0 && (
-            <div key={cur.id} className={`chart ${hasChords ? 'mono' : 'prose'}`} style={{ fontSize: chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={onChartScroll}>
+            <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit ? 'fitted' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={onChartScroll}>
               {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
                 : b.kind === 'section' ? <div key={n} className="chart-section">{b.text}</div>
                 : b.kind === 'line' ? <div key={n} className="chart-lyric">{b.text}</div>
