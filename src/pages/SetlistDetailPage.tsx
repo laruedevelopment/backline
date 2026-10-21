@@ -120,7 +120,7 @@ export default function SetlistDetailPage() {
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
             {items.map((s, i) => (
               <SortableRow key={s.id} id={s.id} title={s.title} handle={canEdit && items.length > 1}
-                className={`paper-row ${canEdit && items.length > 1 ? 'has-grip' : ''} ${editing ? 'editing' : ''}`}>
+                className={`paper-row ${canEdit && items.length > 1 ? 'has-grip' : ''} ${editing ? 'editing' : ''} ${differs(i) ? 'with-retune' : ''}`}>
                 {differs(i) && <div className="retune">{isStandard(s) ? 'VOLVER A E ESTÁNDAR' : `CAMBIAR A ${tuningSummary(s).toUpperCase()}`}</div>}
                 <span className="n">{i + 1}</span>
                 {canEdit && !editing ? (

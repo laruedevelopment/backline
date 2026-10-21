@@ -571,3 +571,8 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 /* Notch y barras del sistema en el modo escenario */
 .stage { padding-top: max(16px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 @media (max-height: 520px) { .stage { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } }
+
+/* Fila con aviso de cambio de afinación: el aviso ocupa su propia fila y el resto se alinea debajo, con el asa en su columna. */
+.paper-row.with-retune > .retune { grid-row: 1; grid-column: 1 / -1; }
+.paper-row.with-retune > :not(.retune) { grid-row: 2; }
+.paper-row.with-retune.editing > .tools { grid-row: 3; }
