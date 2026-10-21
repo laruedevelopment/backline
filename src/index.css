@@ -458,7 +458,7 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .chart-input { font-family: var(--mono); font-size: 0.9rem; }
 /* Giro por CSS (iPhone y navegadores que no permiten bloquear la orientación). */
 .stage.rotated { inset: auto; top: 0; left: 100vw; width: 100dvh; height: 100dvw; transform: rotate(90deg); transform-origin: top left; }
-@media (orientation: landscape) { .stage.rotated { inset: 0; width: auto; height: auto; transform: none; } }
+/* El giro por software funciona en los dos sentidos (de vertical a horizontal y al revés). */
 
 .stage-tools { gap: 6px; }
 .stage-tools .btn { min-width: 40px; padding: 0 8px; }
@@ -615,3 +615,21 @@ div.paper-label { cursor: default; }
 .stage-main.has-chart .stage-mynote { text-align: left; }
 .stage-pick .tag { color: var(--text); border-color: var(--muted); }
 .stage-pick .tag.key { color: var(--amber); border-color: var(--amber); }
+
+/* Modo escenario: la letra manda. La información de la canción se pliega al bajar y «Info» la muestra un momento. */
+.stage-info { display: contents; }
+.stage-info.is-folded { display: none; }
+.stage-main.has-chart { display: flex; flex-direction: column; align-content: normal; overflow: hidden; min-height: 0; }
+.stage-main.has-chart .stage-info > * { flex: none; }
+.stage-main.has-chart > .chart { flex: 1 1 0; min-height: 0; width: 100%; overflow-y: auto; overflow-x: hidden; }
+.stage-mini { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 2px 4px; color: var(--muted); font-size: 0.95rem; text-align: left; }
+.stage-mini b { color: #fff; }
+.stage-mini .btn { min-height: 36px; flex: none; }
+@media (max-height: 520px) and (orientation: landscape) {
+  .stage-main.has-chart { display: grid; grid-template-columns: minmax(190px, 34%) 1fr; grid-template-rows: repeat(8, min-content) 1fr; column-gap: 18px; overflow: hidden; align-content: stretch; }
+  .stage-main.has-chart .stage-info > * { grid-column: 1; }
+  .stage-main.has-chart > .chart { grid-column: 2; grid-row: 1 / -1; align-self: stretch; }
+  .stage-main.has-chart.folded { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .stage-main.has-chart.folded > .stage-mini { grid-column: 1; }
+  .stage-main.has-chart.folded > .chart { grid-column: 1; grid-row: 2; }
+}

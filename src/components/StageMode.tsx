@@ -35,6 +35,10 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<string | null>(readInstrument)
   const [picking, setPicking] = useState(false)
+  // Al bajar por la letra la información de la canción se oculta (lo único relevante es la letra); «Info» la muestra un momento.
+  // Se guardan por canción: al pasar a otra, vuelve a mostrarse la información completa.
+  const [foldId, setFoldId] = useState<string | null>(null)
+  const [peekId, setPeekId] = useState<string | null>(null)
   const who = instrument || picked // lo que toca esta persona: el de la banda o el que eligió aquí
   const [mine, setMine] = useState(true)
   const [vw, setVw] = useState(() => window.innerWidth)
@@ -59,6 +63,16 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     }
     setTouch(null)
   }
+  useEffect(() => {
+    if (!peekId) return
+    const t = window.setTimeout(() => setPeekId(null), 8000)
+    return () => window.clearTimeout(t)
+  }, [peekId])
+  const onChartScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const top = e.currentTarget.scrollTop
+    if (top > 40) setFoldId(cur.id)
+    else if (top <= 8) { setFoldId(null); setPeekId(null) }
+  }
   const view = mine && who ? who : null
   const kind = view ? instrumentKind(view) : 'melodic'
   // La batería no lee acordes ni letra; la voz lee la letra sin acordes.
@@ -71,6 +85,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   // En «mi vista» solo lo mío; las notas de los demás instrumentos se ven en «Todo».
   const others = view ? [] : otherNotes(cur, null)
   const hasChords = chart.some((l) => l.kind === 'chords')
+  const folded = chart.length > 0 && foldId === cur.id && peekId !== cur.id
   // Estructura de la canción (para quien no lee la letra, como la batería).
   const sections = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics).filter((l) => l.kind === 'section').map((l) => l.text) : []), [cur.lyrics])
   const blocks = useMemo(() => toBlocks(chart, (t) => transposeChordLine(t, shift), hasChords), [chart, shift, hasChords])
@@ -157,7 +172,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           <button type="button" className={`tag ${!view && who ? 'key' : ''}`} onClick={() => { setMine(false); setPicking(false) }}>Todo</button>
         </div>
       )}
-      <div className={`stage-main ${chart.length ? 'has-chart' : ''}`}>
+      <div className={`stage-main ${chart.length ? 'has-chart' : ''} ${folded ? 'folded' : ''}`}>
+        {folded && (
+          <div className="stage-mini">
+            <span><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
+            <button type="button" className="btn sm" onClick={() => setPeekId(cur.id)} aria-label="Mostrar la información de la canción">Info</button>
+          </div>
+        )}
+        <div className={`stage-info ${folded ? 'is-folded' : ''}`}>
         {retune && next && (
           <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
         )}
@@ -182,7 +204,6 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </ul>
         )}
         {chart.length > 0 && (
-          <>
             <div className="stage-tools" role="group" aria-label="Letra y acordes">
               <button className="btn" onClick={() => resize(-2)} aria-label="Letra más pequeña"><Minus size={18} aria-hidden /></button>
               <span aria-hidden>Aa</span>
@@ -196,7 +217,10 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
                 </>
               )}
             </div>
-            <div className={`chart ${hasChords ? 'mono' : 'prose'}`} style={{ fontSize: chartSize }} tabIndex={0} aria-label="Letra y acordes">
+        )}
+        </div>
+        {chart.length > 0 && (
+            <div key={cur.id} className={`chart ${hasChords ? 'mono' : 'prose'}`} style={{ fontSize: chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={onChartScroll}>
               {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
                 : b.kind === 'section' ? <div key={n} className="chart-section">{b.text}</div>
                 : b.kind === 'line' ? <div key={n} className="chart-lyric">{b.text}</div>
@@ -206,7 +230,6 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
                   </div>
                 ))}
             </div>
-          </>
         )}
       </div>
       <div className="stage-next">
