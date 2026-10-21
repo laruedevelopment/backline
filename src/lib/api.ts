@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { SetlistItem } from './setlistItems'
 import type { Song } from './song'
 
 export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
@@ -80,16 +81,16 @@ export async function deleteSong(id: string) {
   if (error) throw error
 }
 
-export type Setlist = { id: string; name: string; songIds: string[]; spotifyUrl?: string }
+export type Setlist = { id: string; name: string; songIds: string[]; items?: SetlistItem[]; spotifyUrl?: string }
 
 export async function listSetlists(bandId: string): Promise<Setlist[]> {
-  const { data, error } = await db().from('setlists').select('id, name, song_ids, spotify_url').eq('band_id', bandId).order('created_at')
+  const { data, error } = await db().from('setlists').select('id, name, song_ids, spotify_url, items').eq('band_id', bandId).order('created_at')
   if (error) throw error
-  return (data as { id: string; name: string; song_ids: string[]; spotify_url: string | null }[]).map((r) => ({ id: r.id, name: r.name, songIds: r.song_ids, spotifyUrl: r.spotify_url ?? undefined }))
+  return (data as { id: string; name: string; song_ids: string[]; spotify_url: string | null; items: SetlistItem[] | null }[]).map((r) => ({ id: r.id, name: r.name, songIds: r.song_ids, spotifyUrl: r.spotify_url ?? undefined, items: r.items ?? undefined }))
 }
 
 export async function upsertSetlist(bandId: string, s: Setlist) {
-  const { error } = await db().from('setlists').upsert({ id: s.id, band_id: bandId, name: s.name, song_ids: s.songIds, spotify_url: s.spotifyUrl ?? null, updated_at: new Date().toISOString() })
+  const { error } = await db().from('setlists').upsert({ id: s.id, band_id: bandId, name: s.name, song_ids: s.songIds, spotify_url: s.spotifyUrl ?? null, items: s.items ?? null, updated_at: new Date().toISOString() })
   if (error) throw error
 }
 

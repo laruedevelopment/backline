@@ -576,3 +576,20 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 .paper-row.with-retune > .retune { grid-row: 1; grid-column: 1 / -1; }
 .paper-row.with-retune > :not(.retune) { grid-row: 2; }
 .paper-row.with-retune.editing > .tools { grid-row: 3; }
+
+/* Etiquetas en el setlist */
+.paper-label-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--paper-line); }
+.paper-label-row.has-grip { grid-template-columns: 40px 1fr auto; }
+.paper-label { all: unset; box-sizing: border-box; display: block; min-width: 0; padding: 8px 12px; border-radius: 3px; background: var(--paper-ink); color: var(--paper); font-family: var(--mono); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; cursor: pointer; }
+div.paper-label { cursor: default; }
+.paper-label:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.paper-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.paper-tags span { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.03em; text-transform: uppercase; padding: 1px 6px; border: 1px solid var(--paper-line); border-radius: 3px; background: color-mix(in srgb, var(--paper-ink) 6%, transparent); }
+.paper-label-row .tools { flex-direction: row; }
+/* …y en el modo escenario */
+.stage-label { margin: 0; padding: 10px 14px; border-left: 4px solid var(--amber); background: color-mix(in srgb, var(--amber) 16%, #000); border-radius: 0 var(--r-m) var(--r-m) 0; font-size: clamp(1.1rem, 4.2vw, 1.5rem); font-weight: 700; text-align: left; }
+.stage-label b { display: block; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); }
+.stage-tags { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.stage-main.has-chart .stage-tags { justify-content: flex-start; }
+.stage-tags span { font-family: var(--mono); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 9px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--text); }
+.stage-next em { color: var(--amber); font-style: normal; }

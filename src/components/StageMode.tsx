@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, Minus, Plus, RotateCw, X } from 'lucide-react'
 import { parseChart, transposeChordLine, transposeLabel } from '../lib/chart'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
+import type { StageSong } from '../lib/setlistItems'
 import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, type Song } from '../lib/song'
 
 const SIZE_KEY = 'backline-stage-size'
@@ -9,7 +10,7 @@ const readSize = () => { try { const n = Number(localStorage.getItem(SIZE_KEY));
 
 /** Pantalla limpia para el toque: canción actual en grande, tono, afinación y la siguiente. */
 /** `instrument`: lo que toca quien lo abre. Con eso ve primero lo suyo: su afinación, su nota y, según el instrumento, la letra o los acordes. */
-export default function StageMode({ songs, instrument, onClose }: { songs: Song[]; instrument?: string | null; onClose: () => void }) {
+export default function StageMode({ songs, instrument, onClose }: { songs: StageSong[]; instrument?: string | null; onClose: () => void }) {
   const [i, setI] = useState(0)
   const [mine, setMine] = useState(!!instrument)
   const [shift, setShift] = useState(0)
@@ -108,8 +109,10 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Song[
         {retune && next && (
           <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
         )}
+        {cur.before?.map((t) => <div key={t} className="stage-label" role="note"><b>Antes</b>{t}</div>)}
         <h1 className={`stage-title ${chart.length ? 'compact' : ''}`}>{cur.title}</h1>
         <div className="stage-artist">{cur.artist}</div>
+        {cur.tags && cur.tags.length > 0 && <div className="stage-tags">{cur.tags.map((t) => <span key={t}>{t}</span>)}</div>}
         <div className="stage-chips">
           {cur.key && <span className="stage-chip key">{cur.key}</span>}
           <span className="stage-chip">{cur.bpm} bpm</span>
@@ -119,6 +122,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Song[
         {cur.guest && <div className="stage-artist">{cur.guest}</div>}
         {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
         {cur.notes && <p className="stage-notes">{cur.notes}</p>}
+        {cur.after?.map((t) => <div key={t} className="stage-label" role="note"><b>Al terminar</b>{t}</div>)}
         {others.length > 0 && (
           <ul className="stage-others" aria-label="Notas de los demás instrumentos">
             {others.map(([k, v]) => <li key={k}><b>{k}</b> {v}</li>)}
@@ -150,7 +154,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Song[
       <div className="stage-next">
         {next ? (
           <>
-            <span>Sigue: <b>{next.title}</b></span>
+            <span>Sigue: {next.before && next.before.length > 0 && <em>{next.before.join(' · ')} → </em>}<b>{next.title}</b></span>
           </>
         ) : <span>Última canción</span>}
       </div>

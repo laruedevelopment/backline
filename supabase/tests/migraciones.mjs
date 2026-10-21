@@ -383,6 +383,13 @@ await ok('una declaración de menor no se puede cambiar con confirm_adult', asyn
   eq(r.rows[0].age_declaration, 'minor_with_consent', 'declaración cambiada')
   await pg.query(`update public.profiles set age_declaration = 'adult' where id = $1`, [U.member])
 })
+await ok('setlist con etiquetas: guarda elementos (canciones y etiquetas sueltas)', async () => {
+  const items = JSON.stringify([{ t: 's', id: 'a', tags: ['Intro largo'] }, { t: 'l', id: 'l1', text: 'Afinar a Drop C' }])
+  await as('leader', `insert into public.setlists (band_id, name, items) values ($1,'Con etiquetas',$2::jsonb)`, [band, items])
+})
+await rejects('setlist: items debe ser una lista', async () => {
+  await as('leader', `insert into public.setlists (band_id, name, items) values ($1,'Mal',$2::jsonb)`, [band, '{"a":1}'])
+}, /check|items/)
 await rejects('la letra no puede pasar de 12000 caracteres', async () => {
   await as('leader', `update public.songs set lyrics = $2 where band_id=$1`, [band, 'a'.repeat(12001)])
 }, /check|lyrics/)
