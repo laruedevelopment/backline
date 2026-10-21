@@ -593,3 +593,25 @@ div.paper-label { cursor: default; }
 .stage-main.has-chart .stage-tags { justify-content: flex-start; }
 .stage-tags span { font-family: var(--mono); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 9px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--text); }
 .stage-next em { color: var(--amber); font-style: normal; }
+
+/* Modo escenario: letra grande, centrada y fácil de leer; cada quien ve lo suyo */
+.stage-main.has-chart { text-align: center; }
+.stage-main.has-chart .stage-chips, .stage-main.has-chart .stage-artist, .stage-main.has-chart .stage-tags, .stage-main.has-chart .stage-tools { justify-content: center; }
+.chart { display: flex; flex-direction: column; align-items: center; text-align: center; white-space: normal; overflow-x: hidden; line-height: 1.3; padding: 10px 0 40px; font-family: var(--body); }
+.chart.mono { font-family: var(--mono); line-height: 1.25; }
+.chart.prose .chart-lyric { font-weight: 600; line-height: 1.32; margin: 0.12em 0; max-width: 100%; overflow-wrap: anywhere; }
+.chart-pair { white-space: pre; text-align: left; width: fit-content; max-width: 100%; margin: 0.18em 0; }
+.chart-chords { color: var(--amber); font-weight: 800; }
+.chart-lyric { color: #fff; }
+.chart.mono .chart-lyric { font-weight: 600; }
+.chart-section { margin: 0.9em 0 0.25em; font-family: var(--mono); font-size: 0.5em; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.chart-gap { height: 0.5em; }
+.stage-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 12px; border: 1px solid var(--line-2); border-radius: var(--r-m); background: #0b0b0b; }
+.stage-pick > span { width: 100%; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+.stage-pick .tag { min-height: 36px; padding: 0 12px; font-size: 0.85rem; }
+.stage-structure { margin: 0; padding: 10px 14px; border: 1px solid var(--line-2); border-radius: var(--r-m); font-size: 1.25rem; line-height: 1.4; }
+.stage-structure b { display: block; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.stage-mynote { font-size: clamp(1.3rem, 5vw, 1.8rem); }
+.stage-main.has-chart .stage-mynote { text-align: left; }
+.stage-pick .tag { color: var(--text); border-color: var(--muted); }
+.stage-pick .tag.key { color: var(--amber); border-color: var(--amber); }
