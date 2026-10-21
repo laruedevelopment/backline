@@ -639,10 +639,3 @@ div.paper-label { cursor: default; }
 .member-notes b { color: var(--amber); font-weight: 600; margin-right: 4px; }
 .stage-mynote.personal { border-left-color: var(--sage); background: color-mix(in srgb, var(--sage) 16%, #000); }
 .stage-mynote.personal b { color: var(--sage); }
-
-/* Mi anotación en el escenario: alineada a la derecha y más grande */
-.stage-main .stage-mynote.personal, .stage-main.has-chart .stage-mynote.personal {
-  text-align: right; font-size: clamp(1.7rem, 6.2vw, 2.6rem); line-height: 1.2; font-weight: 600;
-  border-left: 0; border-right: 4px solid var(--sage); border-radius: var(--r-m) 0 0 var(--r-m);
-}
-.stage-mynote.personal b { font-size: 0.8rem; }
