@@ -20,8 +20,10 @@ jobs:
           KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
         run: |
           if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Faltan las variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY"; exit 1; fi
-          for path in "/auth/v1/health" "/rest/v1/"; do
+          # Una respuesta 200/401/403 significa que el servicio y la base contestaron (con la clave pública, /rest/v1/ responde 401 a propósito).
+          # Falla solo si hay error del servidor (5xx) o no responde.
+          for path in "/auth/v1/health" "/rest/v1/profiles?select=id&limit=1"; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -H "apikey: $KEY" "$URL$path")
             echo "$path respondió $code"
-            if [ "$code" != "200" ]; then exit 1; fi
+            case "$code" in 200|401|403) ;; *) exit 1 ;; esac
           done
