@@ -679,3 +679,4 @@ div.paper-label { cursor: default; }
 .stage-mini .btn.sm { min-width: 38px; min-height: 36px; padding: 0 8px; }
 @media (max-width: 560px) { .stage-mini .mini-title { display: none; } }
 .chart > .stage-info.in-scroll { scroll-snap-align: start; }
+.chart.cols2 { padding-bottom: 0; }

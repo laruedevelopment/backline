@@ -10,6 +10,7 @@ import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, type Song }
 const SIZE_KEY = 'backline-stage-size-v2'
 const INSTR_KEY = 'backline-stage-instrument'
 const MIN_SIZE = 16, MAX_SIZE = 72, DEFAULT_SIZE = 32
+const MIN_FIT = 20 // «Ajustar» no baja de aquí: si no cabe, la letra queda en páginas legibles en vez de diminuta
 const readSize = () => { try { const n = Number(localStorage.getItem(SIZE_KEY)); return n >= MIN_SIZE && n <= MAX_SIZE ? n : DEFAULT_SIZE } catch { return DEFAULT_SIZE } }
 const readInstrument = () => { try { return localStorage.getItem(INSTR_KEY) } catch { return null } }
 const COLS_KEY = 'backline-stage-cols'
@@ -112,13 +113,46 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       el.style.fontSize = `${n}px`
       return columns === 2 ? el.scrollWidth <= el.clientWidth + 2 : el.scrollHeight <= el.clientHeight + 2
     }
-    let lo = MIN_SIZE, hi = hasChords ? Math.min(MAX_SIZE, Math.floor(stageW / (longest * 0.62))) : MAX_SIZE, best = MIN_SIZE
+    let lo = MIN_FIT, hi = hasChords ? Math.min(MAX_SIZE, Math.floor(stageW / (longest * 0.62))) : MAX_SIZE, best = MIN_FIT
     while (lo <= hi) {
       const mid = (lo + hi) >> 1
       if (fits(mid)) { best = mid; lo = mid + 1 } else hi = mid - 1
     }
     el.style.fontSize = `${Math.max(12, best)}px`
   }, [fit, columns, cur.id, blocks, vw, compact, stageW, longest, hasChords])
+
+  // Páginas (en dos columnas): cuántas hay y en cuál estás, para saber siempre si falta letra por ver.
+  const [pageInfo, setPageInfo] = useState({ page: 1, pages: 1 })
+  const measurePages = () => {
+    const el = chartRef.current
+    if (!el || columns !== 2) { setPageInfo((v) => (v.pages === 1 && v.page === 1 ? v : { page: 1, pages: 1 })); return }
+    const step = el.clientWidth + COLUMN_GAP
+    const pages = Math.max(1, Math.ceil((el.scrollWidth + COLUMN_GAP - 4) / step))
+    const page = Math.min(pages, Math.round(el.scrollLeft / step) + 1)
+    setPageInfo((v) => (v.pages === pages && v.page === page ? v : { page, pages }))
+  }
+  useEffect(() => {
+    const id = requestAnimationFrame(measurePages)
+    return () => cancelAnimationFrame(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [columns, blocks, vw, fit, size, compact, cur.id, shift])
+
+  // La rueda del ratón (vertical) pasa de página cuando la letra está en dos páginas.
+  useEffect(() => {
+    const el = chartRef.current
+    if (!el || columns !== 2) return
+    let last = 0
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const d = e.deltaY || e.deltaX
+      const now = performance.now()
+      if (Math.abs(d) < 4 || now - last < 450) return // un giro de rueda = una página
+      last = now
+      el.scrollBy({ left: Math.sign(d) * (el.clientWidth + COLUMN_GAP), behavior: 'smooth' })
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [columns, cur.id, compact, chart.length])
 
   // Desplazamiento automático: recorre la letra durante lo que dura la canción (con la velocidad elegida). En dos páginas cambia de página a ese ritmo.
   useEffect(() => {
@@ -288,6 +322,13 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     <div className={`stage-mini ${compact ? '' : 'sticky'}`}>
       <span className="mini-title"><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
       <span className="mini-actions">
+        {columns === 2 && pageInfo.pages > 1 && (
+          <>
+            <button type="button" className="btn sm" disabled={pageInfo.page <= 1} onClick={() => move(-1)} aria-label="Página anterior"><ChevronLeft size={16} aria-hidden /></button>
+            <span className="speed" role="status" aria-label={`Página ${pageInfo.page} de ${pageInfo.pages}`}>{pageInfo.page}/{pageInfo.pages}</span>
+            <button type="button" className="btn sm" disabled={pageInfo.page >= pageInfo.pages} onClick={() => move(1)} aria-label="Página siguiente"><ChevronRight size={16} aria-hidden /></button>
+          </>
+        )}
         <button type="button" className="btn sm" onClick={() => resize(-3)} aria-label="Letra más pequeña"><Minus size={14} aria-hidden /></button>
         <span aria-hidden className="aa">Aa</span>
         <button type="button" className="btn sm" onClick={() => resize(3)} aria-label="Letra más grande"><Plus size={14} aria-hidden /></button>
@@ -331,7 +372,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         {chart.length === 0 && <div className="stage-info">{infoNode}</div>}
         {chart.length > 0 && compact && miniBar}
         {chart.length > 0 && (
-          <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit ? 'fitted' : ''} ${playing ? 'auto' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes">
+          <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit && pageInfo.pages === 1 ? 'fitted' : ''} ${playing ? 'auto' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={measurePages}>
             {!compact && <div ref={infoRef} className="stage-info in-scroll">{infoNode}</div>}
             {!compact && miniBar}
             {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
