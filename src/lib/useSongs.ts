@@ -12,8 +12,9 @@ export function useSongs(bandId: string | undefined) {
   const key = ['songs', bandId]
 
   const query = useQuery({ queryKey: key, queryFn: () => listSongs(bandId!), enabled: cloud })
-  const save = useMutation({ mutationFn: (s: Song) => upsertSong(bandId!, s), onSuccess: () => qc.invalidateQueries({ queryKey: key }) })
-  const remove = useMutation({ mutationFn: (id: string) => deleteSong(id), onSuccess: () => qc.invalidateQueries({ queryKey: key }) })
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['song-lyrics'] }), qc.invalidateQueries({ queryKey: ['song-lyrics-one'] })])
+  const save = useMutation({ mutationFn: (s: Song) => upsertSong(bandId!, s), onSuccess: refresh })
+  const remove = useMutation({ mutationFn: (id: string) => deleteSong(id), onSuccess: refresh })
 
   if (!cloud) return { songs: local.songs, loading: false, error: '', save: async (s: Song) => local.saveSong(s), remove: async (id: string) => local.removeSong(id) }
   return {

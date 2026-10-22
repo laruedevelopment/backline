@@ -3,6 +3,9 @@ import { Plus, Trash2 } from 'lucide-react'
 import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
+import { useQuery } from '@tanstack/react-query'
+import { getLyrics } from '../lib/api'
+import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
 import MemberNotes from './MemberNotes'
 import Sheet from './Sheet'
@@ -25,6 +28,9 @@ type Props = { song?: Song; onSave: (s: Song) => Promise<unknown>; onDelete?: ()
 export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
   const [s, setS] = useState<Song>(() => song ?? empty())
   const band = useActiveBand()
+  // Con cuenta, la lista de canciones no trae las letras: se piden al abrir el editor (y solo se envían si se tocan).
+  const needsLyrics = !!song && !!supabase && song.lyrics === undefined
+  const { data: loadedLyrics, isLoading: lyricsLoading } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
   const [minutes, setMinutes] = useState(String(song?.minutes ?? 4))
@@ -183,7 +189,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         <textarea rows={3} value={s.notes ?? ''} onChange={(e) => patch({ notes: e.target.value || undefined })} maxLength={2000} />
       </label>
       <label className="field">Letra y acordes (opcional)
-        <textarea rows={8} className="chart-input" value={s.lyrics ?? ''} onChange={(e) => patch({ lyrics: e.target.value || undefined })} maxLength={12000} spellCheck={false}
+        <textarea rows={8} className="chart-input" value={s.lyrics ?? loadedLyrics ?? ''} disabled={needsLyrics && s.lyrics === undefined && lyricsLoading} onChange={(e) => patch({ lyrics: e.target.value })} maxLength={12000} spellCheck={false}
           placeholder={'[Verso]\nAm        F\nHoy vuelvo a casa\n\nO así: Hoy [Am]vuelvo a [F]casa'} />
         <span className="li-sub wrap">Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella.</span>
       </label>

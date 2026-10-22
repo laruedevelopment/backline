@@ -31,7 +31,7 @@ export const persistOptions = {
 }
 
 // Lo efímero se descarta de la memoria a los 5 minutos de no usarse (el resto se conserva una semana para el modo sin señal).
-for (const key of ['explore', 'public-band', 'public-band-members', 'public-musician', 'public-musician-bands', 'busy', 'push-state', 'photos', 'venue-photos', 'calendar-sources']) {
+for (const key of ['explore', 'public-band', 'public-band-members', 'public-musician', 'public-musician-bands', 'busy', 'push-state', 'photos', 'venue-photos', 'calendar-sources', 'song-lyrics', 'song-lyrics-one']) {
   queryClient.setQueryDefaults([key], { gcTime: 5 * 60_000 })
 }
 
