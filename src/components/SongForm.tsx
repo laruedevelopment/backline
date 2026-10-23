@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
+import { safeLink, statusLabel, type LineupSlot, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
 import { useQuery } from '@tanstack/react-query'
-import { getLyrics } from '../lib/api'
+import { getLyrics, listMembers } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
 import MemberNotes from './MemberNotes'
@@ -31,6 +31,8 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
   // Con cuenta, la lista de canciones no trae las letras: se piden al abrir el editor (y solo se envían si se tocan).
   const needsLyrics = !!song && !!supabase && song.lyrics === undefined
   const { data: loadedLyrics, isLoading: lyricsLoading } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
+  const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!supabase && !!band })
+  const setSlot = (i: number, p: Partial<LineupSlot>) => patch({ lineup: (s.lineup ?? []).map((x, j) => (j === i ? { ...x, ...p } : x)) })
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
   const [minutes, setMinutes] = useState(String(song?.minutes ?? 4))
@@ -62,6 +64,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         bpm: Math.min(300, Math.max(30, Number(bpm) || 100)),
         minutes: Math.min(30, Math.max(1, Number(minutes) || 4)),
         tunings: s.tunings.filter((t) => t.tuning.trim()),
+        lineup: (s.lineup ?? []).filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, guest: l.profileId ? undefined : l.guest?.trim() })),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
         instrumentNotes: noteRows.reduce<Record<string, string>>((acc, r) => { if (r.instrument.trim() && r.text.trim()) acc[r.instrument.trim()] = r.text.trim(); return acc }, {}),
@@ -103,13 +106,56 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         </select>
       </label>
 
+      <h3 className="section-title">Quién toca</h3>
+      <p className="li-sub wrap">Qué instrumentos lleva la canción y quién lo toca: alguien de la banda o un invitado.</p>
+      {(s.lineup ?? []).map((l, i) => (
+        <div className="subform" key={i}>
+          <div className="grid-row">
+            <label className="field grow">Instrumento
+              <select value={l.instrument} onChange={(e) => setSlot(i, { instrument: e.target.value })}>
+                {!instrumentOptions.includes(l.instrument) && <option value={l.instrument}>{l.instrument || 'Elige…'}</option>}
+                {instrumentOptions.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </label>
+            <label className="field grow">Quién
+              <select value={l.profileId ?? (l.guest !== undefined ? '__guest' : '')}
+                onChange={(e) => setSlot(i, e.target.value === '__guest' ? { profileId: undefined, guest: l.guest ?? '' } : e.target.value ? { profileId: e.target.value, guest: undefined } : { profileId: undefined, guest: undefined })}>
+                <option value="">Sin asignar</option>
+                {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}
+                <option value="__guest">Invitado…</option>
+              </select>
+            </label>
+            <button type="button" className="btn ghost icon" style={{ alignSelf: 'end' }} aria-label={`Quitar ${l.instrument || 'instrumento'} de quién toca`} onClick={() => patch({ lineup: (s.lineup ?? []).filter((_, j) => j !== i) })}>
+              <Trash2 size={18} aria-hidden />
+            </button>
+          </div>
+          {l.guest !== undefined && !l.profileId && (
+            <label className="field">Nombre del invitado
+              <input value={l.guest} maxLength={60} placeholder="Camilo (trompeta)" onChange={(e) => setSlot(i, { guest: e.target.value })} />
+            </label>
+          )}
+        </div>
+      ))}
+      <div className="row">
+        <button type="button" className="btn" onClick={() => patch({ lineup: [...(s.lineup ?? []), { instrument: instrumentOptions.find((o) => !(s.lineup ?? []).some((x) => x.instrument === o)) ?? 'Otro' }] })}>
+          <Plus size={16} aria-hidden /> Agregar instrumento
+        </button>
+        {members.length > 0 && !(s.lineup ?? []).length && (
+          <button type="button" className="btn ghost" onClick={() => patch({ lineup: members.filter((m) => m.instrument || m.instruments[0]).map((m) => ({ instrument: m.instrument || m.instruments[0], profileId: m.profileId })) })}>
+            Llenar con la banda
+          </button>
+        )}
+      </div>
+
       <h3 className="section-title">Afinación por instrumento</h3>
-      <datalist id="tuning-instruments">{['Todos', ...instrumentOptions].map((o) => <option key={o} value={o} />)}</datalist>
       <p className="li-sub wrap">«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento.</p>
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
           <label className="field">Instrumento
-            <input value={t.instrument} placeholder="Guitarra" maxLength={30} list="tuning-instruments" onChange={(e) => setTuning(i, { instrument: e.target.value })} />
+            <select value={t.instrument} onChange={(e) => setTuning(i, { instrument: e.target.value })}>
+              {!['Todos', ...instrumentOptions].includes(t.instrument) && <option value={t.instrument}>{t.instrument || 'Elige…'}</option>}
+              {['Todos', ...instrumentOptions].map((o) => <option key={o} value={o}>{o}</option>)}
+            </select>
           </label>
           <div className="grid-row">
             <label className="field grow">Afinación

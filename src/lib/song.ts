@@ -19,7 +19,11 @@ export type Song = {
   lyrics?: string
   /** Notas por instrumento: { Batería: 'entra con el hi-hat' }. */
   instrumentNotes?: Record<string, string>
+  /** Quién toca qué en esta canción: un integrante de la banda o un invitado. */
+  lineup?: LineupSlot[]
 }
+
+export type LineupSlot = { instrument: string; profileId?: string; guest?: string }
 
 export const statusLabel: Record<SongStatus, string> = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }
 

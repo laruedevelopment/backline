@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { ExternalLink, Pause, Play } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { embedsFor } from '../lib/embed'
+import { listMembers } from '../lib/api'
+import { supabase } from '../lib/supabase'
+import { useActiveBand } from '../store/useBandSession'
 import { isStandard, keyChangeLabel, statusLabel, tuningSummary, type Song } from '../lib/song'
 
 type Props = { song: Song; onEdit?: () => void }
@@ -15,6 +19,9 @@ function Main({ onEdit, label, children }: { onEdit?: () => void; label: string;
 /** Una canción del repertorio: tono y BPM como lectura de equipo, afinación solo destacada si no es estándar. */
 export default function SongRow({ song, onEdit }: Props) {
   const embeds = embedsFor(song.links)
+  const band = useActiveBand()
+  const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!supabase && !!band && !!song.lineup?.length })
+  const who = (song.lineup ?? []).map((l) => `${l.instrument}: ${l.profileId ? (members.find((m) => m.profileId === l.profileId)?.name.split(' ')[0] ?? '…') : l.guest}`)
   const [open, setOpen] = useState<number | null>(null)
   const current = open === null ? undefined : embeds[open]
   const standard = isStandard(song)
@@ -28,6 +35,7 @@ export default function SongRow({ song, onEdit }: Props) {
           <div className="sub-row">
             <span className={standard ? '' : 'flag'}>{tuningSummary(song)}</span>
             {song.keyChanges.map((k, i) => <span key={i} className="flag">{keyChangeLabel(k)}</span>)}
+            {who.length > 0 && <span>{who.join(' · ')}</span>}
             {song.guest && <span>{song.guest}</span>}
             {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}
           </div>
