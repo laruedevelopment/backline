@@ -680,3 +680,14 @@ div.paper-label { cursor: default; }
 @media (max-width: 560px) { .stage-mini .mini-title { display: none; } }
 .chart > .stage-info.in-scroll { scroll-snap-align: start; }
 .chart.cols2 { padding-bottom: 0; }
+
+/* Escenario: legible a distancia y con luz mala; objetivos táctiles de 48 px */
+.chart-section { font-size: max(0.65em, 15px); color: #c9c9c9; font-weight: 700; letter-spacing: 0.1em; }
+.stage-mini { color: #bdbdbd; }
+.stage-mini .btn.sm { min-width: 48px; min-height: 48px; padding: 0 10px; }
+.stage-mini .mini-actions { gap: 8px; }
+.stage-mini .aa { font-size: 1rem; min-width: 2ch; text-align: center; color: #fff; }
+@media (max-width: 700px) {
+  .stage-mini { flex-wrap: wrap; }
+  .stage-mini .mini-actions { flex-wrap: wrap; width: 100%; justify-content: flex-end; }
+}

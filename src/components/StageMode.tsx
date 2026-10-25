@@ -68,7 +68,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const [touch, setTouch] = useState<{ x: number; y: number } | null>(null)
   const onSwipeEnd = (e: React.TouchEvent) => {
     const t = e.changedTouches[0]
-    if (touch && t) {
+    // En dos páginas el deslizamiento horizontal mueve la página (no la canción): cambiar de canción sin querer en tarima es peor que no poder deslizar.
+    if (touch && t && columns !== 2) {
       const dx = t.clientX - touch.x, dy = t.clientY - touch.y
       if (Math.abs(dx) > 80 && Math.abs(dy) < 50) { if (dx < 0 && i < songs.length - 1) go(i + 1); else if (dx > 0 && i > 0) go(i - 1) }
     }
@@ -217,7 +218,13 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
 
   // Cada canción empieza en su tono original.
   const go = (n: number) => { setI(n); setShift(0) }
-  const resize = (d: number) => setSize((v) => { const n = Math.min(MAX_SIZE, Math.max(MIN_SIZE, v + d)); try { localStorage.setItem(SIZE_KEY, String(n)) } catch { /* solo en memoria */ } return n })
+  const resize = (d: number) => {
+    // Con «Ajustar» activo, Aa lo suelta y sigue desde el tamaño que se estaba viendo: se puede agrandar y leer por páginas.
+    const shown = fit ? Math.round(parseFloat(getComputedStyle(chartRef.current ?? document.body).fontSize)) || size : size
+    if (fit) { setFit(false); remember(FIT_KEY, '0') }
+    const n = Math.min(MAX_SIZE, Math.max(MIN_SIZE, shown + d))
+    setSize(n); remember(SIZE_KEY, String(n))
+  }
 
   async function rotate() {
     // Android (instalada o en pantalla completa) deja bloquear la orientación; iPhone no: ahí se gira la vista por CSS.
@@ -260,12 +267,15 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     else if (dir === -1 && i > 0) go(i - 1)
   }
   const moveRef = useRef(move)
-  useEffect(() => { moveRef.current = move })
+  const resizeRef = useRef(resize)
+  useEffect(() => { moveRef.current = move; resizeRef.current = resize })
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return
       if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); moveRef.current(1) }
       else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); moveRef.current(-1) }
+      else if (e.key === '+' || e.key === '=') resizeRef.current(2)
+      else if (e.key === '-') resizeRef.current(-2)
       else if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
@@ -343,7 +353,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </>
         )}
         <button type="button" className="btn sm" onClick={() => resize(-3)} aria-label="Letra más pequeña"><Minus size={14} aria-hidden /></button>
-        <span aria-hidden className="aa">Aa</span>
+        <span className="aa" aria-label={`Tamaño de letra ${Math.round(chartSize)}`}>{Math.round(chartSize)}</span>
         <button type="button" className="btn sm" onClick={() => resize(3)} aria-label="Letra más grande"><Plus size={14} aria-hidden /></button>
         {layoutControls}
         <button type="button" className="btn sm" onClick={showInfo} aria-label="Volver a la información de la canción">Info</button>
