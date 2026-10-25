@@ -691,3 +691,5 @@ div.paper-label { cursor: default; }
   .stage-mini { flex-wrap: wrap; }
   .stage-mini .mini-actions { flex-wrap: wrap; width: 100%; justify-content: flex-end; }
 }
+
+.stage-endhint { text-align: center; padding: 10px 14px; border-radius: var(--r-m); background: var(--amber); color: var(--amber-ink); font-weight: 700; font-size: 1.05rem; }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Check, ExternalLink, GripVertical, Plus, Tag, X } from 'lucide-react'
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
@@ -8,6 +8,7 @@ import { useActiveBand } from '../store/useBandSession'
 import { useQuery } from '@tanstack/react-query'
 import { listLyrics, listMemberNotes, listMembers } from '../lib/api'
 import { supabase } from '../lib/supabase'
+import { loadOfflineLyrics, saveOfflineLyrics } from '../lib/offlineLyrics'
 import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
@@ -81,7 +82,7 @@ export default function SetlistDetailPage() {
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!band && !!userId })
   const { data: memberNotes = [] } = useQuery({ queryKey: ['song-notes', band?.id], queryFn: () => listMemberNotes(band!.id), enabled: !!band && !!userId })
   // Las letras no vienen con la lista de canciones: se piden aparte (solo con cuenta; sin cuenta ya están en cada canción).
-  const { data: lyricsById } = useQuery({ queryKey: ['song-lyrics', band?.id], queryFn: () => listLyrics(band!.id), enabled: !!supabase && !!band })
+  const { data: lyricsById, refetch: refetchLyrics } = useQuery({ queryKey: ['song-lyrics', band?.id], queryFn: () => listLyrics(band!.id), enabled: !!supabase && !!band })
   // Lo que toca quien abre el modo escenario: el instrumento que eligió en esta banda o, si no, el primero de su perfil.
   const me = members.find((m) => m.profileId === userId)
   const myInstrument = me?.instrument || me?.instruments[0] || null
@@ -92,6 +93,25 @@ export default function SetlistDetailPage() {
   )
 
   const list = setlists.find((l) => l.id === id)
+  // Letras guardadas en el dispositivo: sirven cuando no hay señal (se actualizan solas cada vez que se abre el setlist con señal).
+  const [offlineLyrics, setOfflineLyrics] = useState<Record<string, string>>(loadOfflineLyrics)
+  const [prepared, setPrepared] = useState<'' | 'ok' | 'fail'>('')
+  const songIdsHere = list ? itemsOf(list).flatMap((e) => (e.t === 's' ? [e.id] : [])) : []
+  const hereKey = songIdsHere.join(',')
+  const saveForOffline = (map: Map<string, string> | undefined) => {
+    if (!map) return false
+    const mine: Record<string, string> = {}
+    for (const sid of songIdsHere) { const l = map.get(sid); if (l) mine[sid] = l }
+    const n = saveOfflineLyrics(mine)
+    if (n >= 0) setOfflineLyrics((v) => ({ ...v, ...mine }))
+    return n >= 0
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (lyricsById && hereKey) saveForOffline(lyricsById) }, [lyricsById, hereKey])
+  const prepare = async () => {
+    setPrepared('')
+    try { const r = await refetchLyrics(); setPrepared(saveForOffline(r.data) ? 'ok' : 'fail') } catch { setPrepared('fail') }
+  }
   if (loading) return <ListSkeleton rows={4} />
   if (!list) return <p className="empty">No encontramos ese setlist. <Link to="/setlists" style={{ color: 'var(--amber)' }}>Volver a setlists</Link></p>
 
@@ -127,7 +147,7 @@ export default function SetlistDetailPage() {
   }
   const marks = stageMarks(entries)
   // Cada quien lleva al escenario solo su propia anotación de cada canción.
-  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? lyricsById?.get(x.id), ...marks.get(x.id), personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
+  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? lyricsById?.get(x.id) ?? offlineLyrics[x.id], ...marks.get(x.id), personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
   const saveName = () => {
     const n = (nameDraft ?? '').trim()
     if (nameDraft !== null && n && n !== list.name) void save({ ...list, name: n.slice(0, 80) })
@@ -227,6 +247,7 @@ export default function SetlistDetailPage() {
         {canEdit && <button className="btn block" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Agregar etiqueta</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         {spotify && <a className="btn block" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
+        {supabase && <button className="btn block" disabled={!items.length} onClick={() => void prepare()}>{prepared === 'ok' ? 'Listo: las letras quedan en este dispositivo' : prepared === 'fail' ? 'No se pudo: revisa la conexión' : 'Preparar para tocar sin conexión'}</button>}
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
           <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>

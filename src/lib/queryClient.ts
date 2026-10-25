@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
+import { clearOfflineLyrics } from './offlineLyrics'
 
 const WEEK = 7 * 24 * 3600_000
 const KEY = 'backline-cache-v1'
@@ -39,4 +40,5 @@ for (const key of ['explore', 'public-band', 'public-band-members', 'public-musi
 export function clearLocalCache() {
   queryClient.clear()
   try { localStorage.removeItem(KEY) } catch { /* sin almacenamiento */ }
+  clearOfflineLyrics()
 }

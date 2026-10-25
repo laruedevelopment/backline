@@ -250,7 +250,10 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   }, [])
 
   // Adelante / atrás: baja o cambia de página; al llegar al final pasa a la siguiente canción (así un pedal de página o las flechas bastan para todo el toque).
-  const move = (dir: 1 | -1) => {
+  // `guard`: con pedal o teclado, el último toque no salta de canción de golpe: avisa y pide pulsar otra vez (un salto sin querer en vivo es grave).
+  const [endHint, setEndHint] = useState('')
+  const armedAt = useRef(0)
+  const move = (dir: 1 | -1, guard = false) => {
     const el = chartRef.current
     if (el && chart.length > 0) {
       if (columns === 2) {
@@ -263,8 +266,23 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         if (dir === 1 ? !atEnd : !atStart) { el.scrollBy({ top: dir * el.clientHeight * 0.85, behavior: 'smooth' }); return }
       }
     }
-    if (dir === 1 && i < songs.length - 1) go(i + 1)
-    else if (dir === -1 && i > 0) go(i - 1)
+    const target = dir === 1 ? songs[i + 1] : songs[i - 1]
+    if (!target) return
+    if (guard && Date.now() - armedAt.current > 3000) {
+      armedAt.current = Date.now()
+      setEndHint(dir === 1 ? `Fin de la canción. Pulsa otra vez para pasar a «${target.title}»` : `Inicio de la canción. Pulsa otra vez para volver a «${target.title}»`)
+      setTimeout(() => setEndHint(''), 3000)
+      return
+    }
+    armedAt.current = 0; setEndHint('')
+    go(dir === 1 ? i + 1 : i - 1)
+  }
+  // En pantallas táctiles, tocar el borde izquierdo de la letra va atrás y el derecho adelante (el centro no hace nada, para poder sujetar o desplazar).
+  const tapPage = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!window.matchMedia('(pointer: coarse)').matches || (e.target as HTMLElement).closest('button, a')) return
+    const r = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width
+    if (x > 0.78) move(1, true); else if (x < 0.22) move(-1, true)
   }
   const moveRef = useRef(move)
   const resizeRef = useRef(resize)
@@ -272,8 +290,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return
-      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); moveRef.current(1) }
-      else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); moveRef.current(-1) }
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); moveRef.current(1, true) }
+      else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); moveRef.current(-1, true) }
       else if (e.key === '+' || e.key === '=') resizeRef.current(2)
       else if (e.key === '-') resizeRef.current(-2)
       else if (e.key === 'Escape') onClose()
@@ -285,11 +303,11 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const layoutControls = chart.length > 0 && (
     <>
       {vw >= 700 && (
-        <button type="button" className={`btn sm ${columns === 2 ? 'on' : ''}`} aria-pressed={columns === 2} onClick={toggleCols} aria-label="Mostrar la letra en dos páginas"><Columns2 size={16} aria-hidden /> <span className="hide-sm">2 págs</span></button>
+        <button type="button" className={`btn sm ${columns === 2 ? 'on' : ''}`} aria-pressed={columns === 2} onClick={toggleCols} aria-label="Mostrar la letra en dos páginas"><Columns2 size={16} aria-hidden /> <span>2 págs</span></button>
       )}
-      <button type="button" className={`btn sm ${fit ? 'on' : ''}`} aria-pressed={fit} onClick={toggleFit} aria-label="Ajustar toda la letra a la pantalla"><Scan size={16} aria-hidden /> <span className="hide-sm">Ajustar</span></button>
+      <button type="button" className={`btn sm ${fit ? 'on' : ''}`} aria-pressed={fit} onClick={toggleFit} aria-label="Ajustar toda la letra a la pantalla"><Scan size={16} aria-hidden /> <span>Ajustar</span></button>
       <button type="button" className={`btn sm ${playing ? 'on' : ''}`} aria-pressed={playing} onClick={togglePlay} aria-label={playing ? 'Pausar el desplazamiento automático' : 'Desplazar la letra sola, al ritmo de la canción'}>
-        {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />} <span className="hide-sm">Auto</span>
+        {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />} <span>Auto</span>
       </button>
       {playing && (
         <>
@@ -395,7 +413,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         {chart.length === 0 && <div className="stage-info">{infoNode}</div>}
         {chart.length > 0 && compact && miniBar}
         {chart.length > 0 && (
-          <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit && pageInfo.pages === 1 ? 'fitted' : ''} ${playing ? 'auto' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={measurePages}>
+          <div key={cur.id} ref={chartRef} className={`chart ${hasChords ? 'mono' : 'prose'} ${columns === 2 ? 'cols2' : ''} ${fit && pageInfo.pages === 1 ? 'fitted' : ''} ${playing ? 'auto' : ''}`} style={{ fontSize: fit ? undefined : chartSize }} tabIndex={0} aria-label="Letra y acordes" onScroll={measurePages} onClick={tapPage}>
             {!compact && <div ref={infoRef} className="stage-info in-scroll">{infoNode}</div>}
             {!compact && miniBar}
             {blocks.map((b, n) => b.kind === 'gap' ? <div key={n} className="chart-gap" />
@@ -419,6 +437,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </>
         ) : <span>Última canción</span>}
       </div>
+      {endHint && <div className="stage-endhint" role="status">{endHint}</div>}
       <div className="stage-nav">
         {columns === 2 && pageInfo.pages > 1 ? (
           <>
