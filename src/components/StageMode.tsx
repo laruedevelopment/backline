@@ -100,7 +100,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   // Con acordes la letra va en monoespaciada (para alinear) y se reduce lo justo para que cada línea quepa sin desplazarse de lado.
   const stageW = ((forced ? window.innerHeight : vw) - 40 - (columns === 2 ? COLUMN_GAP : 0)) / columns
   const longest = Math.max(1, ...blocks.flatMap((b) => (b.kind === 'pair' ? b.lines.map((l) => l.text.length) : [])))
-  const chartSize = hasChords ? Math.max(14, Math.min(size, Math.floor(stageW / (longest * 0.62)))) : size
+  const chartSize = hasChords ? Math.max(10, Math.min(size, Math.floor(stageW / (longest * 0.62)))) : size
   const toggleCols = () => setCols((c) => { const n = c === 2 ? 1 : 2; remember(COLS_KEY, String(n)); return n })
   const toggleFit = () => setFit((f) => { remember(FIT_KEY, f ? '0' : '1'); return !f })
   const togglePlay = () => setAutoId((a) => (a === cur.id ? null : cur.id))
@@ -109,16 +109,29 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   useLayoutEffect(() => {
     const el = chartRef.current
     if (!el || !fit) return
+    // Una línea más ancha que su columna se monta sobre la otra columna: eso nunca es aceptable.
+    const linesOk = () => columns !== 2 || ![...el.querySelectorAll<HTMLElement>('.chart-pair, .chart-lyric')].some((n) => n.scrollWidth > n.clientWidth + 1)
     const fits = (n: number) => {
       el.style.fontSize = `${n}px`
-      return columns === 2 ? el.scrollWidth <= el.clientWidth + 2 : el.scrollHeight <= el.clientHeight + 2
+      return linesOk() && (columns === 2 ? el.scrollWidth <= el.clientWidth + 2 : el.scrollHeight <= el.clientHeight + 2)
     }
-    let lo = MIN_FIT, hi = hasChords ? Math.min(MAX_SIZE, Math.floor(stageW / (longest * 0.62))) : MAX_SIZE, best = MIN_FIT
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1
-      if (fits(mid)) { best = mid; lo = mid + 1 } else hi = mid - 1
+    const top = hasChords ? Math.min(MAX_SIZE, Math.floor(stageW / (longest * 0.62))) : MAX_SIZE
+    const search = (from: number, ok: (n: number) => boolean) => {
+      let lo = from, hi = top, best = 0
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (ok(mid)) { best = mid; lo = mid + 1 } else hi = mid - 1
+      }
+      return best
     }
-    el.style.fontSize = `${Math.max(12, best)}px`
+    // Lo más grande que cabe en una página sin bajar de MIN_FIT; si no cabe, lo más grande en el que ninguna línea se sale de su columna.
+    let best = search(MIN_FIT, fits)
+    if (!best) {
+      // No cabe en una página: queda en páginas legibles (MIN_FIT), o menos solo si a ese tamaño una línea se saldría de la columna.
+      el.style.fontSize = `${Math.min(MIN_FIT, top)}px`
+      best = linesOk() ? Math.min(MIN_FIT, top) : search(10, (n) => { el.style.fontSize = `${n}px`; return linesOk() })
+    }
+    el.style.fontSize = `${Math.max(10, best)}px`
   }, [fit, columns, cur.id, blocks, vw, compact, stageW, longest, hasChords])
 
   // Páginas (en dos columnas): cuántas hay y en cuál estás, para saber siempre si falta letra por ver.
@@ -397,8 +410,17 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
         ) : <span>Última canción</span>}
       </div>
       <div className="stage-nav">
-        <button className="btn" disabled={i === 0} onClick={() => go(i - 1)}><ChevronLeft size={28} aria-hidden /> Anterior</button>
-        <button className="btn primary" disabled={i === songs.length - 1} onClick={() => go(i + 1)}>Siguiente <ChevronRight size={28} aria-hidden /></button>
+        {columns === 2 && pageInfo.pages > 1 ? (
+          <>
+            <button className="btn" disabled={pageInfo.page <= 1 && i === 0} onClick={() => move(-1)}><ChevronLeft size={28} aria-hidden /> {pageInfo.page > 1 ? `Página ${pageInfo.page - 1}` : 'Canción anterior'}</button>
+            <button className="btn primary" disabled={pageInfo.page >= pageInfo.pages && i === songs.length - 1} onClick={() => move(1)}>{pageInfo.page < pageInfo.pages ? `Página ${pageInfo.page + 1}` : 'Canción siguiente'} <ChevronRight size={28} aria-hidden /></button>
+          </>
+        ) : (
+          <>
+            <button className="btn" disabled={i === 0} onClick={() => go(i - 1)}><ChevronLeft size={28} aria-hidden /> Anterior</button>
+            <button className="btn primary" disabled={i === songs.length - 1} onClick={() => go(i + 1)}>Siguiente <ChevronRight size={28} aria-hidden /></button>
+          </>
+        )}
       </div>
     </div>
   )
