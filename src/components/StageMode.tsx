@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, X } from 'lucide-react'
 import { useKeepAwake } from '../lib/keepAwake'
-import { parseChart, transposeChordLine, transposeLabel, type ChartLine } from '../lib/chart'
+import { parseChart, transposeChordLine, wrapAligned, transposeLabel, type ChartLine } from '../lib/chart'
 import { instrumentOptions } from '../lib/identity'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
 import type { StageSong } from '../lib/setlistItems'
@@ -22,19 +22,23 @@ const remember = (k: string, v: string) => { try { localStorage.setItem(k, v) } 
 
 /** Letra y acordes en bloques centrados: cada línea de acordes va pegada a su letra (se alinean por columna). */
 type Block = { kind: 'pair'; lines: { text: string; chords: boolean }[] } | { kind: 'section'; text: string } | { kind: 'line'; text: string } | { kind: 'gap' }
-function toBlocks(chart: ChartLine[], shiftLine: (s: string) => string, mono: boolean): Block[] {
-  const out: Block[] = []
+function toBlocks(chart: ChartLine[], shiftLine: (s: string) => string, mono: boolean, maxCols: number): Block[] {
+  const raw: Block[] = []
+  const push = (b: Block) => {
+    if (b.kind !== 'pair') { raw.push(b); return }
+    for (const part of wrapAligned(b.lines.map((l) => l.text), maxCols)) raw.push({ kind: 'pair', lines: part.map((text, n) => ({ text, chords: b.lines[n].chords })) })
+  }
   for (let k = 0; k < chart.length; k++) {
     const l = chart[k]
-    if (l.kind === 'blank') out.push({ kind: 'gap' })
-    else if (l.kind === 'section') out.push({ kind: 'section', text: l.text })
+    if (l.kind === 'blank') push({ kind: 'gap' })
+    else if (l.kind === 'section') push({ kind: 'section', text: l.text })
     else if (l.kind === 'chords') {
       const nextLine = chart[k + 1]
-      if (nextLine?.kind === 'lyric') { out.push({ kind: 'pair', lines: [{ text: shiftLine(l.text), chords: true }, { text: nextLine.text, chords: false }] }); k++ } else out.push({ kind: 'pair', lines: [{ text: shiftLine(l.text), chords: true }] })
-    } else out.push(mono ? { kind: 'pair', lines: [{ text: l.text, chords: false }] } : { kind: 'line', text: l.text })
+      if (nextLine?.kind === 'lyric') { push({ kind: 'pair', lines: [{ text: shiftLine(l.text), chords: true }, { text: nextLine.text, chords: false }] }); k++ } else push({ kind: 'pair', lines: [{ text: shiftLine(l.text), chords: true }] })
+    } else push(mono ? { kind: 'pair', lines: [{ text: l.text, chords: false }] } : { kind: 'line', text: l.text })
   }
   // Una sección sin letra debajo (por ejemplo «Intro» para la voz) se omite.
-  return out.filter((b, k) => b.kind !== 'section' || out.slice(k + 1).find((x) => x.kind !== 'gap')?.kind === 'pair' || out.slice(k + 1).find((x) => x.kind !== 'gap')?.kind === 'line')
+  return raw.filter((b, k) => b.kind !== 'section' || raw.slice(k + 1).find((x) => x.kind !== 'gap')?.kind === 'pair' || raw.slice(k + 1).find((x) => x.kind !== 'gap')?.kind === 'line')
 }
 
 /** Pantalla limpia para el toque: canción actual en grande, tono, afinación y la siguiente. */
@@ -97,11 +101,13 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const infoRef = useRef<HTMLDivElement>(null)
   // Estructura de la canción (para quien no lee la letra, como la batería).
   const sections = useMemo(() => (cur.lyrics ? parseChart(cur.lyrics).filter((l) => l.kind === 'section').map((l) => l.text) : []), [cur.lyrics])
-  const blocks = useMemo(() => toBlocks(chart, (t) => transposeChordLine(t, shift), hasChords), [chart, shift, hasChords])
   // Con acordes la letra va en monoespaciada (para alinear) y se reduce lo justo para que cada línea quepa sin desplazarse de lado.
   const stageW = ((forced ? window.innerHeight : vw) - 40 - (columns === 2 ? COLUMN_GAP : 0)) / columns
+  // Las líneas largas se parten (acorde y letra juntos) al ancho de la columna con el tamaño de letra elegido: así Aa siempre funciona.
+  const maxCols = Math.max(12, Math.floor(stageW / ((fit ? MIN_FIT : size) * 0.62)))
+  const blocks = useMemo(() => toBlocks(chart, (t) => transposeChordLine(t, shift), hasChords, maxCols), [chart, shift, hasChords, maxCols])
   const longest = Math.max(1, ...blocks.flatMap((b) => (b.kind === 'pair' ? b.lines.map((l) => l.text.length) : [])))
-  const chartSize = hasChords ? Math.max(10, Math.min(size, Math.floor(stageW / (longest * 0.62)))) : size
+  const chartSize = size
   const toggleCols = () => setCols((c) => { const n = c === 2 ? 1 : 2; remember(COLS_KEY, String(n)); return n })
   const toggleFit = () => setFit((f) => { remember(FIT_KEY, f ? '0' : '1'); return !f })
   const togglePlay = () => setAutoId((a) => (a === cur.id ? null : cur.id))
@@ -371,7 +377,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </>
         )}
         <button type="button" className="btn sm" onClick={() => resize(-3)} aria-label="Letra más pequeña"><Minus size={14} aria-hidden /></button>
-        <span className="aa" aria-label={`Tamaño de letra ${Math.round(chartSize)}`}>{Math.round(chartSize)}</span>
+        <span className="aa" aria-label={`Tamaño de letra ${Math.round(chartSize)}`}>{fit ? "Aa" : Math.round(chartSize)}</span>
         <button type="button" className="btn sm" onClick={() => resize(3)} aria-label="Letra más grande"><Plus size={14} aria-hidden /></button>
         {layoutControls}
         <button type="button" className="btn sm" onClick={showInfo} aria-label="Volver a la información de la canción">Info</button>

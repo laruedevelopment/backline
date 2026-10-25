@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isChordLine, parseChart, transposeChord, transposeChordLine, transposeLabel } from './chart'
+import { isChordLine, parseChart, transposeChord, transposeChordLine, transposeLabel, wrapAligned } from './chart'
 
 describe('acordes', () => {
   it('reconoce líneas de acordes y no confunde letra con acordes', () => {
@@ -43,5 +43,20 @@ describe('acordes', () => {
     expect(transposeLabel(0)).toBe('Original')
     expect(transposeLabel(3)).toBe('+3')
     expect(transposeLabel(-2)).toBe('−2')
+  })
+})
+
+describe('wrapAligned', () => {
+  it('parte acorde y letra juntos, en un espacio, sin partir un acorde', () => {
+    const chords = 'Am        F          G'
+    const lyric = 'Hoy vuelvo a casa otra vez sin ti'
+    const parts = wrapAligned([chords, lyric], 16)
+    expect(parts.length).toBeGreaterThan(1)
+    expect(parts.every((p) => p.every((r) => r.length <= 16))).toBe(true)
+    expect(parts.map((p) => p[1]).join(' ').replace(/\s+/g, ' ')).toBe(lyric)
+    expect(parts.flatMap((p) => p[0].split(/\s+/).filter(Boolean))).toEqual(['Am', 'F', 'G'])
+  })
+  it('no toca lo que ya cabe', () => {
+    expect(wrapAligned(['Am', 'Hola'], 20)).toEqual([['Am', 'Hola']])
   })
 })

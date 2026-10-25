@@ -93,3 +93,31 @@ export function transposeChordLine(line: string, by: number): string {
 
 /** «+2» / «−1» / «Original». */
 export const transposeLabel = (n: number) => (n === 0 ? 'Original' : n > 0 ? `+${n}` : `−${Math.abs(n)}`)
+
+/**
+ * Parte un par acordes/letra (alineados por columna) en tramos de a lo sumo `max` caracteres, cortando en un espacio de la letra
+ * y sin partir un acorde, para que cada acorde siga sobre su sílaba. Con `max` muy chico corta duro.
+ */
+export function wrapAligned(rows: string[], max: number): string[][] {
+  const width = Math.max(...rows.map((r) => r.length))
+  if (width <= max || max < 8) return [rows]
+  const out: string[][] = []
+  let rest = rows.map((r) => r.padEnd(width))
+  while (rest[0].length > max) {
+    const chordsRow = rest.length > 1 ? rest[0] : ''
+    const lyricRow = rest[rest.length - 1]
+    let k = -1
+    for (let c = max; c >= Math.floor(max / 2); c--) {
+      if (lyricRow[c] === ' ' && (!chordsRow || chordsRow[c] === ' ' || chordsRow[c - 1] === ' ')) { k = c; break }
+    }
+    if (k < 0) k = max
+    const head = rest.map((r) => r.slice(0, k).trimEnd())
+    const tail = rest.map((r) => r.slice(k))
+    const lead = Math.min(...tail.map((r) => (r.trim() ? r.length - r.trimStart().length : r.length)))
+    out.push(head)
+    rest = tail.map((r) => r.slice(lead))
+    if (rest.every((r) => !r.trim())) return out
+  }
+  out.push(rest.map((r) => r.trimEnd()))
+  return out
+}
