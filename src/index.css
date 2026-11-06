@@ -729,3 +729,9 @@ div.paper-label { cursor: default; }
 .dm-who span { display: grid; min-width: 0; }
 .dm-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dm-who small { color: var(--muted); font-size: 0.8rem; }
+
+.opening { align-items: flex-start; }
+.opening-details { margin: 6px 0 0; font-size: 0.95rem; line-height: 1.4; white-space: pre-line; overflow-wrap: anywhere; }
+
+.btn.primary.sm, .btn.primary.sm:hover { color: var(--amber-ink, #1a1205); }
+.opening .btn { align-self: center; flex: none; }

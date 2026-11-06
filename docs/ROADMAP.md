@@ -45,10 +45,10 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 ## Fase 4 — Comunidad
 Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos y mensajes directos; 3) «Busco músico» (banda busca bajista/baterista, temporal o fijo, con detalles); 4) Marketplace; 5) feed con fotos/videos y seguir bandas (fans). Antes de cada una: reglas de visibilidad (quién ve qué: banda, amigos, público), menores de edad, denuncias/bloqueo y moderación; el contenido es responsabilidad de quien lo sube (Términos 0.6).
 - [ ] Comentarios por canción y chat de la banda (Realtime, anclado a canciones/eventos).
-- [ ] Amigos (solicitud/aceptar), mensajes directos, y poder ser invitado a una banda sin tener amigos en ella.
-- [ ] «Busco músico»: publicación de la banda (instrumento, temporal/definitivo, fecha del toque, detalles) y respuestas.
+- [x] Amigos (solicitud/aceptar/bloquear) y mensajes directos, solo entre mayores de edad (migración 0026). Falta: avisos push, y ser invitado a una banda por un amigo.
+- [x] «Busco músico»: publicación de la banda pública (instrumento, temporal/definitivo, fecha, detalles) y respuestas al admin (migración 0027). Falta: avisos, vencimiento automático por fecha pasada en la lista del admin.
 - [ ] Perfil público de banda con seguidores (fans) y qué información es pública vs solo de la banda.
-- [ ] Exportar setlist a PDF con letras y acordes.
+- [x] Exportar setlist a PDF (con letras y acordes o solo la lista) desde el diálogo de imprimir del navegador.
 - [x] Comentarios por canción y chat de la banda con contador de no leídos y tiempo real (migración 0025). Falta: avisos push de mensajes nuevos, mencionar a alguien, adjuntar imágenes.
 - [ ] Modo escenario: tablatura (texto monoespaciado ya se ve; archivos Guitar Pro/MusicXML necesitan un lector, evaluar alphaTab), vista «solo letra / letra y acordes / tablatura» por canción.
 - [ ] Sincronizar el modo escenario entre músicos (el líder avanza y todos siguen): con internet por Realtime; sin internet, red local (WebRTC entre dispositivos en el mismo WiFi/hotspot) — requiere investigación.

@@ -41,6 +41,7 @@ const pageLoaders = {
   BandPage: () => import('./pages/BandPage'),
   ChatPage: () => import('./pages/ChatPage'),
   FriendsPage: () => import('./pages/FriendsPage'),
+  OpeningsPage: () => import('./pages/OpeningsPage'),
   DirectPage: () => import('./pages/DirectPage'),
   ProfilePage: () => import('./pages/ProfilePage')
 }
@@ -61,6 +62,7 @@ const LessonPage = lazy(pageLoaders.LessonPage)
 const BandPage = lazy(pageLoaders.BandPage)
 const ChatPage = lazy(pageLoaders.ChatPage)
 const FriendsPage = lazy(pageLoaders.FriendsPage)
+const OpeningsPage = lazy(pageLoaders.OpeningsPage)
 const DirectPage = lazy(pageLoaders.DirectPage)
 const ProfilePage = lazy(pageLoaders.ProfilePage)
 
@@ -240,6 +242,7 @@ function Shell() {
               <Route path="/explorar" element={<ExplorePage />} />
               <Route path="/explorar/musicos" element={<ExplorePage />} />
               <Route path="/explorar/amigos" element={<FriendsPage />} />
+              <Route path="/explorar/buscan" element={<OpeningsPage />} />
               <Route path="/explorar/amigos/:id" element={<Measure><DirectPage /></Measure>} />
               <Route path="/explorar/bandas/:id" element={<Measure><PublicBandPage /></Measure>} />
               <Route path="/explorar/musicos/:id" element={<Measure><PublicMusicianPage /></Measure>} />

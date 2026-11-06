@@ -583,6 +583,37 @@ await ok('limpieza de amigos', async () => {
   await pg.query(`update public.profiles set is_public = false where id = $1`, [U.minor])
 })
 
+console.log('Busco músico')
+U.replier = crypto.randomUUID()
+await pg.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, 'replier@x.co', $2)`, [U.replier, JSON.stringify({ name: 'REPLIER', terms_version: '0.2', age_declaration: 'adult' })])
+await pg.query(`update public.bands set is_public = true where id = $1`, [band])
+await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+let opening
+await ok('el admin publica «busco bajista»; un músico ajeno la ve y un integrante normal no puede publicar', async () => {
+  const [o] = await as('leader', `insert into public.band_openings (band_id, created_by, instrument, kind, details) values ($1,$2,'Bajo','temporary','Toque del sábado') returning id`, [band, U.leader]); opening = o.id
+  eq((await as('replier', `select id from public.band_openings where id=$1`, [opening])).length, 1, 'no la ve un ajeno')
+  eq((await as('replier', `select id from public.open_openings()`)).length >= 1, true, 'no sale en la lista')
+})
+await rejects('un integrante sin rol de admin no publica', () => as('member', `insert into public.band_openings (band_id, created_by, instrument, kind) values ($1,$2,'Voz','permanent')`, [band, U.member]), /row-level|violates/)
+await ok('un músico adulto responde; solo el admin ve quién respondió', async () => {
+  await as('replier', `insert into public.opening_replies (opening_id, profile_id, message) values ($1,$2,'Toco bajo hace 8 años')`, [opening, U.replier])
+  eq((await as('leader', `select display_name from public.opening_replies_for($1)`, [opening])).length, 1, 'el admin no ve la respuesta')
+  eq((await as('member', `select 1 from public.opening_replies_for($1)`, [opening])).length, 0, 'un integrante normal ve respuestas')
+  eq((await as('minor', `select 1 from public.opening_replies`)).length, 0, 'un tercero lee respuestas')
+})
+await rejects('no se responde dos veces a la misma publicación', () => as('replier', `insert into public.opening_replies (opening_id, profile_id, message) values ($1,$2,'otra vez')`, [opening, U.replier]), /duplicate|unique/)
+await rejects('un menor de edad no responde', () => as('minor', `insert into public.opening_replies (opening_id, profile_id, message) values ($1,$2,'Hola')`, [opening, U.minor]), /row-level|violates/)
+await rejects('un integrante de la propia banda no responde', () => as('member', `insert into public.opening_replies (opening_id, profile_id, message) values ($1,$2,'Hola')`, [opening, U.member]), /row-level|violates/)
+await ok('al cerrar la publicación deja de verse y de aceptar respuestas', async () => {
+  await as('leader', `update public.band_openings set status='closed' where id=$1`, [opening])
+  eq((await as('replier', `select id from public.band_openings where id=$1`, [opening])).length, 0, 'sigue visible')
+  eq((await as('leader', `select id from public.band_openings where id=$1`, [opening])).length, 1, 'el admin ya no la ve')
+})
+await ok('limpieza de búsquedas', async () => {
+  await pg.query(`delete from public.band_openings`); await pg.query(`update public.bands set is_public = false where id = $1`, [band])
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

@@ -52,7 +52,8 @@ function estado() {
     (select count(*) from public.events where title like '%(PRUEBA)%' or place like '%(PRUEBA)%' or band_id in (select id from public.bands where name like '%(PRUEBA)')) as eventos,
     (select count(*) from public.bookings where venue_id in (select id from public.venues where name like '%(PRUEBA)')) as reservas,
     (select count(*) from public.band_messages where band_id in (select id from public.bands where name like '%(PRUEBA)')) as mensajes_banda,
-    (select count(*) from public.friendships where requester in (select id from auth.users where email like '%@${DOMAIN}') or addressee in (select id from auth.users where email like '%@${DOMAIN}')) as amistades`)
+    (select count(*) from public.friendships where requester in (select id from auth.users where email like '%@${DOMAIN}') or addressee in (select id from auth.users where email like '%@${DOMAIN}')) as amistades,
+    (select count(*) from public.band_openings where band_id in (select id from public.bands where name like '%(PRUEBA)')) as busquedas`)
   return r
 }
 
@@ -120,7 +121,7 @@ async function sembrar() {
 
   const eq = (room, venue, kind, o = {}) => `(${q(room)}, ${q(venue)}, ${q(kind)}, ${o.title ? q(o.title) : 'null'}, ${o.quantity ?? 1}, ${o.format ? q(o.format) : 'null'}, ${o.brand ? q(o.brand) : 'null'}, ${o.model ? q(o.model) : 'null'}, ${o.channels ?? 'null'}, ${o.details ? q(o.details) : 'null'}, ${o.included === false ? 'false' : 'true'}, ${o.price ?? 'null'}, ${q(o.unit ?? 'hour')})`
 
-  const evRehearsal = id(), evGig = id(), evPast = id()
+  const evRehearsal = id(), evGig = id(), evPast = id(), opening = id()
   const bk = { pend: id(), conf: id(), manual: id(), past: id(), rej: id(), canc: id(), v2pend: id(), v2conf: id() }
 
   const script = `
@@ -222,6 +223,13 @@ async function sembrar() {
       (${q(B1)}, ${q(U2)}, 'Ensayo mañana a las 8, llevo el bajo nuevo.', now() - interval '26 hours'),
       (${q(B1)}, ${q(J)}, 'Perfecto. Yo llevo la lista del toque del sábado.', now() - interval '25 hours'),
       (${q(B1)}, ${q(U3)}, '¿Alguien trae cable para la batería electrónica?', now() - interval '20 minutes');
+
+    -- «Busco músico»: la banda busca bajista para el sábado y Valentina ya respondió
+    insert into public.band_openings (id, band_id, created_by, instrument, kind, needed_on, city, details) values
+      (${q(opening)}, ${q(B1)}, ${q(J)}, 'Voz', 'temporary', ${q(day(6))}, 'Bucaramanga', 'Cantante para el toque del sábado en Cabecera. Repertorio de rock y funk. Ensayamos el jueves. (PRUEBA)'),
+      (${q(id())}, ${q(B1)}, ${q(J)}, 'Teclado', 'permanent', null, 'Bucaramanga', 'Buscamos tecladista fijo para formar la banda. (PRUEBA)');
+    insert into public.opening_replies (opening_id, profile_id, message) values
+      (${q(opening)}, ${q(U1)}, 'Canto hace 6 años, estoy libre el sábado. Puedo ensayar el jueves.');
 
     -- Amigos: Sebas ya es tu amigo (con conversación), Dani te envió una solicitud y tú se la enviaste a Valentina
     insert into public.friendships (requester, addressee, status, responded_at) values (${q(U2)}, ${q(J)}, 'accepted', now());

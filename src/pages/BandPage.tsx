@@ -15,6 +15,7 @@ import Avatar from '../components/Avatar'
 import BandForm from '../components/BandForm'
 import BandMark from '../components/BandMark'
 import BandNav from '../components/BandNav'
+import BandOpenings from '../components/BandOpenings'
 import BandMedia from '../components/BandMedia'
 import { ask } from '../lib/confirm'
 import Sheet from '../components/Sheet'
@@ -124,6 +125,7 @@ export default function BandPage() {
       )}
 
       <BandMedia band={band} canEdit={isAdmin} />
+      {isAdmin && <BandOpenings bandId={band.id} bandName={band.name} city={band.city ?? ''} isPublic={band.isPublic} />}
 
       <div className="section-title">Integrantes · {members.length}</div>
       {isLoading ? <ListSkeleton rows={3} /> : (
