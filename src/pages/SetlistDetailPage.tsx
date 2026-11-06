@@ -147,7 +147,7 @@ export default function SetlistDetailPage() {
   }
   const marks = stageMarks(entries)
   // Cada quien lleva al escenario solo su propia anotación de cada canción.
-  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? lyricsById?.get(x.id) ?? offlineLyrics[x.id], ...marks.get(x.id), personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
+  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? lyricsById?.get(x.id) ?? offlineLyrics[x.id], ...marks.get(x.id), myRole: x.lineup?.find((l) => l.profileId === userId)?.instrument, personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
   const saveName = () => {
     const n = (nameDraft ?? '').trim()
     if (nameDraft !== null && n && n !== list.name) void save({ ...list, name: n.slice(0, 80) })

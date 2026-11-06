@@ -47,7 +47,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<string | null>(readInstrument)
   const [picking, setPicking] = useState(false)
-  const who = instrument || picked // lo que toca esta persona: el de la banda o el que eligió aquí
+  // Lo que toca esta persona en esta canción: el que le asignaron en «Quién toca» o, si no, el de la banda o el que eligió aquí.
+  const who = songs[i]?.myRole || instrument || picked
   const [mine, setMine] = useState(true)
   const [vw, setVw] = useState(() => window.innerWidth)
   useEffect(() => {

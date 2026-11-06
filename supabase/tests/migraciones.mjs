@@ -481,10 +481,20 @@ await ok('el integrante escribe su anotación de una canción y toda la banda la
   await as('member', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Les Paul')`, [noteSong, band, U.member])
   eq((await as('leader', `select note from public.song_member_notes where song_id=$1`, [noteSong])).length, 1, 'el líder no la ve')
 })
-await rejects('nadie escribe la anotación de otra persona', () => as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Falsa')`, [noteSong, band, U.member]), /row-level|violates/)
-await ok('nadie edita ni borra la anotación de otra persona', async () => {
-  eq((await as('leader', `update public.song_member_notes set note = 'cambiada' where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.member])).length, 0, 'editó la de otro')
-  eq((await as('leader', `delete from public.song_member_notes where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.member])).length, 0, 'borró la de otro')
+await ok('quien lidera la banda escribe, cambia y borra la anotación de un integrante (y queda quién la puso)', async () => {
+  await as('leader', `update public.song_member_notes set note = 'Strat', updated_by = $3 where song_id=$1 and profile_id=$2`, [noteSong, U.member, U.leader])
+  const [r] = await as('member', `select note, updated_by from public.song_member_notes where song_id=$1 and profile_id=$2`, [noteSong, U.member])
+  eq(r.note, 'Strat', 'el líder no pudo cambiarla'); eq(r.updated_by, U.leader, 'no quedó quién la puso')
+  await as('leader', `delete from public.song_member_notes where song_id=$1 and profile_id=$2`, [noteSong, U.member])
+  await as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Les Paul')`, [noteSong, band, U.member])
+  eq((await as('member', `select note from public.song_member_notes where song_id=$1 and profile_id=$2`, [noteSong, U.member])).length, 1, 'el líder no pudo crearla')
+})
+await rejects('el líder no escribe la anotación de alguien que no es de la banda', () => as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Falsa')`, [noteSong, band, U.other]), /row-level|violates/)
+await rejects('un integrante no escribe la anotación de otra persona', () => as('member', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Falsa')`, [noteSong, band, U.leader]), /row-level|violates/)
+await ok('un integrante no edita ni borra la anotación de otra persona', async () => {
+  await as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Del líder')`, [noteSong, band, U.leader])
+  eq((await as('member', `update public.song_member_notes set note = 'cambiada' where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.leader])).length, 0, 'editó la de otro')
+  eq((await as('member', `delete from public.song_member_notes where song_id=$1 and profile_id=$2 returning note`, [noteSong, U.leader])).length, 0, 'borró la de otro')
 })
 await ok('quien no es de la banda no ve las anotaciones', async () => {
   eq((await as('other', `select note from public.song_member_notes where song_id=$1`, [noteSong])).length, 0, 'las ve un ajeno')

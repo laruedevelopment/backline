@@ -219,7 +219,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         <Plus size={16} aria-hidden /> Agregar nota por instrumento
       </button>
 
-      {song && band && <MemberNotes songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} />}
+      {song && band && <MemberNotes songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} canManage={band.role === 'owner' || band.role === 'admin'} />}
 
       <h3 className="section-title">Escuchar y notas</h3>
       <label className="field">Link de YouTube
