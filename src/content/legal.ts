@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.5'
+export const TERMS_VERSION = '0.6'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -113,6 +113,7 @@ export const terms: LegalDoc = {
       title: '4. Música de terceros',
       paragraphs: [
         'Backline no aloja ni distribuye música ni videos de terceros: solo guarda enlaces a YouTube y Spotify y muestra sus reproductores oficiales. No ofrecemos un catálogo de letras. Lo que una banda escribe en «Letra y acordes» es contenido de la banda, visible solo para sus integrantes, y cada banda es responsable de usar solo textos que tenga derecho a copiar y compartir entre sus miembros. La música y las letras siguen sujetas a las condiciones de las plataformas y a los derechos de sus titulares.',
+        'Cada persona y cada banda es la única responsable del contenido que sube o escribe (canciones, letras, acordes, setlists, textos, fotos, videos, mensajes y publicaciones) y de tener los derechos o permisos para usarlo. Backline actúa como intermediario técnico: no revisa el contenido antes de que se publique, no lo edita y no responde por las infracciones de derechos de autor ni por los reclamos de terceros que provengan de lo que suben los usuarios. Quien suba contenido se obliga a mantener indemne a Backline frente a esos reclamos.',
         `Si eres titular de derechos y crees que hay una infracción, escribe a ${CONTACT_EMAIL} con la información del contenido y tu legitimación; lo revisaremos y retiraremos lo que corresponda.`,
       ],
     },

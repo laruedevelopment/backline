@@ -43,6 +43,12 @@ Regla: cada fase es usable por sí sola y se prueba con la banda de Javier antes
 - [ ] Integración con Slothy (chatbot de horarios y reservas): cada sala puede apuntar su `booking_url` a su chat de Slothy; la sincronización completa llega cuando Slothy esté desplegado.
 
 ## Fase 4 — Comunidad
+Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos y mensajes directos; 3) «Busco músico» (banda busca bajista/baterista, temporal o fijo, con detalles); 4) Marketplace; 5) feed con fotos/videos y seguir bandas (fans). Antes de cada una: reglas de visibilidad (quién ve qué: banda, amigos, público), menores de edad, denuncias/bloqueo y moderación; el contenido es responsabilidad de quien lo sube (Términos 0.6).
+- [ ] Comentarios por canción y chat de la banda (Realtime, anclado a canciones/eventos).
+- [ ] Amigos (solicitud/aceptar), mensajes directos, y poder ser invitado a una banda sin tener amigos en ella.
+- [ ] «Busco músico»: publicación de la banda (instrumento, temporal/definitivo, fecha del toque, detalles) y respuestas.
+- [ ] Perfil público de banda con seguidores (fans) y qué información es pública vs solo de la banda.
+- [ ] Exportar setlist a PDF con letras y acordes.
 - [x] Directorio de bandas y músicos con perfil público opcional (migración 0015): explorar, filtrar por ciudad/género/instrumento, WhatsApp opcional, solo para personas con cuenta.
 - Feed, seguir, subir demos/videos, buscar/ofrecer miembros, cartelera de la ciudad, notificaciones push (web push).
 
