@@ -13,6 +13,8 @@ import OfflineBanner from './components/OfflineBanner'
 import ListSkeleton from './components/Skeleton'
 import ErrorBoundary from './components/ErrorBoundary'
 import { reloadForNewVersion } from './lib/reload'
+import ChatDock from './components/ChatDock'
+import { useWide } from './lib/useWide'
 import { useChatUnread, useLiveBookings, useLiveChat, useLiveSocial, usePendingRequests, useSocialBadge } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
@@ -220,6 +222,7 @@ function Shell() {
     return () => { if (idle) window.cancelIdleCallback(id); else window.clearTimeout(id) }
   }, [])
   const band = useActiveBand()
+  const wide = useWide(1240)
   return (
     <div className="shell">
         <Nav />
@@ -256,6 +259,7 @@ function Shell() {
             </ErrorBoundary>
           </main>
         </div>
+        {wide && supabase && <ChatDock />}
     </div>
   )
 }

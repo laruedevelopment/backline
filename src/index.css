@@ -735,3 +735,23 @@ div.paper-label { cursor: default; }
 
 .btn.primary.sm, .btn.primary.sm:hover { color: var(--amber-ink, #1a1205); }
 .opening .btn { align-self: center; flex: none; }
+
+/* Panel de chat a un costado (pantallas anchas) */
+@media (min-width: 1240px) {
+  .shell:has(> .dock) { grid-template-columns: 232px minmax(0, 1fr) 340px; }
+}
+.dock { position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--sunk); min-height: 0; }
+.dock-head { display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px; border-bottom: 1px solid var(--line); min-height: 64px; }
+.dock-head b { font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock-who { display: flex; align-items: center; gap: 10px; color: var(--text); min-width: 0; }
+.dock-list { overflow-y: auto; padding: 8px; display: grid; align-content: start; gap: 2px; }
+.dock-label { margin: 12px 8px 4px; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.dock-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px; min-height: 56px; border: 0; border-radius: var(--r-m); background: none; color: var(--text); text-align: left; cursor: pointer; }
+.dock-row:hover { background: var(--raise); }
+.dock-name { display: grid; flex: 1; min-width: 0; }
+.dock-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.dock-name small { color: var(--muted); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dock-empty { padding: 8px; }
+.dock-more { display: flex; align-items: center; gap: 8px; margin: 10px 8px; color: var(--amber); font-size: 0.9rem; min-height: 44px; }
+.dock-body { flex: 1; min-height: 0; padding: 8px 10px 12px; display: flex; flex-direction: column; }
+.dock-body .thread.chat { height: auto; flex: 1; min-height: 0; }
