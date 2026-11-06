@@ -50,7 +50,9 @@ function estado() {
     (select count(*) from public.venues where name like '%(PRUEBA)') as negocios,
     (select count(*) from public.songs where band_id in (select id from public.bands where name like '%(PRUEBA)')) as canciones,
     (select count(*) from public.events where title like '%(PRUEBA)%' or place like '%(PRUEBA)%' or band_id in (select id from public.bands where name like '%(PRUEBA)')) as eventos,
-    (select count(*) from public.bookings where venue_id in (select id from public.venues where name like '%(PRUEBA)')) as reservas`)
+    (select count(*) from public.bookings where venue_id in (select id from public.venues where name like '%(PRUEBA)')) as reservas,
+    (select count(*) from public.band_messages where band_id in (select id from public.bands where name like '%(PRUEBA)')) as mensajes_banda,
+    (select count(*) from public.friendships where requester in (select id from auth.users where email like '%@${DOMAIN}') or addressee in (select id from auth.users where email like '%@${DOMAIN}')) as amistades`)
   return r
 }
 
@@ -203,6 +205,30 @@ async function sembrar() {
     insert into public.event_rsvps (event_id, profile_id, status) values
       (${q(evGig)}, ${q(U2)}, 'yes'), (${q(evGig)}, ${q(U3)}, 'maybe'),
       (${q(evRehearsal)}, ${q(U2)}, 'yes'), (${q(evRehearsal)}, ${q(U3)}, 'yes'), (${q(evRehearsal)}, ${q(J)}, 'no');
+
+    -- Letra con acordes (texto inventado para la prueba), quién toca y anotaciones por músico
+    update public.songs set lyrics = ${q(['[Verso]', 'Am        F', 'Hoy vuelvo a casa de prueba', 'C         G', 'Y nadie me pregunta nada', '', '[Coro]', 'F   C   G   Am', 'La la la, esto es una prueba'].join(String.fromCharCode(10)))},
+      lineup = ${qj([{ instrument: 'Bajo', profile_id: U2 }, { instrument: 'Batería', profile_id: U3 }, { instrument: 'Guitarra', profile_id: J }, { instrument: 'Trompeta', guest: 'Camilo (invitado)' }])}
+      where id in (${q(song[0])}, ${q(song[1])});
+    insert into public.song_member_notes (song_id, band_id, profile_id, note, updated_by) values
+      (${q(song[0])}, ${q(B1)}, ${q(U2)}, 'Bajo Precision, cuerdas nuevas', ${q(U2)}),
+      (${q(song[0])}, ${q(B1)}, ${q(J)}, 'Les Paul en Drop D', ${q(J)});
+
+    -- Comentarios por canción y chat de la banda
+    insert into public.song_comments (song_id, band_id, profile_id, body, created_at) values
+      (${q(song[0])}, ${q(B1)}, ${q(U2)}, 'Subamos medio tono, la voz no llega al coro.', now() - interval '2 hours'),
+      (${q(song[0])}, ${q(B1)}, ${q(U3)}, 'Yo puedo meter un cierre largo en el último coro.', now() - interval '1 hour');
+    insert into public.band_messages (band_id, profile_id, body, created_at) values
+      (${q(B1)}, ${q(U2)}, 'Ensayo mañana a las 8, llevo el bajo nuevo.', now() - interval '26 hours'),
+      (${q(B1)}, ${q(J)}, 'Perfecto. Yo llevo la lista del toque del sábado.', now() - interval '25 hours'),
+      (${q(B1)}, ${q(U3)}, '¿Alguien trae cable para la batería electrónica?', now() - interval '20 minutes');
+
+    -- Amigos: Sebas ya es tu amigo (con conversación), Dani te envió una solicitud y tú se la enviaste a Valentina
+    insert into public.friendships (requester, addressee, status, responded_at) values (${q(U2)}, ${q(J)}, 'accepted', now());
+    insert into public.friendships (requester, addressee, status) values (${q(U3)}, ${q(J)}, 'pending'), (${q(J)}, ${q(U1)}, 'pending');
+    insert into public.direct_messages (sender, recipient, body, created_at) values
+      (${q(U2)}, ${q(J)}, 'Hola, ¿tocamos el sábado en el bar?', now() - interval '3 hours'),
+      (${q(J)}, ${q(U2)}, 'Dale, confirmo con la banda.', now() - interval '2 hours');
   `
   sql(script)
 

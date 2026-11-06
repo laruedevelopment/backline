@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query'
 import { listLyrics, listMemberNotes, listMembers } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { loadOfflineLyrics, saveOfflineLyrics } from '../lib/offlineLyrics'
+import { printSetlist, setlistHtml } from '../lib/exportSetlist'
 import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
@@ -131,6 +132,10 @@ export default function SetlistDetailPage() {
     const from = entryIds.indexOf(String(active.id)), to = entryIds.indexOf(String(over.id))
     if (from >= 0 && to >= 0) saveEntries(arrayMove(entries, from, to))
   }
+  const exportPdf = (withLyrics: boolean) => {
+    const known = lyricsById ?? new Map(Object.entries(offlineLyrics))
+    printSetlist(setlistHtml(list.name, entries, songById, known, withLyrics))
+  }
   const copy = async () => {
     let n = 0
     const lines = entries.flatMap((e) => {
@@ -249,6 +254,8 @@ export default function SetlistDetailPage() {
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         {spotify && <a className="btn block" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
         {supabase && <button className="btn block" disabled={!items.length} onClick={() => void prepare()}>{prepared === 'ok' ? 'Listo: las letras quedan en este dispositivo' : prepared === 'fail' ? 'No se pudo: revisa la conexión' : 'Preparar para tocar sin conexión'}</button>}
+        <button className="btn block" disabled={!items.length} onClick={() => exportPdf(true)}>Exportar PDF con letras y acordes</button>
+        <button className="btn block" disabled={!items.length} onClick={() => exportPdf(false)}>Exportar PDF solo la lista</button>
         <button className="btn block" disabled={!items.length} onClick={() => void copy()}>{copied ? 'Copiado: pégalo en WhatsApp' : 'Copiar para WhatsApp'}</button>
         {canEdit && (
           <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>

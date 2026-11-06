@@ -548,6 +548,41 @@ await ok('al borrar la cuenta del solicitante se anonimizan sus datos de contact
   const rows = await pg.query(`select contact_name, contact_phone, note, requested_by from public.bookings where id = $1`, [b3])
   eq([rows.rows[0].contact_name, rows.rows[0].contact_phone, rows.rows[0].note, rows.rows[0].requested_by], ['', null, null, null], 'datos de contacto')
 })
+console.log('Amigos y mensajes directos')
+U.minor = crypto.randomUUID()
+await pg.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, 'minor@x.co', $2)`, [U.minor, JSON.stringify({ name: 'MINOR', terms_version: '0.2', age_declaration: 'minor_with_consent' })])
+await pg.query(`update public.profiles set is_public = true where id = $1`, [U.minor])
+let fr
+await ok('un adulto envía solicitud a un perfil público; solo ellos dos la ven', async () => {
+  const [r] = await as('owner', `insert into public.friendships (requester, addressee) values ($1,$2) returning id`, [U.owner, U.leader]); fr = r.id
+  eq((await as('leader', `select id from public.friendships where id=$1`, [fr])).length, 1, 'el destinatario no la ve')
+  eq((await as('member', `select id from public.friendships where id=$1`, [fr])).length, 0, 'un tercero la ve')
+})
+await rejects('un menor de edad no puede enviar solicitudes', () => as('minor', `insert into public.friendships (requester, addressee) values ($1,$2)`, [U.minor, U.leader]), /row-level|violates/)
+await rejects('no se puede escribir antes de ser amigos', () => as('owner', `insert into public.direct_messages (sender, recipient, body) values ($1,$2,'Hola')`, [U.owner, U.leader]), /row-level|violates/)
+await ok('quien envió la solicitud no puede aceptarla; el destinatario sí', async () => {
+  eq((await as('owner', `update public.friendships set status='accepted' where id=$1 returning id`, [fr])).length, 0, 'se aceptó sola')
+  eq((await as('leader', `update public.friendships set status='accepted', responded_at=now() where id=$1 returning id`, [fr])).length, 1, 'no pudo aceptar')
+})
+await ok('los amigos se escriben, un tercero no lo lee y solo el destinatario marca leído', async () => {
+  const [m] = await as('owner', `insert into public.direct_messages (sender, recipient, body) values ($1,$2,'Hola') returning id`, [U.owner, U.leader])
+  await as('leader', `insert into public.direct_messages (sender, recipient, body) values ($1,$2,'Hola, ¿cómo vas?')`, [U.leader, U.owner])
+  eq((await as('member', `select id from public.direct_messages`)).length, 0, 'un tercero lee mensajes')
+  eq((await as('owner', `update public.direct_messages set read_at = now() where id=$1 returning id`, [m.id])).length, 0, 'el remitente marcó leído')
+  eq((await as('leader', `update public.direct_messages set read_at = now() where id=$1 returning id`, [m.id])).length, 1, 'el destinatario no pudo marcar leído')
+  const ov = await as('leader', `select display_name, direction, unread from public.friends_overview()`)
+  eq(ov.length, 1, 'panorama'); eq(ov[0].direction, 'friend', 'dirección'); eq(Number(ov[0].unread), 0, 'no leídos')
+})
+await ok('bloquear deshace la amistad y corta mensajes y solicitudes', async () => {
+  await as('leader', `select public.block_user($1)`, [U.owner])
+  eq((await pg.query(`select 1 from public.friendships`)).rows.length, 0, 'sigue la amistad')
+})
+await rejects('tras un bloqueo no se pueden enviar solicitudes ni mensajes', () => as('owner', `insert into public.friendships (requester, addressee) values ($1,$2)`, [U.owner, U.leader]), /row-level|violates/)
+await ok('limpieza de amigos', async () => {
+  await pg.query(`delete from public.direct_messages`); await pg.query(`delete from public.user_blocks`)
+  await pg.query(`update public.profiles set is_public = false where id = $1`, [U.minor])
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

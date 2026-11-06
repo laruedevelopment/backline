@@ -723,3 +723,9 @@ div.paper-label { cursor: default; }
 .sheet .btn.danger.grow { background: var(--ember); border-color: var(--ember); color: #1a0504; }
 .eyebrow, .section-title, .stat span, .bandbtn .ctx { font-size: max(0.75rem, 11px); }
 .avatar-edit label:focus-within { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.dm-head { display: flex; align-items: center; gap: 6px; margin: 4px 0 8px; }
+.dm-who { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: var(--text); }
+.dm-who span { display: grid; min-width: 0; }
+.dm-who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-who small { color: var(--muted); font-size: 0.8rem; }

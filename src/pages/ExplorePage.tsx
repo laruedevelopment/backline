@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
+import CommunityNav from '../components/CommunityNav'
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import BandMark from '../components/BandMark'
@@ -53,10 +54,7 @@ export default function ExplorePage() {
         <h1 className="page-title">Explorar</h1>
         <p className="page-sub">Bandas y músicos que decidieron hacerse visibles. Encuentra con quién tocar, a quién invitar o qué se mueve en tu ciudad.</p>
       </div>
-      <div className="seg" role="navigation" aria-label="Comunidad" onClick={() => setTag('')}>
-        <NavLink to="/explorar" end className={({ isActive }) => (isActive ? 'active' : '')}>Bandas</NavLink>
-        <NavLink to="/explorar/musicos" className={({ isActive }) => (isActive ? 'active' : '')}>Músicos</NavLink>
-      </div>
+      <CommunityNav onChange={() => setTag('')} />
 
       <div className="explore-filters">
         <label className="search">
