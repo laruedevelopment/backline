@@ -13,7 +13,7 @@ import OfflineBanner from './components/OfflineBanner'
 import ListSkeleton from './components/Skeleton'
 import ErrorBoundary from './components/ErrorBoundary'
 import { reloadForNewVersion } from './lib/reload'
-import { useLiveBookings, usePendingRequests } from './lib/useLive'
+import { useChatUnread, useLiveBookings, useLiveChat, usePendingRequests } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
 import OnboardingPage from './pages/OnboardingPage'
 import JoinPage from './pages/JoinPage'
@@ -39,6 +39,7 @@ const pageLoaders = {
   LearnPage: () => import('./pages/LearnPage'),
   LessonPage: () => import('./pages/LessonPage'),
   BandPage: () => import('./pages/BandPage'),
+  ChatPage: () => import('./pages/ChatPage'),
   ProfilePage: () => import('./pages/ProfilePage')
 }
 const LegalPage = lazy(pageLoaders.LegalPage)
@@ -56,6 +57,7 @@ const PublicMusicianPage = lazy(pageLoaders.PublicMusicianPage)
 const LearnPage = lazy(pageLoaders.LearnPage)
 const LessonPage = lazy(pageLoaders.LessonPage)
 const BandPage = lazy(pageLoaders.BandPage)
+const ChatPage = lazy(pageLoaders.ChatPage)
 const ProfilePage = lazy(pageLoaders.ProfilePage)
 
 /** Pantallas de formulario o de lectura: no se estiran a todo el ancho de un monitor. */
@@ -167,6 +169,7 @@ function Nav() {
   const { pathname } = useLocation()
   const { count: pending } = usePendingRequests()
   const inBusiness = pathname.startsWith('/mi-negocio')
+  const unread = useChatUnread(useActiveBand()?.id)
   return (
     <nav className="nav" aria-label={inBusiness ? 'Mi negocio' : 'Principal'}>
       <div className="wordmark">back<span>line</span></div>
@@ -174,6 +177,7 @@ function Nav() {
         <NavLink key={to} to={to} className={match(pathname) ? 'active' : ''} aria-current={match(pathname) ? 'page' : undefined}>
           <span className="icon-wrap">
             <Icon size={22} strokeWidth={1.7} aria-hidden />
+            {!inBusiness && to === '/banda' && unread > 0 && <span className="badge" aria-label={`${unread} mensajes sin leer en el chat`}>{unread > 99 ? '99+' : unread}</span>}
             {inBusiness && to === '/mi-negocio' && pending > 0 && <span className="badge" aria-label={`${pending} solicitudes de reserva por responder`}>{pending}</span>}
           </span>
           {label}
@@ -191,6 +195,8 @@ function Nav() {
 
 function Shell() {
   useLiveBookings()
+  const activeBand = useActiveBand()
+  useLiveChat(activeBand?.id)
   const { pathname } = useLocation()
   // Con la app ya abierta, se descargan las demás pantallas en un momento libre: al navegar no hay espera.
   useEffect(() => {
@@ -231,6 +237,7 @@ function Shell() {
               <Route path="/aprender" element={<LearnPage />} />
               <Route path="/aprender/:id" element={<Measure><LessonPage /></Measure>} />
               <Route path="/banda" element={<Measure><BandPage /></Measure>} />
+              <Route path="/banda/chat" element={<Measure><ChatPage /></Measure>} />
               <Route path="/perfil" element={<Measure><ProfilePage /></Measure>} />
             </Routes>
             </Suspense>

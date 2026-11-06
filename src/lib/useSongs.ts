@@ -13,7 +13,8 @@ export function useSongs(bandId: string | undefined) {
 
   const query = useQuery({ queryKey: key, queryFn: () => listSongs(bandId!), enabled: cloud })
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: key }), qc.invalidateQueries({ queryKey: ['song-lyrics'] }), qc.invalidateQueries({ queryKey: ['song-lyrics-one'] })])
-  const save = useMutation({ mutationFn: (s: Song) => upsertSong(bandId!, s), onSuccess: refresh })
+  // Las letras (pesadas) solo se vuelven a pedir si este guardado las tocó.
+  const save = useMutation({ mutationFn: (s: Song) => upsertSong(bandId!, s), onSuccess: (_, s) => (s.lyrics === undefined ? qc.invalidateQueries({ queryKey: key }) : refresh()) })
   const remove = useMutation({ mutationFn: (id: string) => deleteSong(id), onSuccess: refresh })
 
   if (!cloud) return { songs: local.songs, loading: false, error: '', save: async (s: Song) => local.saveSong(s), remove: async (id: string) => local.removeSong(id) }

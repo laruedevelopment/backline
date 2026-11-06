@@ -147,11 +147,17 @@ export async function saveMemberNote(bandId: string, songId: string, profileId: 
     if (error) throw error
     return
   }
-  const { data, error } = await db().from('song_member_notes').update({ note, updated_at: new Date().toISOString(), updated_by: actorId }).eq('song_id', songId).eq('profile_id', profileId).select('song_id')
-  if (error) throw error
-  if (data.length) return
-  const { error: insErr } = await db().from('song_member_notes').insert({ song_id: songId, band_id: bandId, profile_id: profileId, note, updated_by: actorId })
-  if (insErr) throw insErr
+  const change = { note, updated_at: new Date().toISOString(), updated_by: actorId }
+  const update = () => db().from('song_member_notes').update(change).eq('song_id', songId).eq('profile_id', profileId).select('song_id')
+  const first = await update()
+  if (first.error) throw first.error
+  if (first.data.length) return
+  const { error: insErr } = await db().from('song_member_notes').insert({ song_id: songId, band_id: bandId, profile_id: profileId, ...change })
+  if (!insErr) return
+  // Otro guardado la creó justo antes (la clave ya existe): se actualiza.
+  if (insErr.code !== '23505') throw insErr
+  const retry = await update()
+  if (retry.error) throw retry.error
 }
 
 export type RsvpStatus = 'yes' | 'maybe' | 'no'
@@ -352,4 +358,55 @@ export async function confirmAdult() {
 export async function setProfilePublic(isPublic: boolean) {
   const { error } = await db().rpc('set_profile_public', { p_public: isPublic })
   if (error) throw error
+}
+
+
+// ───────── Comentarios por canción y chat de banda ─────────
+export type Post = { id: string; profileId: string; body: string; createdAt: string }
+type PostRow = { id: string; profile_id: string; body: string; created_at: string }
+const fromPost = (r: PostRow): Post => ({ id: r.id, profileId: r.profile_id, body: r.body, createdAt: r.created_at })
+const PAGE = 100
+
+/** Últimos comentarios de una canción, del más viejo al más nuevo. */
+export async function listSongComments(songId: string): Promise<Post[]> {
+  const { data, error } = await db().from('song_comments').select('id, profile_id, body, created_at').eq('song_id', songId).order('created_at', { ascending: false }).limit(PAGE)
+  if (error) throw error
+  return (data as PostRow[]).map(fromPost).reverse()
+}
+export async function addSongComment(bandId: string, songId: string, userId: string, body: string) {
+  const { error } = await db().from('song_comments').insert({ song_id: songId, band_id: bandId, profile_id: userId, body: body.trim().slice(0, 1000) })
+  if (error) throw error
+}
+export async function deleteSongComment(id: string) {
+  const { error } = await db().from('song_comments').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Últimos mensajes del chat de la banda, del más viejo al más nuevo. */
+export async function listMessages(bandId: string): Promise<Post[]> {
+  const { data, error } = await db().from('band_messages').select('id, profile_id, body, created_at').eq('band_id', bandId).order('created_at', { ascending: false }).limit(PAGE)
+  if (error) throw error
+  return (data as PostRow[]).map(fromPost).reverse()
+}
+export async function sendMessage(bandId: string, userId: string, body: string) {
+  const { error } = await db().from('band_messages').insert({ band_id: bandId, profile_id: userId, body: body.trim().slice(0, 2000) })
+  if (error) throw error
+}
+export async function deleteMessage(id: string) {
+  const { error } = await db().from('band_messages').delete().eq('id', id)
+  if (error) throw error
+}
+/** Marca el chat como leído hasta ahora. */
+export async function markChatRead(bandId: string, userId: string) {
+  const { error } = await db().from('band_chat_reads').upsert({ band_id: bandId, profile_id: userId, last_read_at: new Date().toISOString() }, { onConflict: 'band_id,profile_id' })
+  if (error) throw error
+}
+/** Mensajes de otras personas que aún no leíste. */
+export async function unreadMessages(bandId: string, userId: string): Promise<number> {
+  const { data: read, error: e1 } = await db().from('band_chat_reads').select('last_read_at').eq('band_id', bandId).eq('profile_id', userId).maybeSingle()
+  if (e1) throw e1
+  const since = (read as { last_read_at: string } | null)?.last_read_at ?? new Date(0).toISOString()
+  const { count, error } = await db().from('band_messages').select('id', { count: 'exact', head: true }).eq('band_id', bandId).neq('profile_id', userId).gt('created_at', since)
+  if (error) throw error
+  return count ?? 0
 }

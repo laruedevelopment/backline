@@ -49,6 +49,12 @@ Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos
 - [ ] «Busco músico»: publicación de la banda (instrumento, temporal/definitivo, fecha del toque, detalles) y respuestas.
 - [ ] Perfil público de banda con seguidores (fans) y qué información es pública vs solo de la banda.
 - [ ] Exportar setlist a PDF con letras y acordes.
+- [x] Comentarios por canción y chat de la banda con contador de no leídos y tiempo real (migración 0025). Falta: avisos push de mensajes nuevos, mencionar a alguien, adjuntar imágenes.
+- [ ] Modo escenario: tablatura (texto monoespaciado ya se ve; archivos Guitar Pro/MusicXML necesitan un lector, evaluar alphaTab), vista «solo letra / letra y acordes / tablatura» por canción.
+- [ ] Sincronizar el modo escenario entre músicos (el líder avanza y todos siguen): con internet por Realtime; sin internet, red local (WebRTC entre dispositivos en el mismo WiFi/hotspot) — requiere investigación.
+- [ ] Desplazamiento automático más fino: marcas de tiempo por sección que la banda toca una vez en el ensayo («tap to sync»); no es viable sacarlas automáticamente de un link de YouTube (no hay acceso al audio y alinear letra con audio exige procesamiento aparte con derechos de autor de por medio).
+- [ ] Pendientes de la revisión de código (2026-11): guardado de setlists con actualización optimista y manejo de errores; limpiar canciones borradas de los setlists en la misma operación; `saveHours` en una transacción; tope de almacenamiento por usuario; aviso de reservas marcado tras enviarse; paginar listas largas; confirmar restricciones de la clave de YouTube.
+- [ ] Pendientes de la revisión de interfaz: unificar filtros (.seg/.tabs/.filter-chips), formulario de canción en secciones plegables, 5 pestañas en móvil, componente de estado vacío común, títulos iguales a las pestañas.
 - [x] Directorio de bandas y músicos con perfil público opcional (migración 0015): explorar, filtrar por ciudad/género/instrumento, WhatsApp opcional, solo para personas con cuenta.
 - Feed, seguir, subir demos/videos, buscar/ofrecer miembros, cartelera de la ciudad, notificaciones push (web push).
 

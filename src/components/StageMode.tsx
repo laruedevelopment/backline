@@ -67,7 +67,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const awake = useKeepAwake(true)
   const [forced, setForced] = useState(false) // giro por CSS cuando el navegador no deja bloquear la orientación
   const [locked, setLocked] = useState(false)
-  const cur = songs[i]
+  const cur = songs[Math.min(i, songs.length - 1)]
   const next = songs[i + 1]
   // Deslizar a los lados cambia de canción (en el celular no hay teclado). Se ignora si el dedo empezó sobre la letra y fue un desplazamiento vertical.
   const [touch, setTouch] = useState<{ x: number; y: number } | null>(null)

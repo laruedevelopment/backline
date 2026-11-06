@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { myVenues, venueBookings } from './venues'
+import { unreadMessages } from './api'
 import { useAuth } from '../store/useAuth'
 
 /**
@@ -31,4 +32,27 @@ export function usePendingRequests() {
   const bookings = useQuery({ queryKey: ['venue-bookings', venue?.id], queryFn: () => venueBookings(venue!.id), enabled: !!venue })
   const count = (bookings.data ?? []).filter((b) => b.status === 'requested' && new Date(b.endsAt) > now).length
   return { count, venue }
+}
+
+
+/** Chat y comentarios de la banda activa al instante (una sola suscripción mientras la app está abierta). */
+export function useLiveChat(bandId: string | undefined) {
+  const qc = useQueryClient()
+  useEffect(() => {
+    if (!supabase || !bandId) return
+    const refresh = (keys: string[]) => () => { for (const key of keys) void qc.invalidateQueries({ queryKey: [key] }) }
+    const channel = supabase
+      .channel(`chat-${bandId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_messages', filter: `band_id=eq.${bandId}` }, refresh(['band-messages', 'chat-unread']))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'song_comments', filter: `band_id=eq.${bandId}` }, refresh(['song-comments']))
+      .subscribe()
+    return () => { void supabase!.removeChannel(channel) }
+  }, [qc, bandId])
+}
+
+/** Mensajes sin leer del chat de la banda activa (para el contador de la navegación). */
+export function useChatUnread(bandId: string | undefined): number {
+  const userId = useAuth((s) => s.session?.user.id)
+  const { data = 0 } = useQuery({ queryKey: ['chat-unread', bandId, userId], queryFn: () => unreadMessages(bandId!, userId!), enabled: !!supabase && !!bandId && !!userId, staleTime: 60_000 })
+  return data
 }

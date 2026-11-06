@@ -63,7 +63,7 @@ export default function SetlistDetailPage() {
   const { id } = useParams()
   const nav = useNavigate()
   const band = useActiveBand()
-  const { songs, save: saveSong, remove: removeSong } = useSongs(band?.id)
+  const { songs, loading: songsLoading, save: saveSong, remove: removeSong } = useSongs(band?.id)
   const { setlists, loading, save, remove } = useSetlists(band?.id)
   const [editing, setEditing] = useState(false)
   const [stage, setStage] = useState(false)
@@ -112,7 +112,8 @@ export default function SetlistDetailPage() {
     setPrepared('')
     try { const r = await refetchLyrics(); setPrepared(saveForOffline(r.data) ? 'ok' : 'fail') } catch { setPrepared('fail') }
   }
-  if (loading) return <ListSkeleton rows={4} />
+  // Sin las canciones cargadas no se puede mostrar ni guardar el setlist: se guardaría sin ellas.
+  if (loading || songsLoading) return <ListSkeleton rows={4} />
   if (!list) return <p className="empty">No encontramos ese setlist. <Link to="/setlists" style={{ color: 'var(--amber)' }}>Volver a setlists</Link></p>
 
   // Elementos del setlist: canciones y etiquetas sueltas, en orden. Las canciones borradas del repertorio se ignoran.
@@ -147,7 +148,7 @@ export default function SetlistDetailPage() {
   }
   const marks = stageMarks(entries)
   // Cada quien lleva al escenario solo su propia anotación de cada canción.
-  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? lyricsById?.get(x.id) ?? offlineLyrics[x.id], ...marks.get(x.id), myRole: x.lineup?.find((l) => l.profileId === userId)?.instrument, personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
+  const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? (lyricsById ? lyricsById.get(x.id) : offlineLyrics[x.id]), ...marks.get(x.id), myRole: x.lineup?.find((l) => l.profileId === userId)?.instrument, personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
   const saveName = () => {
     const n = (nameDraft ?? '').trim()
     if (nameDraft !== null && n && n !== list.name) void save({ ...list, name: n.slice(0, 80) })

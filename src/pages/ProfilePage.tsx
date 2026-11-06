@@ -167,7 +167,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         <div className="avatar-edit">
           <label className={`btn sm ${photoBusy ? 'disabled' : ''}`}>
             {photoBusy ? 'Subiendo…' : initial.avatarUrl ? 'Cambiar foto' : 'Agregar foto'}
-            <input type="file" accept="image/*" hidden disabled={photoBusy} onChange={(e) => void changePhoto(e)} />
+            <input type="file" accept="image/*" className="sr-only" disabled={photoBusy} onChange={(e) => void changePhoto(e)} />
           </label>
           {initial.avatarUrl && <button type="button" className="btn sm" disabled={photoBusy} onClick={() => void removePhoto()}>Quitar</button>}
           {photoMsg && <span className="form-error" role="alert">{photoMsg}</span>}

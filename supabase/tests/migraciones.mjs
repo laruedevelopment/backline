@@ -508,6 +508,40 @@ await ok('el integrante actualiza y borra la suya; al borrar la canción se borr
   await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
 })
 
+console.log('Comentarios y chat')
+let chatSong
+await ok('integrantes comentan una canción y escriben en el chat; la banda lo lee y los ajenos no', async () => {
+  await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+  const [sg] = await as('leader', `insert into public.songs (band_id, title) values ($1,'Con comentarios') returning id`, [band]); chatSong = sg.id
+  await as('member', `insert into public.song_comments (song_id, band_id, profile_id, body) values ($1,$2,$3,'Subamos medio tono')`, [chatSong, band, U.member])
+  await as('member', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,'Ensayo a las 7')`, [band, U.member])
+  eq((await as('leader', `select id from public.song_comments where song_id=$1`, [chatSong])).length, 1, 'el líder no ve el comentario')
+  eq((await as('leader', `select id from public.band_messages where band_id=$1`, [band])).length, 1, 'el líder no ve el mensaje')
+  eq((await as('other', `select id from public.band_messages where band_id=$1`, [band])).length, 0, 'un ajeno ve el chat')
+  eq((await as('other', `select id from public.song_comments where band_id=$1`, [band])).length, 0, 'un ajeno ve los comentarios')
+})
+await rejects('nadie escribe a nombre de otra persona ni un ajeno escribe en el chat', () => as('member', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,'Falso')`, [band, U.leader]), /row-level|violates/)
+await rejects('un ajeno no puede escribir en el chat de otra banda', () => as('other', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,'Hola')`, [band, U.other]), /row-level|violates/)
+await rejects('un mensaje no puede ir vacío ni pasar de 2000 caracteres', () => as('member', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,$3)`, [band, U.member, 'a'.repeat(2001)]), /check|body/)
+await ok('cada quien borra lo suyo, el líder modera y un integrante no borra lo de otro', async () => {
+  const [lm] = await as('leader', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,'Del líder') returning id`, [band, U.leader])
+  eq((await as('member', `delete from public.band_messages where id=$1 returning id`, [lm.id])).length, 0, 'borró un mensaje ajeno')
+  const [mm] = await as('member', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,'Del integrante') returning id`, [band, U.member])
+  eq((await as('leader', `delete from public.band_messages where id=$1 returning id`, [mm.id])).length, 1, 'el líder no pudo moderar')
+  eq((await as('leader', `delete from public.band_messages where id=$1 returning id`, [lm.id])).length, 1, 'no pudo borrar el suyo')
+})
+await rejects('frena las ráfagas: más de 20 mensajes en un minuto', async () => {
+  for (let k = 0; k < 25; k++) await as('member', `insert into public.band_messages (band_id, profile_id, body) values ($1,$2,$3)`, [band, U.member, 'spam ' + k])
+}, /demasiados mensajes/)
+await ok('cada quien guarda hasta dónde leyó y al borrar la canción se borran sus comentarios', async () => {
+  await as('member', `insert into public.band_chat_reads (band_id, profile_id) values ($1,$2) on conflict (band_id, profile_id) do update set last_read_at = now()`, [band, U.member])
+  eq((await as('leader', `select 1 from public.band_chat_reads where band_id=$1`, [band])).length, 0, 'el líder ve lo leído de otro')
+  await as('leader', `delete from public.songs where id=$1`, [chatSong])
+  eq((await pg.query(`select 1 from public.song_comments where song_id=$1`, [chatSong])).rows.length, 0, 'quedó huérfano')
+  await pg.query(`delete from public.band_messages where band_id=$1`, [band])
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+})
+
 console.log('\nBorrar cuenta (Ley 1581)')
 await ok('al borrar la cuenta del solicitante se anonimizan sus datos de contacto', async () => {
   await as('other', `select public.delete_account()`)

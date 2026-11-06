@@ -8,6 +8,7 @@ import { getLyrics, listMembers } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
 import MemberNotes from './MemberNotes'
+import SongComments from './SongComments'
 import Sheet from './Sheet'
 
 const empty = (): Song => ({
@@ -30,7 +31,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
   const band = useActiveBand()
   // Con cuenta, la lista de canciones no trae las letras: se piden al abrir el editor (y solo se envían si se tocan).
   const needsLyrics = !!song && !!supabase && song.lyrics === undefined
-  const { data: loadedLyrics, isLoading: lyricsLoading } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
+  const { data: loadedLyrics, isLoading: lyricsLoading, isError: lyricsError } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
   const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!supabase && !!band })
   const setSlot = (i: number, p: Partial<LineupSlot>) => patch({ lineup: (s.lineup ?? []).map((x, j) => (j === i ? { ...x, ...p } : x)) })
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
@@ -220,6 +221,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       </button>
 
       {song && band && <MemberNotes songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} canManage={band.role === 'owner' || band.role === 'admin'} />}
+      {song && band && <SongComments songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} canModerate={band.role === 'owner' || band.role === 'admin'} />}
 
       <h3 className="section-title">Escuchar y notas</h3>
       <label className="field">Link de YouTube
@@ -235,7 +237,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         <textarea rows={3} value={s.notes ?? ''} onChange={(e) => patch({ notes: e.target.value || undefined })} maxLength={2000} />
       </label>
       <label className="field">Letra y acordes (opcional)
-        <textarea rows={8} className="chart-input" value={s.lyrics ?? loadedLyrics ?? ''} disabled={needsLyrics && s.lyrics === undefined && lyricsLoading} onChange={(e) => patch({ lyrics: e.target.value })} maxLength={12000} spellCheck={false}
+        <textarea rows={8} className="chart-input" value={s.lyrics ?? loadedLyrics ?? ''} disabled={needsLyrics && s.lyrics === undefined && (lyricsLoading || lyricsError)} onChange={(e) => patch({ lyrics: e.target.value })} maxLength={12000} spellCheck={false}
           placeholder={'[Verso]\nAm        F\nHoy vuelvo a casa\n\nO así: Hoy [Am]vuelvo a [F]casa'} />
         <span className="li-sub wrap">Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella.</span>
       </label>

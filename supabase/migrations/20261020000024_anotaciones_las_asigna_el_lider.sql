@@ -25,4 +25,15 @@ drop policy if exists smn_delete on public.song_member_notes;
 create policy smn_delete on public.song_member_notes for delete to authenticated
   using (profile_id = (select auth.uid()) or public.is_band_admin(band_id));
 
+-- Quién escribió la anotación lo fija la base (no se puede falsificar desde la app).
+create or replace function public.set_note_author() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  new.updated_by := (select auth.uid());
+  return new;
+end $$;
+revoke all on function public.set_note_author from public, anon, authenticated;
+drop trigger if exists song_member_notes_author on public.song_member_notes;
+create trigger song_member_notes_author before insert or update on public.song_member_notes for each row execute function public.set_note_author();
+
 grant update (note, updated_at, updated_by) on public.song_member_notes to authenticated;

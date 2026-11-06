@@ -13,13 +13,12 @@ function NoteField({ songId, bandId, profileId, actorId, label, current, by, pla
   const [msg, setMsg] = useState('')
   const save = useMutation({
     mutationFn: (text: string) => saveMemberNote(bandId, songId, profileId, actorId, text),
-    onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['song-notes', bandId] }); setMsg('Guardada') },
+    onSuccess: async () => { await qc.invalidateQueries({ queryKey: ['song-notes', bandId] }); setDraft(null); setMsg('Guardada') },
     onError: () => setMsg('No pudimos guardarla. Intenta de nuevo.'),
   })
   const commit = () => {
     const text = (draft ?? current).trim()
-    setDraft(null)
-    if (text !== current.trim()) { setMsg('Guardando…'); save.mutate(text) }
+    if (text !== current.trim()) { setMsg('Guardando…'); save.mutate(text) } else setDraft(null)
   }
   return (
     <label className="field">{label}

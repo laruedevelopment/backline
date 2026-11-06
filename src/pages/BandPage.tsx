@@ -14,6 +14,7 @@ import { useActiveBand, useBands } from '../store/useBandSession'
 import Avatar from '../components/Avatar'
 import BandForm from '../components/BandForm'
 import BandMark from '../components/BandMark'
+import BandNav from '../components/BandNav'
 import BandMedia from '../components/BandMedia'
 import { ask } from '../lib/confirm'
 import Sheet from '../components/Sheet'
@@ -72,8 +73,7 @@ export default function BandPage() {
     } catch { setMsg('No pudimos sacarte de la banda. Intenta de nuevo.') }
   }
   async function destroy() {
-    const typed = prompt(`Esto borra la banda, su repertorio, setlists y agenda para todos.\nEscribe el nombre de la banda para confirmar:`)
-    if (typed?.trim() !== band!.name) return
+    if (!(await ask({ title: '¿Borrar la banda?', body: 'Se borran el repertorio, los setlists y la agenda para todos los integrantes. No se puede deshacer.', confirmLabel: 'Borrar la banda', typeToConfirm: band!.name }))) return
     try {
       await purgeBandMedia(band!.id).catch(() => {})
       await deleteBand(band!.id)
@@ -84,6 +84,7 @@ export default function BandPage() {
 
   return (
     <>
+      <BandNav />
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
         <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
