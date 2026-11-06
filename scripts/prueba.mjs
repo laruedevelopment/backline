@@ -27,7 +27,7 @@ function sql(text) {
   const file = path.join(os.tmpdir(), `backline-prueba-${randomUUID()}.sql`)
   fs.writeFileSync(file, text)
   try {
-    const out = run(['db', 'query', '--linked', '--project-ref', REF, '--output-format', 'json', '-f', file])
+    const out = run(['db', 'query', '--linked', '--project-ref', REF, '--output-format', 'json', '--yes', '-f', file])
     const json = JSON.parse(out.slice(out.indexOf('{')))
     return json.rows ?? []
   } finally { fs.rmSync(file, { force: true }) }
