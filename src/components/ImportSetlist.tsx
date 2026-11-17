@@ -67,7 +67,7 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
   async function fromLink() {
     const { kind, id } = playlistIdFromUrl(link)
     setError('')
-    if (kind === 'spotify') return setError('Spotify no deja leer playlists de otras personas. Toma una captura de la lista y súbela con "Foto o captura de pantalla".')
+    if (kind === 'spotify') return setError('Spotify no deja leer playlists de otras personas desde un link. Abre la lista en Spotify, selecciona las canciones (Ctrl+A), copia y pega aquí abajo; o sube una captura de pantalla de la lista, o un archivo CSV exportado.')
     if (kind !== 'youtube' || !id) return setError('Pega el link de una playlist de YouTube (debe incluir "list=").')
     setFetching(true)
     try {
@@ -122,6 +122,11 @@ export default function ImportSetlist({ songs, saveSong, saveSetlist, onDone, on
           <Camera size={18} aria-hidden /> {reading === null ? 'Foto o captura de pantalla' : `Leyendo imagen… ${reading}%`}
           <input type="file" accept="image/*" hidden disabled={reading !== null} onChange={(e) => void fromImage(e)} />
         </label>
+        <label className="btn">
+          <Link2 size={18} aria-hidden /> Archivo CSV (Exportify u otro)
+          <input type="file" accept=".csv,text/csv,text/plain" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { setError(''); if (f.size > 1_000_000) return setError('Ese archivo es muy grande para ser una lista.'); setImageRows([]); setText(await f.text()) } }} />
+        </label>
+        <p className="sub note">Para una lista de Spotify: ábrela, selecciona las canciones (Ctrl+A), copia y pega arriba; o sube una captura de pantalla. El orden se respeta y luego puedes cambiarlo.</p>
         {matches.length > 0 && (
           <>
             <label className="field">Nombre del setlist

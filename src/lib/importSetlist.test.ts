@@ -46,3 +46,23 @@ describe('norm / matchSongs', () => {
     expect(b.song).toBeUndefined()
   })
 })
+
+describe('listas de Spotify', () => {
+  it('lee un CSV exportado con comillas y varios artistas', () => {
+    const r = parseSetlistText('Track URI,Track Name,Artist Name(s),Album Name\nspotify:track:1,"Come Together - Remastered 2009",The Beatles,Abbey Road\nspotify:track:2,"Hola, mundo","Artista Uno;Artista Dos",Disco')
+    expect(r.lines.map((l) => [l.title, l.artist])).toEqual([['Come Together - Remastered 2009', 'The Beatles'], ['Hola, mundo', 'Artista Uno']])
+  })
+  it('lee filas con tabuladores pegadas desde la app de escritorio', () => {
+    const r = parseSetlistText('1\tSeven Nation Army\tThe White Stripes\tElephant\t3:51\n2\tSuperstition\tStevie Wonder\tTalking Book\t4:26')
+    expect(r.lines.map((l) => [l.title, l.artist])).toEqual([['Seven Nation Army', 'The White Stripes'], ['Superstition', 'Stevie Wonder']])
+  })
+  it('junta título y artista en líneas seguidas, ignorando números, duraciones y la marca E', () => {
+    const r = parseSetlistText('Seven Nation Army\nThe White Stripes\n3:51\nCome Together\nE The Beatles\n4:19\nSuperstition\nStevie Wonder\n4:26\nBlack Hole Sun\nSoundgarden\n5:18')
+    expect(r.lines.map((l) => [l.title, l.artist])).toEqual([['Seven Nation Army', 'The White Stripes'], ['Come Together', 'The Beatles'], ['Superstition', 'Stevie Wonder'], ['Black Hole Sun', 'Soundgarden']])
+  })
+  it('no confunde una lista normal «título - artista»', () => {
+    const r = parseSetlistText('1. Seven Nation Army - The White Stripes\n2. Come Together - The Beatles\n3. Superstition - Stevie Wonder\n4. Wonderwall - Oasis')
+    expect(r.lines).toHaveLength(4)
+    expect(r.lines[0]).toEqual({ title: 'Seven Nation Army', artist: 'The White Stripes' })
+  })
+})

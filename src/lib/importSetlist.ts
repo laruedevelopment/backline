@@ -1,4 +1,5 @@
 import type { Song } from './song'
+import { parseSpotifyText } from './spotifyList'
 
 export type ParsedLine = { title: string; artist: string; tuning?: string; notes?: string }
 export type ParsedSetlist = { name: string; lines: ParsedLine[] }
@@ -13,6 +14,10 @@ const SEPARATORS = [' - ', ' – ', ' — ', ' / ', ' by ', ' de ']
 
 /** Entiende listas pegadas desde WhatsApp, notas o Drive: una canción por línea, con o sin artista. */
 export function parseSetlistText(text: string): ParsedSetlist {
+  // Primero: ¿viene de Spotify (CSV, celdas o título y artista en líneas separadas)?
+  const spotify = parseSpotifyText(text)
+  if (spotify) return { name: '', lines: spotify }
+
   let name = ''
   const lines: ParsedLine[] = []
   const seen = new Set<string>()

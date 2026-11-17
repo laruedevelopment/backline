@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --pool=vmThreads",
     "test:db": "node supabase/tests/migraciones.mjs"
   },
   "dependencies": {
