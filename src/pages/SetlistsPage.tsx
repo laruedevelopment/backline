@@ -42,6 +42,7 @@ export default function SetlistsPage() {
           </>
         )}
       </MusicNav>
+      <button className="fab" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={26} aria-hidden /></button>
       {error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
       {loading && <ListSkeleton rows={3} />}
 

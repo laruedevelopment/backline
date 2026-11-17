@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
+import { CalendarPlus, ListMusic, MessageCircle, UserSearch } from 'lucide-react'
 import Avatar from '../components/Avatar'
+import BandMark from '../components/BandMark'
 import { Link } from 'react-router-dom'
 import { band as demoBand } from '../data/demo'
 import { listMembers } from '../lib/api'
@@ -59,11 +61,20 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">{greeting()}{first ? `, ${first}` : ''}</span>
-        <h1 className="page-title">{title}</h1>
-        {band && <p className="page-sub">{[band.city, band.genres.join(' · ')].filter(Boolean).join(' · ')}</p>}
-      </div>
+      <header className="hero">
+        <BandMark name={title} logoUrl={band?.logoUrl} size="lg" />
+        <div className="hero-text">
+          <span className="eyebrow">{greeting()}{first ? `, ${first}` : ''}</span>
+          <h1 className="hero-title">{title}</h1>
+          {band && <p className="page-sub">{[band.city, band.genres.join(' · ')].filter(Boolean).join(' · ')}</p>}
+        </div>
+      </header>
+      <nav className="quick" aria-label="Accesos rápidos">
+        <Link to="/setlists"><span><ListMusic size={22} aria-hidden /></span>Setlists</Link>
+        <Link to="/agenda"><span><CalendarPlus size={22} aria-hidden /></span>Agendar</Link>
+        <Link to="/banda/chat"><span><MessageCircle size={22} aria-hidden /></span>Chat</Link>
+        <Link to="/explorar/buscan"><span><UserSearch size={22} aria-hidden /></span>Se busca</Link>
+      </nav>
 
       <div className="home-grid">
       <div className="home-col">
@@ -160,8 +171,12 @@ export default function HomePage() {
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>
       </p>
       </div>
-      <div className="section-title">¿Tienes una sala de ensayos?</div>
-      <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
+      {!myVenue && (
+        <>
+          <div className="section-title">¿Tienes una sala de ensayos?</div>
+          <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
+        </>
+      )}
       </div>
     </>
   )

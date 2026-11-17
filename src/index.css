@@ -755,3 +755,73 @@ div.paper-label { cursor: default; }
 .dock-more { display: flex; align-items: center; gap: 8px; margin: 10px 8px; color: var(--amber); font-size: 0.9rem; min-height: 44px; }
 .dock-body { flex: 1; min-height: 0; padding: 8px 10px 12px; display: flex; flex-direction: column; }
 .dock-body .thread.chat { height: auto; flex: 1; min-height: 0; }
+
+/* ───────── Capa moderna: tarjetas, bordes redondeados y jerarquía tipo red social ───────── */
+:root {
+  --raise: #1a1713;
+  --r-m: 14px;
+  --r-l: 22px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 12px 28px -16px rgba(0, 0, 0, 0.7);
+}
+/* Títulos de sección: frase en negrita, sin línea ni mayúsculas en monoespaciada */
+.section-title { font-family: var(--body); font-size: 1.15rem; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--text); margin: 26px 0 10px; }
+.section-title::after { display: none; }
+/* Listas como tarjetas */
+.list { border-top: 0; display: grid; gap: 10px; }
+.list.cols { display: grid; }
+.li { background: var(--raise); border: 1px solid var(--line); border-radius: var(--r-l); padding: 12px 16px; box-shadow: var(--shadow); transition: background .15s, border-color .15s, transform .15s; }
+a.li:hover, button.li:hover { border-color: var(--line-2); background: color-mix(in srgb, var(--raise) 88%, #fff 4%); }
+.song { background: var(--raise); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); overflow: hidden; }
+.song .li { background: none; border: 0; border-radius: 0; box-shadow: none; }
+.card, .stats, .notice, .checklist, .explore-card { border-radius: var(--r-l); box-shadow: var(--shadow); }
+.stats { overflow: hidden; }
+.stat b { font-size: 2.2rem; }
+.stat span { font-size: 0.75rem; }
+.notice { padding: 14px 16px; border-left-width: 4px; }
+/* Botones tipo píldora */
+.btn { border-radius: 999px; padding: 0 20px; }
+.btn.sm { padding: 0 16px; }
+.btn.icon { border-radius: 50%; padding: 0; width: 44px; }
+.btn.primary { box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--amber) 70%, transparent); }
+.tag { border-radius: 999px; padding: 3px 10px; }
+.seg { border-radius: 999px; padding: 4px; }
+.seg a, .seg button { border-radius: 999px; }
+.seg .active, .seg [aria-selected=true], .seg [aria-pressed=true] { background: var(--text); color: var(--bg); box-shadow: none; }
+.filter-chips button { border-radius: 999px; }
+input, select, textarea { border-radius: var(--r-m); }
+/* Avatares con aro */
+.avatar, .mono-mark { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px color-mix(in srgb, var(--amber) 45%, var(--line)); }
+.avatars .avatar { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--amber); }
+/* Inicio: tarjeta de la banda y accesos rápidos */
+.hero { display: flex; align-items: center; gap: 16px; padding: 20px 0 14px; }
+.hero-text { display: grid; gap: 2px; min-width: 0; }
+.hero-title { font-size: clamp(1.7rem, 7vw, 2.6rem); text-transform: uppercase; line-height: 1.02; overflow-wrap: anywhere; }
+.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 4px 0 6px; }
+.quick a { display: grid; justify-items: center; gap: 8px; padding: 14px 4px 12px; border-radius: var(--r-l); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 0.82rem; font-weight: 600; text-align: center; min-height: 88px; transition: transform .15s, border-color .15s; }
+.quick a:hover { border-color: var(--amber); transform: translateY(-2px); }
+.quick a span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: color-mix(in srgb, var(--amber) 16%, var(--sunk)); color: var(--amber); }
+/* Navegación: la pestaña activa se marca con una píldora */
+.nav a.active::before { display: none; }
+.nav a .icon-wrap { display: grid; place-items: center; width: 52px; height: 30px; border-radius: 999px; transition: background .15s; }
+.nav a.active .icon-wrap { background: color-mix(in srgb, var(--amber) 22%, transparent); color: var(--amber); }
+@media (min-width: 960px) {
+  .nav a .icon-wrap { width: 36px; height: 32px; }
+  .nav a.active { background: color-mix(in srgb, var(--amber) 14%, var(--raise)); border-radius: 999px; }
+  .nav a.active::before { display: none; }
+}
+/* Botón flotante de la acción principal (solo en celular) */
+.fab { position: fixed; right: 18px; bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom)); z-index: 11; width: 58px; height: 58px; border-radius: 50%; border: 0; background: var(--amber); color: var(--amber-ink); display: grid; place-items: center; box-shadow: 0 10px 28px -6px rgba(0, 0, 0, 0.8), 0 0 0 4px color-mix(in srgb, var(--amber) 22%, transparent); }
+.fab:active { transform: scale(0.95); }
+@media (min-width: 960px) { .fab { display: none; } }
+.main { padding-bottom: calc(var(--nav-h) + 96px + env(safe-area-inset-bottom)); }
+.nav a .icon-wrap { position: relative; }
+.nav a .icon-wrap .badge { top: -6px; right: 0; }
+@media (min-width: 960px) { .nav a .icon-wrap .badge { right: -6px; } }
+@media (max-width: 959px) {
+  .music-actions .btn[aria-label="Agregar canción"], .music-actions .btn[aria-label="Nuevo setlist"] { display: none; }
+}
+@media (max-width: 959px) {
+  .filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chips button { flex: none; }
+}
