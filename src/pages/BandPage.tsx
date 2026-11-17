@@ -32,6 +32,7 @@ export default function BandPage() {
   const [editing, setEditing] = useState(false)
   const [member, setMember] = useState<Member | null>(null)
   const [code, setCode] = useState('')
+  const [inviteKind, setInviteKind] = useState<'member' | number>('member') // number = días de acceso como invitado
   const [msg, setMsg] = useState('')
   const [publicBusy, setPublicBusy] = useState(false)
 
@@ -60,7 +61,7 @@ export default function BandPage() {
 
   async function invite() {
     setMsg('')
-    try { setCode(await createInvite(band!.id, userId!)) } catch { setMsg('No pudimos crear el código. Intenta de nuevo.') }
+    try { setCode(await createInvite(band!.id, userId!, inviteKind === 'member' ? undefined : inviteKind)) } catch { setMsg('No pudimos crear el código. Intenta de nuevo.') }
   }
   const shareText = `Te invito a ${band.name} en Backline. Entra con este link, crea tu cuenta y quedas dentro de la banda: ${inviteLink(APP_URL, code)}
 (Si te pide un código: ${code})`
@@ -139,7 +140,7 @@ export default function BandPage() {
                   <div className="li-title">{m.name}{me && <span className="sub"> · tú</span>}</div>
                   <div className="li-sub">{m.instrument ?? m.instruments[0] ?? 'Sin instrumento'}</div>
                 </div>
-                <span className={`tag ${m.role === 'owner' ? 'key' : ''}`}>{roleLabel[m.role]}</span>
+                <span className={`tag ${m.role === 'owner' ? 'key' : ''}`}>{roleLabel[m.role]}{m.guestUntil ? ` · hasta ${new Date(`${m.guestUntil}T12:00:00-05:00`).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' })}` : ''}</span>
               </button>
             )
           })}
@@ -149,7 +150,19 @@ export default function BandPage() {
       {isAdmin && (
         <>
           <div className="section-title">Invitar</div>
-          <p className="li-sub wrap" style={{ marginBottom: 10 }}>El código sirve 7 días. Quien lo use entra como integrante.</p>
+          <p className="li-sub wrap" style={{ marginBottom: 10 }}>El código sirve 7 días. Quien lo use entra a la banda según lo que elijas aquí.</p>
+          <div className="seg" role="group" aria-label="Cómo entra quien use el código" style={{ marginBottom: 10 }}>
+            <button type="button" className={inviteKind === 'member' ? 'active' : ''} aria-pressed={inviteKind === 'member'} onClick={() => { setInviteKind('member'); setCode('') }}>Integrante</button>
+            <button type="button" className={inviteKind !== 'member' ? 'active' : ''} aria-pressed={inviteKind !== 'member'} onClick={() => { setInviteKind(7); setCode('') }}>Invitado de un toque</button>
+          </div>
+          {inviteKind !== 'member' && (
+            <label className="field" style={{ marginBottom: 10 }}>Su acceso dura
+              <select value={inviteKind} onChange={(e) => { setInviteKind(Number(e.target.value)); setCode('') }}>
+                {[3, 7, 14, 30, 60].map((d) => <option key={d} value={d}>{d} días</option>)}
+              </select>
+              <span className="li-sub wrap">Ve el repertorio, los setlists, la agenda y su parte (afinación, notas y letras) en el modo escenario; confirma asistencia y escribe sus propias anotaciones. No edita nada más. Al vencer, sale solo de la banda.</span>
+            </label>
+          )}
           <button className="btn" onClick={() => void invite()}>Generar código</button>
           {code && (
             <div className="card stack" style={{ marginTop: 12 }}>

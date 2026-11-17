@@ -66,8 +66,11 @@ export async function joinBand(code: string) {
   return data as string
 }
 
-export async function createInvite(bandId: string, userId: string) {
-  const { data, error } = await db().from('band_invites').insert({ band_id: bandId, created_by: userId }).select('code').single()
+/** Código de invitación. Con `guestDays` la persona entra como invitada y su acceso vence solo pasado ese plazo. */
+export async function createInvite(bandId: string, userId: string, guestDays?: number) {
+  const row: { band_id: string; created_by: string; role?: string; guest_days?: number } = { band_id: bandId, created_by: userId }
+  if (guestDays) { row.role = 'guest'; row.guest_days = guestDays }
+  const { data, error } = await db().from('band_invites').insert(row).select('code').single()
   if (error) throw error
   return data.code as string
 }
@@ -120,13 +123,13 @@ export async function deleteSetlist(id: string) {
   if (error) throw error
 }
 
-export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[]; avatarUrl: string | null }
+export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[]; avatarUrl: string | null; guestUntil?: string }
 
 export async function listMembers(bandId: string): Promise<Member[]> {
-  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, profiles(display_name, instruments, avatar_path)').eq('band_id', bandId).order('created_at')
+  const { data, error } = await db().from('band_members').select('profile_id, role, instrument, guest_until, profiles(display_name, instruments, avatar_path)').eq('band_id', bandId).order('created_at')
   if (error) throw error
-  return (data as unknown as { profile_id: string; role: string; instrument: string | null; profiles: { display_name: string; instruments: string[]; avatar_path: string | null } | null }[]).map((m) => ({
-    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument, instruments: m.profiles?.instruments ?? [], avatarUrl: avatarUrl(m.profiles?.avatar_path),
+  return (data as unknown as { profile_id: string; role: string; instrument: string | null; guest_until: string | null; profiles: { display_name: string; instruments: string[]; avatar_path: string | null } | null }[]).map((m) => ({
+    profileId: m.profile_id, name: m.profiles?.display_name || 'Integrante', role: m.role, instrument: m.instrument, instruments: m.profiles?.instruments ?? [], avatarUrl: avatarUrl(m.profiles?.avatar_path), guestUntil: m.guest_until ?? undefined,
   }))
 }
 

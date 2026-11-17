@@ -614,6 +614,24 @@ await ok('limpieza de búsquedas', async () => {
   await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
 })
 
+async function rejects_inline(fn, msg) { let failed = false; try { await fn() } catch { failed = true } if (!failed) throw new Error(msg) }
+console.log('Invitados por días')
+await ok('un invitado con plazo entra, lee, escribe su anotación y al vencer deja de ser de la banda', async () => {
+  const [inv] = await as('leader', `insert into public.band_invites (band_id, role, guest_days) values ($1,'guest',3) returning code`, [band])
+  await as('replier', `select public.join_band($1)`, [inv.code])
+  const [m] = (await pg.query(`select guest_until, role from public.band_members where band_id=$1 and profile_id=$2`, [band, U.replier])).rows
+  eq(m.role, 'guest', 'rol'); eq(m.guest_until != null, true, 'sin plazo')
+  const [sg] = await as('leader', `insert into public.songs (band_id, title) values ($1,'Del toque') returning id`, [band])
+  eq((await as('replier', `select id from public.songs where id=$1`, [sg.id])).length, 1, 'el invitado no lee')
+  await as('replier', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Bajo en el coro')`, [sg.id, band, U.replier])
+  await rejects_inline(() => as('replier', `insert into public.songs (band_id, title) values ($1,'Intruso')`, [band]), 'el invitado no edita canciones')
+  await pg.query(`update public.band_members set guest_until = current_date - 1 where band_id=$1 and profile_id=$2`, [band, U.replier])
+  eq((await as('replier', `select id from public.songs where id=$1`, [sg.id])).length, 0, 'vencido sigue leyendo')
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.replier])
+  await pg.query(`delete from public.songs where id=$1`, [sg.id]); await pg.query(`delete from public.band_invites where band_id=$1`, [band])
+})
+await rejects('el plazo de invitado solo aplica a invitaciones de invitado', () => as('leader', `insert into public.band_invites (band_id, role, guest_days) values ($1,'member',3)`, [band]), /check|guest_days/)
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)
