@@ -859,3 +859,9 @@ input, select, textarea { border-radius: var(--r-m); }
 @media (min-width: 1240px) { .shell:has(> .dock.collapsed) { grid-template-columns: 232px minmax(0, 1fr) 72px; } }
 
 .label-who { color: var(--amber); font-weight: 500; }
+
+.gear-list { display: grid; gap: 8px; margin: 10px 0; }
+.gear-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 150px) auto; gap: 8px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--sunk); }
+.gear-row.done .gear-check span { text-decoration: line-through; color: var(--muted); }
+.gear-row select { min-height: 40px; }
+@media (max-width: 520px) { .gear-row { grid-template-columns: minmax(0, 1fr) auto; } .gear-row select { grid-column: 1 / -1; order: 3; } }

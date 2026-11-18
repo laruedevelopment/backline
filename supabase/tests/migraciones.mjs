@@ -632,6 +632,28 @@ await ok('un invitado con plazo entra, lee, escribe su anotación y al vencer de
 })
 await rejects('el plazo de invitado solo aplica a invitaciones de invitado', () => as('leader', `insert into public.band_invites (band_id, role, guest_days) values ($1,'member',3)`, [band]), /check|guest_days/)
 
+console.log('Equipo por toque')
+await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+let gearEv
+await ok('un integrante arma la lista de equipo y la banda la lee; un ajeno no', async () => {
+  const [ev] = await as('leader', `insert into public.events (band_id, kind, title, starts_at, created_by) values ($1,'gig','Toque equipo', now() + interval '3 days', $2) returning id`, [band, U.leader]); gearEv = ev.id
+  await as('member', `insert into public.event_gear (event_id, band_id, item, assigned_to) values ($1,$2,'Ampli de bajo',$3)`, [gearEv, band, U.member])
+  eq((await as('leader', `select id from public.event_gear where event_id=$1`, [gearEv])).length, 1, 'el líder no la ve')
+  eq((await as('minor', `select id from public.event_gear`)).length, 0, 'un ajeno la ve')
+  const [g] = await as('leader', `select id from public.event_gear where event_id=$1`, [gearEv])
+  eq((await as('member', `update public.event_gear set done = true where id=$1 returning id`, [g.id])).length, 1, 'no pudo marcarlo')
+})
+await rejects('no se asigna equipo a quien no es de la banda', () => as('leader', `insert into public.event_gear (event_id, band_id, item, assigned_to) values ($1,$2,'Cable',$3)`, [gearEv, band, U.minor]), /row-level|violates/)
+await rejects('un ajeno no agrega equipo', () => as('minor', `insert into public.event_gear (event_id, band_id, item) values ($1,$2,'Intruso')`, [gearEv, band]), /row-level|violates/)
+await rejects('máximo 60 elementos por evento', async () => {
+  for (let k = 0; k < 62; k++) await as('leader', `insert into public.event_gear (event_id, band_id, item) values ($1,$2,$3)`, [gearEv, band, 'Cable ' + k])
+}, /60 elementos/)
+await ok('al borrar el evento se borra su lista de equipo', async () => {
+  await as('leader', `delete from public.events where id=$1`, [gearEv])
+  eq((await pg.query(`select 1 from public.event_gear where event_id=$1`, [gearEv])).rows.length, 0, 'quedó huérfana')
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

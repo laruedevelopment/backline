@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { listGear } from '../lib/gear'
+import { supabase } from '../lib/supabase'
+import EventGear from '../components/EventGear'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
@@ -38,6 +41,8 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
   const { data: members = [] } = useQuery({ queryKey: ['members', bandId], queryFn: () => listMembers(bandId) })
   const [editing, setEditing] = useState<BandEvent | 'new' | null>(null)
   const [showPast, setShowPast] = useState(false)
+  const [gearFor, setGearFor] = useState<BandEvent | null>(null)
+  const { data: gear = [] } = useQuery({ queryKey: ['gear', bandId], queryFn: () => listGear(bandId!), enabled: !!supabase && !!bandId })
 
   const upcoming = events.filter(isUpcoming)
   const past = events.filter((e) => !isUpcoming(e)).reverse()
@@ -96,6 +101,11 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
                   ))}
                 </div>
               )}
+              {supabase && !showPast && (
+                <button className="btn sm" style={{ marginTop: 8 }} onClick={() => setGearFor(e)}>
+                  Equipo{(() => { const g = gear.filter((x) => x.eventId === e.id); return g.length ? ` · ${g.filter((x) => x.done).length}/${g.length}` : '' })()}
+                </button>
+              )}
               {!showPast && pending.length > 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>Sin responder: {pending.join(', ')}</p>}
             </article>
           )
@@ -105,6 +115,7 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
       {canEdit && shown.length > 0 && !showPast && (
         <button className="btn primary fab" onClick={() => setEditing('new')}><Plus size={20} aria-hidden /> Nuevo evento</button>
       )}
+      {gearFor && bandId && <EventGear bandId={bandId} eventId={gearFor.id} title={gearFor.title} canEdit={canEdit} onClose={() => setGearFor(null)} />}
       {editing && (
         <EventForm
           event={editing === 'new' ? undefined : editing}
