@@ -56,6 +56,14 @@ Deno.serve(async (req) => {
   } else if (kind === 'direct') {
     const { data: m } = await admin.from('direct_messages').select('id, sender, recipient, body, created_at, notified_at').eq('id', id).maybeSingle()
     if (!m || m.sender !== caller || m.notified_at || !isFresh(m.created_at)) return json({ ok: true, sent: 0 })
+    // Solo se avisa entre amigos que no se hayan bloqueado (el mensaje pudo enviarse justo antes de un bloqueo).
+    const pair = `and(requester.eq.${caller},addressee.eq.${m.recipient}),and(requester.eq.${m.recipient},addressee.eq.${caller})`
+    const blockPair = `and(blocker.eq.${caller},blocked.eq.${m.recipient}),and(blocker.eq.${m.recipient},blocked.eq.${caller})`
+    const [{ data: friends }, { data: blocks }] = await Promise.all([
+      admin.from('friendships').select('id').eq('status', 'accepted').or(pair).limit(1),
+      admin.from('user_blocks').select('blocker').or(blockPair).limit(1),
+    ])
+    if (!friends?.length || blocks?.length) return json({ ok: true, sent: 0 })
     const { data: claimed } = await admin.from('direct_messages').update({ notified_at: new Date().toISOString() }).eq('id', id).is('notified_at', null).select('id')
     if (!claimed?.length) return json({ ok: true, sent: 0 })
     to = [m.recipient]
@@ -65,6 +73,9 @@ Deno.serve(async (req) => {
     if (!f || f.notified_status === f.status) return json({ ok: true, sent: 0 })
     const accepted = kind === 'friend_accepted'
     if (accepted ? (f.status !== 'accepted' || f.addressee !== caller || !isFresh(f.responded_at ?? f.created_at)) : (f.status !== 'pending' || f.requester !== caller || !isFresh(f.created_at))) return json({ ok: true, sent: 0 })
+    const blockPair = `and(blocker.eq.${f.requester},blocked.eq.${f.addressee}),and(blocker.eq.${f.addressee},blocked.eq.${f.requester})`
+    const { data: blocks } = await admin.from('user_blocks').select('blocker').or(blockPair).limit(1)
+    if (blocks?.length) return json({ ok: true, sent: 0 })
     const { data: claimed } = await admin.from('friendships').update({ notified_status: f.status }).eq('id', id).or(`notified_status.is.null,notified_status.neq.${f.status}`).select('id')
     if (!claimed?.length) return json({ ok: true, sent: 0 })
     to = [accepted ? f.requester : f.addressee]

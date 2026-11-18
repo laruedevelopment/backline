@@ -209,14 +209,14 @@ await ok('desactivarla vuelve al modo con aprobación', async () => {
 
 console.log('\nNotificaciones push (suscripciones)')
 await ok('cada quien guarda su suscripción y solo ve las suyas', async () => {
-  await as('leader', `select public.save_push_subscription('https://push.example/abc','p256','auth','Chrome')`)
+  await as('leader', `select public.save_push_subscription('https://fcm.googleapis.com/fcm/send/abc','p256','auth','Chrome')`)
   eq((await as('leader', `select endpoint from public.push_subscriptions`)).length, 1, 'propias')
   eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 0, 'ajenas')
 })
 await rejects('no se pueden insertar suscripciones directo (ni a nombre de otro)', () => as('owner', `insert into public.push_subscriptions (user_id, endpoint, p256dh, auth) values ($1,'https://x.example/1','a','b')`, [U.leader]), /permission denied/)
-await rejects('el endpoint debe ser https', () => as('leader', `select public.save_push_subscription('http://push.example/x','p','a')`), /check/)
+await rejects('el endpoint debe ser https', () => as('leader', `select public.save_push_subscription('http://fcm.googleapis.com/fcm/send/x','p','a')`), /no permitido|check/)
 await ok('si el dispositivo cambia de cuenta, la suscripción pasa a la cuenta actual', async () => {
-  await as('owner', `select public.save_push_subscription('https://push.example/abc','p256b','authb','Chrome')`)
+  await as('owner', `select public.save_push_subscription('https://fcm.googleapis.com/fcm/send/abc','p256b','authb','Chrome')`)
   eq((await as('leader', `select endpoint from public.push_subscriptions`)).length, 0, 'sigue en la anterior')
   eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 1, 'no pasó a la nueva')
 })
@@ -226,7 +226,7 @@ await ok('cada quien puede borrar la suya, no la ajena', async () => {
   await as('owner', `delete from public.push_subscriptions`)
   eq((await as('owner', `select endpoint from public.push_subscriptions`)).length, 0, 'no borró la propia')
 })
-await rejects('máximo 10 dispositivos por persona', async () => { for (let i = 0; i < 11; i++) await as('member', `select public.save_push_subscription($1,'p','a')`, [`https://push.example/m${i}`]) }, /demasiados/)
+await rejects('máximo 10 dispositivos por persona', async () => { for (let i = 0; i < 11; i++) await as('member', `select public.save_push_subscription($1,'p','a')`, [`https://fcm.googleapis.com/fcm/send/m${i}`]) }, /demasiados/)
 
 
 console.log('\nCalendario de Google (horas ocupadas leídas)')
@@ -697,6 +697,64 @@ await ok('el dueño guarda el horario de su sala de una vez y otro no puede', as
   await rejects_inline(() => as('leader', `select public.save_venue_hours($1, '[]'::jsonb)`, [venue]), 'otro cambió el horario')
   await rejects_inline(() => as('owner', `select public.save_venue_hours($1, $2::jsonb)`, [venue, JSON.stringify([{ weekday: 1, opens: '22:00', closes: '09:00' }])]), 'aceptó horas inválidas')
   eq((await pg.query(`select count(*)::int as n from public.venue_hours where venue_id=$1`, [venue])).rows[0].n, 2, 'el horario cambió aunque falló')
+})
+
+console.log('Denuncias y términos')
+await ok('se denuncia contenido una sola vez; cada quien solo ve las suyas', async () => {
+  const target = crypto.randomUUID()
+  await as('leader', `insert into public.content_reports (kind, target_id, reason, details, excerpt) values ('message',$1,'acoso','me escribe seguido','texto del mensaje')`, [target])
+  await rejects_inline(() => as('leader', `insert into public.content_reports (kind, target_id, reason) values ('message',$1,'spam')`, [target]), 'permitió denunciar dos veces lo mismo')
+  eq((await as('leader', `select id from public.content_reports`)).length >= 1, true, 'no ve la suya')
+  eq((await as('owner', `select id from public.content_reports`)).length, 0, 've denuncias ajenas')
+  await rejects_inline(() => as('leader', `update public.content_reports set status='revisada' where target_id=$1`, [target]), 'cambió el estado de su denuncia')
+  await pg.query(`delete from public.content_reports`)
+})
+await ok('se acepta una nueva versión de los términos', async () => {
+  await as('leader', `select public.accept_terms('0.7')`)
+  eq((await as('leader', `select public.my_terms_version() as v`))[0].v, '0.7', 'versión')
+  await rejects_inline(() => as('leader', `select public.accept_terms('')`), 'aceptó versión vacía')
+})
+
+console.log('Endurecimiento')
+await rejects('el endpoint de avisos debe ser de un servicio conocido', () => as('leader', `select public.save_push_subscription('https://servidor-raro.example/x','p','a')`), /no permitido/)
+await ok('nadie lee ni escribe share_token directo; el líder sí lo maneja con sus funciones', async () => {
+  await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+  const [sl] = await as('leader', `insert into public.setlists (band_id, name, song_ids) values ($1,'Token',$2::uuid[]) returning id`, [band, '{}'])
+  await rejects_inline(() => as('member', `select share_token from public.setlists where id=$1`, [sl.id]), 'un integrante leyó share_token')
+  await rejects_inline(() => as('member', `update public.setlists set share_token='aaaaaaaaaaaaaaaaaaaaaaaaaaaa' where id=$1`, [sl.id]), 'un integrante escribió share_token')
+  await rejects_inline(() => as('leader', `select share_token from public.setlists where id=$1`, [sl.id]), 'el líder leyó share_token directo')
+  eq(typeof (await as('leader', `select public.set_setlist_share($1, true) as t`, [sl.id]))[0].t, 'string', 'el líder no pudo compartir')
+  eq((await as('member', `select name from public.setlists where id=$1`, [sl.id])).length, 1, 'el integrante ya no lee el setlist')
+  await pg.query(`delete from public.setlists where id=$1`, [sl.id])
+})
+await ok('las funciones auxiliares no sirven de oráculo sobre terceros', async () => {
+  eq((await as('member', `select public.is_blocked_between($1,$2) as r`, [U.owner, U.leader]))[0].r, false, 'is_blocked_between')
+  eq((await as('member', `select public.are_friends($1,$2) as r`, [U.owner, U.leader]))[0].r, false, 'are_friends')
+  eq((await as('member', `select public.can_befriend($1,$2) as r`, [U.owner, U.leader]))[0].r, false, 'can_befriend')
+})
+await ok('el cliente no elige la fecha ni lo leído de lo que escribe', async () => {
+  await as('leader', `insert into public.band_messages (band_id, profile_id, body, created_at, notified_at) values ($1,$2,'Con fecha falsa', now() - interval '3 years', now())`, [band, U.leader])
+  const [r] = await as('leader', `select created_at > now() - interval '1 minute' as reciente, notified_at is null as sin_aviso from public.band_messages where body='Con fecha falsa'`)
+  eq(r.reciente, true, 'created_at'); eq(r.sin_aviso, true, 'notified_at')
+  await pg.query(`delete from public.band_messages where band_id=$1`, [band])
+})
+await ok('un invitado vencido que vuelve con un código nuevo recupera el acceso', async () => {
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.replier])
+  await pg.query(`insert into public.band_members (band_id, profile_id, role, guest_until) values ($1,$2,'guest', current_date - 2)`, [band, U.replier])
+  const [inv] = await as('leader', `insert into public.band_invites (band_id, role, guest_days) values ($1,'guest',5) returning code`, [band])
+  await as('replier', `select public.join_band($1)`, [inv.code])
+  const [m] = (await pg.query(`select guest_until >= current_date as vigente from public.band_members where band_id=$1 and profile_id=$2`, [band, U.replier])).rows
+  eq(m.vigente, true, 'sigue vencido')
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id in ($2,$3)`, [band, U.replier, U.member]); await pg.query(`delete from public.band_invites where band_id=$1`, [band])
+})
+await ok('el link público aguanta etiquetas con id raro y etiquetas que no son lista', async () => {
+  const [sg] = await as('leader', `insert into public.songs (band_id, title) values ($1,'Rara') returning id`, [band])
+  const items = JSON.stringify([{ t: 'l', id: 'no-es-uuid', text: 'Pausa' }, { t: 's', id: sg.id, tags: 'no-es-lista' }])
+  const [sl] = await as('leader', `insert into public.setlists (band_id, name, song_ids, items) values ($1,'Rara',$2::uuid[],$3::jsonb) returning id`, [band, `{${sg.id}}`, items])
+  const [{ t }] = await as('leader', `select public.set_setlist_share($1, true) as t`, [sl.id])
+  const d = (await pg.query(`select public.shared_setlist($1) as d`, [t])).rows[0].d
+  eq(d.rows.length, 2, 'filas'); eq(d.rows[1].tags, [], 'tags')
+  await pg.query(`delete from public.setlists where id=$1`, [sl.id]); await pg.query(`delete from public.songs where id=$1`, [sg.id])
 })
 
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { instruments, lessons, levelName, type InstrumentId } from '../lib/learn'
 import { useProgress } from '../store/useProgress'
+import MusicNav from '../components/MusicNav'
 
 export default function LearnPage() {
   const [inst, setInst] = useState<InstrumentId>('guitarra')
@@ -10,6 +11,7 @@ export default function LearnPage() {
   const finished = list.filter((l) => done.includes(l.id)).length
   return (
     <>
+      <MusicNav />
       <div className="page-head">
         <span className="eyebrow">Práctica</span>
         <h1 className="page-title">Aprender</h1>

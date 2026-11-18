@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { BrowserRouter, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { CalendarClock, CalendarDays, Compass, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
+import { CalendarClock, CalendarDays, Compass, DoorOpen, Home, Music2, Store, Users } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { persistOptions, queryClient } from './lib/queryClient'
@@ -14,6 +14,7 @@ import ListSkeleton from './components/Skeleton'
 import ErrorBoundary from './components/ErrorBoundary'
 import { reloadForNewVersion } from './lib/reload'
 import ChatDock from './components/ChatDock'
+import TermsGate from './components/TermsGate'
 import { useWide } from './lib/useWide'
 import { useChatUnread, useLiveBookings, useLiveChat, useLiveSocial, usePendingRequests, useSocialBadge } from './lib/useLive'
 import { ConfirmHost } from './components/Confirm'
@@ -76,9 +77,8 @@ function Measure({ children }: { children: React.ReactNode }) { return <div clas
 
 const tabs = [
   { to: '/', label: 'Inicio', icon: Home, match: (p: string) => p === '/' },
-  { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') },
+  { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') || p.startsWith('/aprender') },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/ensayaderos') },
-  { to: '/aprender', label: 'Aprender', icon: GraduationCap, match: (p: string) => p.startsWith('/aprender') },
   { to: '/explorar', label: 'Comunidad', icon: Compass, match: (p: string) => p.startsWith('/explorar') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
@@ -161,6 +161,7 @@ function AuthGate() {
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       {supabase ? <WithBand /> : <Shell />}
+      <TermsGate />
       <ConfirmHost />
     </PersistQueryClientProvider>
   )
@@ -206,7 +207,10 @@ function Nav() {
 }
 
 function Shell() {
-  useLiveBookings()
+  // Las reservas en vivo solo importan a quien tiene una sala o está mirando reservas: así no se abre un canal de más para todos.
+  const { venue: myVenue } = usePendingRequests()
+  const { pathname: here } = useLocation()
+  useLiveBookings(!!myVenue || here.startsWith('/agenda') || here.startsWith('/ensayaderos') || here.startsWith('/mi-negocio'))
   const activeBand = useActiveBand()
   useLiveChat(activeBand?.id)
   useLiveSocial()

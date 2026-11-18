@@ -71,3 +71,10 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
    `npx supabase functions deploy notify-social --project-ref xmhwgdqcjvpsfezxnjuz --use-api`.
    Usa las mismas llaves VAPID que `notify-booking` (ya configuradas).
 3. En la app, cada persona activa los avisos en su perfil (Avisos en este dispositivo).
+
+## Denuncias, términos 0.7 y endurecimiento (2026-11)
+1. SQL: en el editor SQL del proyecto **backline** corre `supabase/migrations/20261020000035_denuncias_y_terminos.sql` y luego `20261020000036_endurecimiento.sql` (o `supabase/pendiente.sql`, que las trae juntas).
+2. Vuelve a publicar la función (cambió: revalida amistad y bloqueo): `npx supabase functions deploy notify-social --project-ref xmhwgdqcjvpsfezxnjuz --use-api`.
+3. Las denuncias llegan a la tabla `content_reports` (Supabase → Table Editor). Revísalas con frecuencia y cambia su `status` a `revisada` o `descartada`.
+4. Revisión legal: los textos son borradores. Llevar a un abogado la política y los términos 0.7 (mensajes entre menores y adultos en una banda, retención, procedimiento de derechos de autor, registro de bases de datos, identificación del responsable con documento y dirección).
+5. Antes de abrir a más bandas: Sentry, vigilancia del sitio (UptimeRobot), respaldos semanales y una prueba de carga (ver `docs/AUDITORIA-2026-11.md`).

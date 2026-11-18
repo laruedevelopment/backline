@@ -889,3 +889,12 @@ input, select, textarea { border-radius: var(--r-m); }
   body:has(.dock) .fab { right: 368px; }
   body:has(.dock-bubble) .fab { right: 104px; }
 }
+
+/* Cinco pestañas: caben con letra más grande */
+@media (max-width: 400px) { .nav a { font-size: 0.75rem; } }
+@media (max-width: 340px) { .nav a { font-size: 0.7rem; } }
+
+.terms-gate { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(0, 0, 0, 0.82); }
+.terms-card { width: min(520px, 100%); display: grid; gap: 14px; padding: 24px; border-radius: var(--r-l); background: var(--raise); border: 1px solid var(--line-2); box-shadow: var(--shadow); }
+.terms-card h2 { font-size: 1.5rem; text-transform: uppercase; line-height: 1.1; }
+.terms-card a { color: var(--amber); font-weight: 600; text-decoration: underline; }

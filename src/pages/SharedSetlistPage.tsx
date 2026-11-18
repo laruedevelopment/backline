@@ -32,7 +32,7 @@ export default function SharedSetlistPage() {
                   <b style={{ color: 'var(--amber)', width: 28 }}>{++n}</b>
                   <div className="li-main">
                     <div className="li-title">{r.title}</div>
-                    <div className="li-sub">{[r.artist, r.key && `Tono ${r.key}`, `${r.bpm} bpm`, `${r.minutes} min`, r.tags.length ? r.tags.join(', ') : ''].filter(Boolean).join(' · ')}</div>
+                    <div className="li-sub">{[r.artist, r.key && `Tono ${r.key}`, `${r.bpm} bpm`, `${r.minutes} min`, Array.isArray(r.tags) && r.tags.length ? r.tags.map(String).join(', ') : ''].filter(Boolean).join(' · ')}</div>
                   </div>
                 </div>
               ))}

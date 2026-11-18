@@ -26,12 +26,14 @@ type Props = {
   emptyText: string
   /** Respuestas de un toque (por ejemplo «Voy»): envían el texto y, si hay, hacen algo más. */
   quick?: { label: string; text: string; also?: () => void }[]
+  /** Si se pasa, los mensajes de otras personas muestran «Denunciar». */
+  onReport?: (p: Post) => void
   /** `chat`: la lista llena el alto y se queda abajo; `inline`: lista corta dentro de un formulario. */
   variant: 'chat' | 'inline'
 }
 
 /** Lista de mensajes con caja de escritura: la usan el chat de la banda y los comentarios de cada canción. */
-export default function Thread({ posts, members, userId, canDelete, onDelete, onSend, placeholder, max, emptyText, variant, quick }: Props) {
+export default function Thread({ posts, members, userId, canDelete, onDelete, onSend, placeholder, max, emptyText, variant, quick, onReport }: Props) {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -74,6 +76,7 @@ export default function Thread({ posts, members, userId, canDelete, onDelete, on
                 <div className="msg-body">
                   <div className="msg-meta">
                     <b>{mine ? 'Tú' : m?.name ?? 'Integrante'}</b> · {hour(p.createdAt)}
+                    {!mine && onReport && <button type="button" className="msg-del" onClick={() => onReport(p)} aria-label="Denunciar mensaje">Denunciar</button>}
                     {canDelete(p) && <button type="button" className="msg-del" onClick={() => onDelete(p)} aria-label="Borrar mensaje">Borrar</button>}
                   </div>
                   <p>{p.body}</p>

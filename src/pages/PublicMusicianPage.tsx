@@ -8,6 +8,7 @@ import ListSkeleton from '../components/Skeleton'
 import { getPublicMusician, musicianBands } from '../lib/community'
 import { waLink } from '../lib/identity'
 import { useAuth } from '../store/useAuth'
+import { ReportSheet } from '../components/ReportSheet'
 import { acceptFriend, requestFriend } from '../lib/social'
 import { useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
@@ -20,6 +21,7 @@ export default function PublicMusicianPage() {
   const qc = useQueryClient()
   const { data: friends = [] } = useFriends()
   const [friendError, setFriendError] = useState('')
+  const [reporting, setReporting] = useState(false)
   const rel = friends.find((f) => f.id === id)
   const ask = useMutation({
     mutationFn: () => (rel?.direction === 'in' ? acceptFriend(rel.friendshipId) : requestFriend(me!, id!)),
@@ -62,8 +64,10 @@ export default function PublicMusicianPage() {
         {wa && m.id !== me && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Escribirle por WhatsApp</a>}
         <button className="btn" onClick={() => void share()}>{copied ? 'Enlace copiado' : 'Copiar enlace'}</button>
         {m.id === me && <Link className="btn" to="/perfil">Editar mi perfil</Link>}
+        {m.id !== me && me && <button className="btn ghost" onClick={() => setReporting(true)}>Denunciar</button>}
       </div>
 
+      {reporting && <ReportSheet target={{ kind: 'profile', id: m.id, label: `a ${m.name}` }} onClose={() => setReporting(false)} />}
       {friendError && <p className="form-error" role="alert">{friendError}</p>}
       <div className="section-title">Sus bandas{bands.length ? ` · ${bands.length}` : ''}</div>
       {bands.length === 0 && <p className="li-sub wrap">No tiene bandas públicas.</p>}

@@ -7,6 +7,7 @@ export default function MusicNav({ children }: { children?: React.ReactNode }) {
       <div className="seg" role="navigation" aria-label="Música">
         <NavLink to="/repertorio" className={({ isActive }) => (isActive ? 'active' : '')}>Canciones</NavLink>
         <NavLink to="/setlists" className={({ isActive }) => (isActive ? 'active' : '')}>Setlists</NavLink>
+        <NavLink to="/aprender" className={({ isActive }) => (isActive ? 'active' : '')}>Aprender</NavLink>
       </div>
       {children && <div className="music-actions">{children}</div>}
     </div>

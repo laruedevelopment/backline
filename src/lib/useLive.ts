@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { myVenues, venueBookings } from './venues'
-import { unreadMessages } from './api'
+import { unreadMessages, type Post } from './api'
 import { listFriends } from './social'
 import { useAuth } from '../store/useAuth'
 
@@ -10,10 +10,10 @@ import { useAuth } from '../store/useAuth'
  * Actualiza la app al instante cuando cambia una reserva (llega una solicitud, el dueño responde, se ocupa una franja).
  * Supabase Realtime solo entrega las filas que esa persona tiene permiso de leer.
  */
-export function useLiveBookings() {
+export function useLiveBookings(enabled = true) {
   const qc = useQueryClient()
   useEffect(() => {
-    if (!supabase) return
+    if (!supabase || !enabled) return
     const channel = supabase
       .channel('bookings-live')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
@@ -21,7 +21,7 @@ export function useLiveBookings() {
       })
       .subscribe()
     return () => { void supabase!.removeChannel(channel) }
-  }, [qc])
+  }, [qc, enabled])
 }
 
 /** Solicitudes de reserva por responder en el negocio del usuario (0 si no tiene uno). */
@@ -36,19 +36,29 @@ export function usePendingRequests() {
 }
 
 
-/** Chat y comentarios de la banda activa al instante (una sola suscripción mientras la app está abierta). */
+/** Chat y comentarios de la banda activa al instante: el mensaje nuevo se agrega a la caché (sin volver a bajar toda la conversación). */
 export function useLiveChat(bandId: string | undefined) {
   const qc = useQueryClient()
+  const userId = useAuth((s) => s.session?.user.id)
   useEffect(() => {
     if (!supabase || !bandId) return
-    const refresh = (keys: string[]) => () => { for (const key of keys) void qc.invalidateQueries({ queryKey: [key] }) }
+    type Row = { id: string; profile_id: string; body: string; created_at: string; song_id?: string }
+    const toPost = (r: Row): Post => ({ id: r.id, profileId: r.profile_id, body: r.body, createdAt: r.created_at })
+    const add = (key: unknown[], r: Row) => qc.setQueryData<Post[]>(key, (old) => (old && !old.some((p) => p.id === r.id) ? [...old, toPost(r)].slice(-100) : old))
+    const drop = (key: unknown[], id: string) => qc.setQueryData<Post[]>(key, (old) => old?.filter((p) => p.id !== id))
     const channel = supabase
       .channel(`chat-${bandId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'band_messages', filter: `band_id=eq.${bandId}` }, refresh(['band-messages', 'chat-unread']))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'song_comments', filter: `band_id=eq.${bandId}` }, refresh(['song-comments']))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'band_messages', filter: `band_id=eq.${bandId}` }, (e) => {
+        const r = e.new as Row
+        add(['band-messages', bandId], r)
+        if (r.profile_id !== userId) qc.setQueryData<number>(['chat-unread', bandId, userId], (n) => (n ?? 0) + 1)
+      })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'band_messages', filter: `band_id=eq.${bandId}` }, (e) => drop(['band-messages', bandId], (e.old as { id: string }).id))
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'song_comments', filter: `band_id=eq.${bandId}` }, (e) => { const r = e.new as Row; if (r.song_id) add(['song-comments', r.song_id], r) })
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'song_comments', filter: `band_id=eq.${bandId}` }, () => { void qc.invalidateQueries({ queryKey: ['song-comments'] }) })
       .subscribe()
     return () => { void supabase!.removeChannel(channel) }
-  }, [qc, bandId])
+  }, [qc, bandId, userId])
 }
 
 /** Mensajes sin leer del chat de la banda activa (para el contador de la navegación). */
