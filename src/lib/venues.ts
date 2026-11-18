@@ -457,3 +457,45 @@ export async function setLocation(venueId: string, lat: number | null, lng: numb
   const { error } = await db().from('venues').update({ lat, lng }).eq('id', venueId)
   if (error) throw error
 }
+
+// ───────── Bloqueos del dueño (cierres, mejoras, eventos privados) ─────────
+export type RoomBlock = { id: string; roomId: string | null; startsAt: string; endsAt: string; reason: string }
+
+export async function listBlocks(venueId: string): Promise<RoomBlock[]> {
+  const { data, error } = await db().from('room_blocks').select('id, room_id, starts_at, ends_at, reason').eq('venue_id', venueId).gt('ends_at', new Date().toISOString()).order('starts_at')
+  if (error) throw error
+  return (data as { id: string; room_id: string | null; starts_at: string; ends_at: string; reason: string | null }[]).map((r) => ({ id: r.id, roomId: r.room_id, startsAt: r.starts_at, endsAt: r.ends_at, reason: r.reason ?? '' }))
+}
+
+/** Bloquea un rango. Si ya hay reservas lanza `BlockConflict` con la cantidad; con `cancel` las cancela y devuelve sus ids. */
+export class BlockConflict extends Error {
+  count: number
+  constructor(count: number) { super('conflicto'); this.count = count }
+}
+export async function addBlock(v: { venueId: string; roomId: string | null; start: Date; end: Date; reason: string; cancel?: boolean }): Promise<string[]> {
+  const { data, error } = await db().rpc('add_room_block', { p_venue: v.venueId, p_room: v.roomId, p_start: v.start.toISOString(), p_end: v.end.toISOString(), p_reason: v.reason || null, p_cancel: !!v.cancel })
+  if (error) {
+    const m = /conflicto:(\d+)/.exec(error.message)
+    if (m) throw new BlockConflict(Number(m[1]))
+    throw error
+  }
+  const ids = (data as string[] | null) ?? []
+  ids.forEach((id) => void notifyBooking(id))
+  return ids
+}
+
+export async function removeBlock(id: string) {
+  const { error } = await db().from('room_blocks').delete().eq('id', id)
+  if (error) throw error
+}
+
+export type ExternalBusy = { startsAt: string; endsAt: string; ignored: boolean }
+export async function listExternalBusy(roomId: string): Promise<ExternalBusy[]> {
+  const { data, error } = await db().rpc('list_external_busy', { p_room: roomId })
+  if (error) throw error
+  return (data as { starts_at: string; ends_at: string; ignored: boolean }[]).map((r) => ({ startsAt: r.starts_at, endsAt: r.ends_at, ignored: r.ignored }))
+}
+export async function setExternalIgnored(roomId: string, e: ExternalBusy, ignored: boolean) {
+  const { error } = await db().rpc('set_external_ignored', { p_room: roomId, p_start: e.startsAt, p_end: e.endsAt, p_ignored: ignored })
+  if (error) throw error
+}

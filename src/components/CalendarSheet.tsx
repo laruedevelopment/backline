@@ -1,6 +1,8 @@
 import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { cleanIcalUrl } from '../lib/calendar'
-import { removeCalendarSource, saveCalendarSource, syncCalendars, type CalendarSource, type Room } from '../lib/venues'
+import { formatDay, formatTime } from '../lib/slots'
+import { listExternalBusy, removeCalendarSource, saveCalendarSource, setExternalIgnored, type ExternalBusy, syncCalendars, type CalendarSource, type Room } from '../lib/venues'
 import { ask } from '../lib/confirm'
 import Sheet from './Sheet'
 
@@ -12,6 +14,11 @@ export default function CalendarSheet({ venueId, room, otherRooms, source, onCha
   const [all, setAll] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const qc = useQueryClient()
+  const { data: events = [] } = useQuery({ queryKey: ['external-busy', room.id], queryFn: () => listExternalBusy(room.id), enabled: !!source })
+  async function toggle(ev: ExternalBusy) {
+    try { await setExternalIgnored(room.id, ev, !ev.ignored); await Promise.all([qc.invalidateQueries({ queryKey: ['external-busy', room.id] }), qc.invalidateQueries({ queryKey: ['busy'] })]) } catch { setError('No pudimos cambiarlo. Intenta de nuevo.') }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,6 +62,23 @@ export default function CalendarSheet({ venueId, room, otherRooms, source, onCha
           <input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} />
           <span>Usar este mismo calendario en las demás salas (si llevas todas en un solo calendario).</span>
         </label>
+      )}
+      <p className="notice">Usa un calendario creado solo para esta sala. Todo lo que esté en el calendario que conectes bloquea esas horas, incluso lo personal (un partido, una cita). Si un evento no tiene que ver con la sala, márcalo como «Disponible» en Google o ignóralo abajo.</p>
+      {source && events.length > 0 && (
+        <div>
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Lo que bloquea tu calendario (próximos)</div>
+          <div className="list">
+            {events.map((ev) => (
+              <div key={ev.startsAt + ev.endsAt} className="li" style={{ opacity: ev.ignored ? 0.55 : 1 }}>
+                <div className="li-main">
+                  <div className="li-title">{formatDay(new Date(ev.startsAt))}</div>
+                  <div className="li-sub">{formatTime(new Date(ev.startsAt))} a {formatTime(new Date(ev.endsAt))}{ev.ignored ? ' · ignorado' : ''}</div>
+                </div>
+                <button type="button" className="btn sm" onClick={() => void toggle(ev)}>{ev.ignored ? 'Volver a bloquear' : 'Ignorar'}</button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
       <p className="notice">Backline guarda solo las horas ocupadas: no ve ni guarda los títulos ni los detalles de tus eventos. No compartas esa dirección con nadie; si se filtra, puedes restablecerla en Google.</p>
       <div className="sheet-foot">

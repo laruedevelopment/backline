@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import PageHead from '../../components/PageHead'
+import BlocksSection from '../../components/BlocksSection'
 import CalendarSheet from '../../components/CalendarSheet'
 import EquipmentSheet from '../../components/EquipmentSheet'
 import { HelpRow } from '../../components/InfoTip'
@@ -73,7 +74,7 @@ export default function BusinessRooms() {
       </div>
 
       <div className="section-title">Calendario de Google</div>
-      <p className="li-sub wrap">Conecta el Google Calendar de cada sala y lo que ya anotas allí bloquea esas horas solo. Es opcional.</p>
+      <p className="li-sub wrap">Conecta un Google Calendar solo para cada sala (no tu calendario personal): lo que anotas allí bloquea esas horas solo. Es opcional.</p>
       <div className="list" style={{ marginTop: 10 }}>
         {rooms.map((r) => {
           const src = sources.find((x) => x.roomId === r.id)
@@ -99,6 +100,8 @@ export default function BusinessRooms() {
           {syncing ? 'Leyendo…' : 'Sincronizar ahora'}
         </button>
       )}
+
+      <BlocksSection venueId={venue.id} rooms={rooms} />
 
       <div className="section-title">Horario de atención</div>
       <HoursEditor venueId={venue.id} initial={hours} />

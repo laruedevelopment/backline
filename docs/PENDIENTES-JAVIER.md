@@ -84,3 +84,4 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
 - Desplegar de nuevo `notify-social` (y `notify-booking` si quieres avisos de comprobante).
 - El workflow `vencer-reservas.yml` usa las mismas variables del repo que `salud-supabase.yml`; sin costo.
 - Backline no recibe dinero: el pago va directo a la cuenta del dueño. Aun así, Lucía debe revisar los términos antes de abrir reservas con cobro.
+- Bloqueos de horario y «Ignorar» eventos del calendario (migración 0041): también va en `supabase/pendiente.sql` (ahora 0037 a 0041).

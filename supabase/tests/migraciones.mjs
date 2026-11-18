@@ -926,6 +926,43 @@ await ok('sin cobro configurado la reserva no pide pago', async () => {
   eq((await pg.query(`select pay_status from public.bookings where id=$1`, [r.id])).rows[0].pay_status, 'not_required', 'estado')
 })
 
+// ───────── Bloqueos de horario del dueño (0041) ─────────
+let blk, bk1
+await ok('el dueño bloquea una sala varios días y nadie puede reservarla', async () => {
+  await as('owner', `select public.add_room_block($1,$2,$3,$4,'Mejoras')`, [venue, room, t(40, '00:00'), t(43, '23:00')])
+  eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(41, '00:00'), t(41, '23:00')]))[0].n, 1, 'no aparece ocupada')
+})
+await rejects('no se puede pedir una franja bloqueada', () => as('leader', `select public.request_booking($1,$2,$3)`, [room, t(41, '15:00'), t(41, '16:00')]), /ocupada/)
+await ok('fuera del bloqueo se reserva normal', async () => { await as('leader', `select public.request_booking($1,$2,$3)`, [room, t(44, '15:00'), t(44, '16:00')]) })
+await rejects('un tercero no puede bloquear horarios', () => as('member', `select public.add_room_block($1,null,$2,$3)`, [venue, t(50, '00:00'), t(51, '00:00')]), /solo el dueño/)
+await rejects('la hora final debe ser posterior', () => as('owner', `select public.add_room_block($1,null,$2,$3)`, [venue, t(51, '00:00'), t(50, '00:00')]), /posterior/)
+await ok('con reservas en el rango avisa y no bloquea hasta confirmar', async () => {
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3) as id`, [room, t(46, '15:00'), t(46, '16:00')]); bk1 = r.id
+  await rejects_inline(() => as('owner', `select public.add_room_block($1,null,$2,$3,'Cerrado')`, [venue, t(46, '00:00'), t(46, '23:00')]), 'conflicto:1')
+  eq((await pg.query(`select count(*)::int as n from public.room_blocks where venue_id=$1 and starts_at >= $2`, [venue, t(46, '00:00')])).rows[0].n, 0, 'bloqueó igual')
+  const ids = (await as('owner', `select public.add_room_block($1,null,$2,$3,'Cerrado',true) as ids`, [venue, t(46, '00:00'), t(46, '23:00')]))[0].ids
+  eq(ids.length, 1, 'canceladas')
+  eq((await pg.query(`select status from public.bookings where id=$1`, [bk1])).rows[0].status, 'cancelled', 'no se canceló')
+})
+await ok('cerrar todo el negocio bloquea todas las salas', async () => {
+  eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(46, '00:00'), t(46, '23:00')]))[0].n, 1, 'sala')
+})
+await ok('el dueño ve y borra sus bloqueos; otros no los ven', async () => {
+  const mine = await as('owner', `select id from public.room_blocks where venue_id=$1`, [venue]); blk = mine[0].id
+  eq((await as('leader', `select id from public.room_blocks`)).length, 0, 'ajeno ve')
+  await as('owner', `delete from public.room_blocks where id=$1`, [blk])
+})
+await ok('el dueño ignora un evento del calendario y la franja se libera', async () => {
+  await pg.query(`delete from public.room_external_busy where room_id=$1`, [room])
+  await pg.query(`insert into public.room_external_busy (room_id, starts_at, ends_at) values ($1,$2,$3)`, [room, t(55, '19:00'), t(55, '21:00')])
+  eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(55, '00:00'), t(55, '23:00')]))[0].n, 1, 'ocupada')
+  eq((await as('owner', `select * from public.list_external_busy($1)`, [room])).length, 1, 'lista')
+  eq((await as('leader', `select * from public.list_external_busy($1)`, [room])).length, 0, 'ajeno ve la lista')
+  await rejects_inline(() => as('leader', `select public.set_external_ignored($1,$2,$3,true)`, [room, t(55, '19:00'), t(55, '21:00')]), 'solo el dueño')
+  await as('owner', `select public.set_external_ignored($1,$2,$3,true)`, [room, t(55, '19:00'), t(55, '21:00')])
+  eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(55, '00:00'), t(55, '23:00')]))[0].n, 0, 'sigue ocupada')
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)
