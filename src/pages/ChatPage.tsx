@@ -16,7 +16,7 @@ export default function ChatPage() {
   if (wide && supabase) return <Navigate to="/banda" replace />
   return (
     <>
-      <PageHead eyebrow="Banda" title="Chat" />
+      <PageHead eyebrow="Banda" title="Chat" info="Conversa con tu banda. Los mensajes solo los ven los integrantes." />
       <BandNav />
       {supabase ? <BandChat /> : <p className="empty">El chat necesita una cuenta. Inicia sesión para usarlo.</p>}
     </>

@@ -38,7 +38,7 @@ export default function BusinessToday() {
 
   return (
     <>
-      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Hoy" />
+      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Hoy" info="Lo que pasa hoy en tu negocio: solicitudes por responder, ocupación de las salas y los ensayos del día." />
       <p className="li-sub" style={{ marginTop: -6 }}>{formatDay(board.now)}</p>
 
       {!venue.isPublished && (
@@ -54,8 +54,8 @@ export default function BusinessToday() {
       </div>
       {board.msg && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{board.msg}</p>}
       <div className="quick" style={{ marginTop: 14 }}>
-        <button className="btn primary" onClick={board.addManual} disabled={board.rooms.length === 0}>Anotar una reserva</button>
-        <Link className="btn" to="/mi-negocio/reservas">Ver todas las reservas</Link>
+        <button className="btn primary" onClick={board.addManual} disabled={board.rooms.length === 0}>Anotar reserva</button>
+        <Link className="btn" to="/mi-negocio/reservas">Ver reservas</Link>
       </div>
       {board.rooms.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>Primero agrega una sala en <Link to="/mi-negocio/salas" style={{ color: 'var(--amber)' }}>Salas</Link>.</p>}
 

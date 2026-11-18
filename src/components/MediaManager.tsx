@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import BandMark from './BandMark'
 import { useQuery } from '@tanstack/react-query'
 import { HelpRow } from './InfoTip'
 import { ask } from '../lib/confirm'
@@ -84,11 +85,15 @@ export default function MediaManager<P extends Photo>({ name, logoUrl, canEdit, 
   return (
     <>
       {canEdit && (
-        <div className="row" style={{ flexWrap: 'wrap', marginTop: 16 }}>
+        <>
+        <div className="section-title">Logo</div>
+        <div className="row" style={{ flexWrap: 'wrap' }}>
+          <BandMark name={name} logoUrl={logoUrl} />
           <button className="btn" disabled={busy !== null} onClick={() => logoInput.current?.click()}>{busy === 'logo' ? 'Subiendo…' : logoUrl ? 'Cambiar logo' : 'Subir logo'}</button>
           {logoUrl && <button className="btn ghost danger" disabled={busy !== null} onClick={() => void removeLogo()}>Quitar logo</button>}
           <input ref={logoInput} type="file" accept="image/*" hidden onChange={onLogo} />
         </div>
+        </>
       )}
 
       <div className="section-title">Fotos{photos.length ? ` · ${photos.length}` : ''}</div>

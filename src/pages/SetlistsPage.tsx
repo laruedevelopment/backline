@@ -31,7 +31,7 @@ export default function SetlistsPage() {
 
   return (
     <>
-      <PageHead eyebrow="Música" title="Setlists" />
+      <PageHead eyebrow="Música" title="Setlists" info="Arma el orden de cada toque o ensayo con las canciones del repertorio. Puedes compartirlo con un link y usarlo en el modo escenario." />
       <MusicNav>
         {canEdit && (
           <>

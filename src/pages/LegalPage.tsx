@@ -14,9 +14,19 @@ export default function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
         {d.intro && <p className="page-sub">{d.intro}</p>}
       </div>
       <p className="notice">Este texto es un borrador en revisión y puede cambiar antes de abrir Backline al público.</p>
+      {d.sections.length > 4 && (
+        <nav className="card legal-toc" aria-label="Contenido">
+          <div className="eyebrow" style={{ marginBottom: 6 }}>Contenido</div>
+          <ol>
+            {d.sections.map((s, i) => (
+              <li key={s.title}><button type="button" className="link-btn" onClick={() => document.getElementById(`sec-${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>{s.title}</button></li>
+            ))}
+          </ol>
+        </nav>
+      )}
       <article className="legal">
-        {d.sections.map((s) => (
-          <section key={s.title}>
+        {d.sections.map((s, i) => (
+          <section key={s.title} id={`sec-${i}`} style={{ scrollMarginTop: 16 }}>
             <h2>{s.title}</h2>
             {s.paragraphs?.map((p, i) => <p key={i}>{p}</p>)}
             {s.bullets && <ul>{s.bullets.map((b, i) => <li key={i}>{b}</li>)}</ul>}
