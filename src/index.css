@@ -980,18 +980,21 @@ input, select, textarea { border-radius: var(--r-m); }
 .eq-list { display: grid; gap: 8px; margin: 10px 0 4px; }
 .eq-block { border: 1px solid var(--line); border-radius: var(--r-m); background: var(--sunk); padding: 6px 12px; }
 .eq-block.on { border-color: color-mix(in srgb, var(--amber) 50%, var(--line)); background: var(--raise); padding-bottom: 12px; }
-.eq-check { font-weight: 600; min-height: 44px; }
-.eq-fields { display: grid; grid-template-columns: 74px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
-.eq-fields input, .eq-fields select { min-height: 42px; }
-.eq-qty { display: grid; gap: 2px; font-size: 0.75rem; color: var(--muted); }
-.eq-wide { grid-column: 1 / -1; }
-.eq-price { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
-.eq-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 6px; }
-@media (min-width: 720px) {
-  .eq-fields { grid-template-columns: 74px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px); }
-  .eq-wide { grid-column: 1 / 4; }
-  .eq-price { grid-column: 4 / 5; grid-template-columns: 1fr; }
-  .eq-actions { grid-column: 4 / 5; }
+.eq-check { font-weight: 600; min-height: 44px; align-items: center; }
+.eq-fields { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px 34px; }
+.eq-fields input, .eq-fields select { min-height: 42px; min-width: 0; flex: 1 1 140px; }
+.eq-qty { flex: 0 0 76px; display: flex; align-items: center; gap: 6px; color: var(--muted); font-weight: 600; }
+.eq-qty input { flex: 1 1 auto; text-align: center; padding-inline: 6px; }
+.eq-wide { flex: 1 1 100%; }
+.eq-foot { flex: 1 1 100%; display: flex; align-items: center; gap: 8px; }
+.eq-price { display: flex; gap: 8px; flex: 1 1 auto; max-width: 360px; }
+.eq-price input { flex: 1 1 110px; }
+.eq-price select { flex: 0 0 130px; }
+.eq-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+@media (max-width: 520px) {
+  .eq-fields { margin-left: 0; }
+  .eq-foot { flex-wrap: wrap; }
+  .eq-price { max-width: none; flex-basis: 100%; }
 }
 
 /* ───────── Armonía entre pantallas (revisión visual) ───────── */

@@ -76,11 +76,11 @@ export default function EquipmentSheet({ venueId, room, rooms, onClose }: { venu
                 {mine.map((r, i) => (
                   <div key={r.id} className="eq-fields">
                     {kind === 'other' && <input className="eq-wide" value={r.title} maxLength={60} placeholder="¿Qué equipo es?" aria-label="Nombre del equipo" onChange={(e) => change(r.id, { title: e.target.value })} />}
-                    <label className="eq-qty">Cant.
-                      <input type="number" inputMode="numeric" min={1} max={99} value={r.quantity} onChange={(e) => change(r.id, { quantity: Math.min(99, Math.max(1, Number(e.target.value) || 1)) })} />
+                    <label className="eq-qty"><span aria-hidden>×</span>
+                      <input type="number" inputMode="numeric" min={1} max={99} aria-label="Cantidad" value={r.quantity} onChange={(e) => change(r.id, { quantity: Math.min(99, Math.max(1, Number(e.target.value) || 1)) })} />
                     </label>
-                    <input value={r.brand} maxLength={60} placeholder={`Marca${info.example[0] ? ` (${info.example[0]})` : ''}`} aria-label="Marca" onChange={(e) => change(r.id, { brand: e.target.value })} />
-                    <input value={r.model} maxLength={80} placeholder={`Referencia${info.example[1] ? ` (${info.example[1]})` : ''}`} aria-label="Referencia" onChange={(e) => change(r.id, { model: e.target.value })} />
+                    <input value={r.brand} maxLength={60} placeholder="Marca" title={info.example[0] ? `Ej.: ${info.example[0]}` : undefined} aria-label="Marca" onChange={(e) => change(r.id, { brand: e.target.value })} />
+                    <input value={r.model} maxLength={80} placeholder="Referencia" title={info.example[1] ? `Ej.: ${info.example[1]}` : undefined} aria-label="Referencia" onChange={(e) => change(r.id, { model: e.target.value })} />
                     {info.formats && (
                       <select value={r.format ?? ''} aria-label="Formato" onChange={(e) => change(r.id, { format: (e.target.value || null) as EquipFormat | null })}>
                         <option value="">Formato</option>
@@ -89,6 +89,7 @@ export default function EquipmentSheet({ venueId, room, rooms, onClose }: { venu
                     )}
                     {info.channels && <input type="number" inputMode="numeric" min={1} max={128} value={r.channels ?? ''} placeholder="Canales" aria-label="Canales" onChange={(e) => change(r.id, { channels: Number(e.target.value) || null })} />}
                     <input className="eq-wide" value={r.details} maxLength={300} placeholder="Detalles u observaciones (opcional)" aria-label="Detalles" onChange={(e) => change(r.id, { details: e.target.value })} />
+                    <div className="eq-foot">
                     {rental && (
                       <span className="eq-price">
                         <input inputMode="numeric" value={r.extraPrice ?? ''} placeholder="Precio" aria-label="Precio del alquiler" onChange={(e) => change(r.id, { extraPrice: e.target.value ? Math.min(2_000_000, Number(e.target.value.replace(/\D/g, '')) || 0) : null })} />
@@ -102,6 +103,7 @@ export default function EquipmentSheet({ venueId, room, rooms, onClose }: { venu
                       {i === mine.length - 1 && mine.length < 6 && <button type="button" className="btn ghost sm" onClick={() => patchRows([...current, blank(kind, roomId)])} aria-label={`Agregar otro: ${info.label}`}><Plus size={14} aria-hidden /> Otro</button>}
                       {mine.length > 1 && <button type="button" className="icon-quiet" onClick={() => drop(r)} aria-label="Quitar esta fila"><Trash2 size={16} aria-hidden /></button>}
                     </span>
+                    </div>
                   </div>
                 ))}
               </div>
