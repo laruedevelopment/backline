@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
+import PageHead from '../components/PageHead'
 import { supabase } from '../lib/supabase'
 import { useWide } from '../lib/useWide'
 import { useDock } from '../store/useDock'
@@ -15,10 +16,7 @@ export default function ChatPage() {
   if (wide && supabase) return <Navigate to="/banda" replace />
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Banda</span>
-        <h1 className="page-title">Chat</h1>
-      </div>
+      <PageHead eyebrow="Banda" title="Chat" />
       <BandNav />
       {supabase ? <BandChat /> : <p className="empty">El chat necesita una cuenta. Inicia sesión para usarlo.</p>}
     </>

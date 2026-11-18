@@ -6,7 +6,7 @@ import BandMark from '../components/BandMark'
 import BookingSheet from '../components/BookingSheet'
 import ListSkeleton from '../components/Skeleton'
 import VenueMedia from '../components/VenueMedia'
-import { byRoom, detailLine, dimensionsLabel, includedChips, quantityLabel, rentals, unitLabel } from '../lib/equipment'
+import { venueRentals, byRoom, detailLine, dimensionsLabel, includedChips, quantityLabel, unitLabel } from '../lib/equipment'
 import { mapLinks, osmEmbedUrl } from '../lib/geo'
 import { waLink } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
@@ -95,7 +95,6 @@ export default function EnsayaderoPage() {
         {rooms.map((r) => {
           const items = equipByRoom.get(r.id) ?? []
           const dims = dimensionsLabel(r)
-          const extra = rentals(items)
           return (
             <div key={r.id} className="li" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <div className="li-main" style={{ minWidth: 180 }}>
@@ -106,12 +105,6 @@ export default function EnsayaderoPage() {
                   <>
                     <div className="eyebrow" style={{ marginTop: 10 }}>Incluye</div>
                     <div className="chips" style={{ marginTop: 4 }}>{includedChips(items).map((c) => <span key={c} className="tag">{c}</span>)}</div>
-                  </>
-                )}
-                {extra.length > 0 && (
-                  <>
-                    <div className="eyebrow" style={{ marginTop: 10 }}>Alquiler aparte</div>
-                    <div className="li-sub wrap">{extra.map((x) => `${x.label}${x.price != null ? ` (${money(x.price)} ${unitLabel[x.unit]})` : ' (consultar)'}`).join(' · ')}</div>
                   </>
                 )}
                 {items.length > 0 && (
@@ -137,6 +130,24 @@ export default function EnsayaderoPage() {
         })}
       </div>
       {!canBook && !isOwner && venue.isPublished && rooms.length > 0 && hours.length === 0 && <p className="li-sub wrap" style={{ marginTop: 8 }}>La sala de ensayos aún no tiene horario cargado: escríbele por WhatsApp para reservar.</p>}
+
+      {venueRentals(equipment).length > 0 && (
+        <>
+          <div className="section-title">Alquiler de instrumentos y equipo</div>
+          <p className="li-sub wrap">Disponible para todas las salas, se toma por orden de llegada (no se reserva con la sala).</p>
+          <div className="list cols">
+            {venueRentals(equipment).map((e) => (
+              <div key={e.id} className="li">
+                <div className="li-main">
+                  <div className="li-title">{quantityLabel(e)}</div>
+                  {detailLine(e) && <div className="li-sub wrap">{detailLine(e)}</div>}
+                </div>
+                <div className="readout"><b>{e.extraPrice != null ? money(e.extraPrice) : 'Consultar'}</b>{e.extraPrice != null ? unitLabel[e.extraUnit] : ''}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <div className="section-title">Horario</div>
       <div className="kv" style={{ maxWidth: 360 }}>

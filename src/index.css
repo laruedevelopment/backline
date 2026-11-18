@@ -796,10 +796,10 @@ input, select, textarea { border-radius: var(--r-m); }
 .hero { display: flex; align-items: center; gap: 16px; padding: 20px 0 14px; }
 .hero-text { display: grid; gap: 2px; min-width: 0; }
 .hero-title { font-size: clamp(1.7rem, 7vw, 2.6rem); text-transform: uppercase; line-height: 1.02; overflow-wrap: anywhere; }
-.quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 4px 0 6px; }
-.quick a { display: grid; justify-items: center; gap: 8px; padding: 14px 4px 12px; border-radius: var(--r-l); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 0.82rem; font-weight: 600; text-align: center; min-height: 88px; transition: transform .15s, border-color .15s; }
-.quick a:hover { border-color: var(--amber); transform: translateY(-2px); }
-.quick a span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: color-mix(in srgb, var(--amber) 16%, var(--sunk)); color: var(--amber); }
+.shortcuts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 4px 0 6px; }
+.shortcuts a { display: grid; justify-items: center; gap: 8px; padding: 14px 4px 12px; border-radius: var(--r-l); background: var(--raise); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 0.82rem; font-weight: 600; text-align: center; min-height: 88px; transition: transform .15s, border-color .15s; }
+.shortcuts a:hover { border-color: var(--amber); transform: translateY(-2px); }
+.shortcuts a span { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: color-mix(in srgb, var(--amber) 16%, var(--sunk)); color: var(--amber); }
 /* Navegación: la pestaña activa se marca con una píldora */
 .nav a.active::before { display: none; }
 .nav a .icon-wrap { display: grid; place-items: center; width: 52px; height: 30px; border-radius: 999px; transition: background .15s; }
@@ -975,3 +975,48 @@ input, select, textarea { border-radius: var(--r-m); }
 .qa .a { color: var(--sage); }
 
 .market-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important; }
+
+/* Editor de equipo con casillas */
+.eq-list { display: grid; gap: 8px; margin: 10px 0 4px; }
+.eq-block { border: 1px solid var(--line); border-radius: var(--r-m); background: var(--sunk); padding: 6px 12px; }
+.eq-block.on { border-color: color-mix(in srgb, var(--amber) 50%, var(--line)); background: var(--raise); padding-bottom: 12px; }
+.eq-check { font-weight: 600; min-height: 44px; }
+.eq-fields { display: grid; grid-template-columns: 74px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
+.eq-fields input, .eq-fields select { min-height: 42px; }
+.eq-qty { display: grid; gap: 2px; font-size: 0.75rem; color: var(--muted); }
+.eq-wide { grid-column: 1 / -1; }
+.eq-price { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.eq-actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 6px; }
+@media (min-width: 720px) {
+  .eq-fields { grid-template-columns: 74px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 150px); }
+  .eq-wide { grid-column: 1 / 4; }
+  .eq-price { grid-column: 4 / 5; grid-template-columns: 1fr; }
+  .eq-actions { grid-column: 4 / 5; }
+}
+
+/* ───────── Armonía entre pantallas (revisión visual) ───────── */
+/* Las tarjetas nunca se salen del ancho: la columna puede encogerse y los subtítulos se cortan con «…» */
+.list, .list.cols { grid-template-columns: minmax(0, 1fr); }
+.li { min-width: 0; }
+@media (min-width: 720px) { .list.cols { grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); } }
+.li.opening { flex-wrap: wrap; }
+@media (max-width: 460px) { .li.opening .btn { width: 100%; margin-top: 4px; } }
+/* Tres niveles de color: submenú en crema, filtro activo con contorno ámbar, acción principal en ámbar sólido */
+.filter-chips button.active, .filter-chips button[aria-pressed=true] { background: color-mix(in srgb, var(--amber) 16%, transparent); border-color: var(--amber); color: var(--amber); }
+/* Vacíos: título discreto, sin competir con el de la pantalla */
+.empty h3 { font-family: var(--body); font-size: 1.15rem; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--text); }
+/* Tarjeta de setlist: sin franja decorativa y con el nombre como título de tarjeta */
+.setlist-card, .setlist-card:hover { border-left: 1px solid var(--line); border-left-color: var(--line); }
+.setlist-card h2 { font-family: var(--body); font-stretch: 100%; font-weight: 700; font-size: 1.2rem; line-height: 1.25; text-transform: none; }
+/* Submenús de varias pestañas: se desplazan y se nota que hay más */
+.seg { scrollbar-width: none; }
+.seg::-webkit-scrollbar { display: none; }
+.title-row h1 { margin: 0; }
+
+.act-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.act-grid .btn { padding: 0 10px; font-size: 0.9rem; }
+
+.filter-chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.dot.paused { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.stage-save { position: sticky; bottom: calc(var(--nav-h) + 12px + env(safe-area-inset-bottom)); z-index: 5; }
+@media (min-width: 960px) { .stage-save { bottom: 16px; } }

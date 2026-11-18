@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Plus, Search, Upload } from 'lucide-react'
+import PageHead from '../components/PageHead'
 import { Link } from 'react-router-dom'
 import { useActiveBand } from '../store/useBandSession'
 import { useSongs } from '../lib/useSongs'
@@ -37,24 +38,19 @@ export default function RepertoirePage() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Música</span>
-        <h1 className="page-title">Repertorio</h1>
-      </div>
+      <PageHead eyebrow="Música" title="Repertorio" />
       <MusicNav>
         {canEdit && songs.length > 0 && (
           <>
             <button className="btn sm" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={16} aria-hidden /><span>Canción</span></button>
-            <Link className="btn sm" to="/setlists?importar=1" aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span className="hide-sm">Importar</span></Link>
+            <Link className="btn sm" to="/setlists?importar=1" aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span>Importar</span></Link>
           </>
         )}
       </MusicNav>
-      {canEdit && <button className="fab-round" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={26} aria-hidden /></button>}
 
       {songs.length > 0 && (
         <>
           <p className="rep-summary"><b>{songs.length}</b> canciones · <b>{ready}</b> {ready === 1 ? "lista" : "listas"} · <b>{minutes}</b> min</p>
-          <div className="meter thin" role="img" aria-label={`${ready} de ${songs.length} canciones listas`}><i style={{ width: `${(ready / songs.length) * 100}%` }} /></div>
 
           <div className="stack" style={{ marginTop: 14 }}>
             <label className="search">

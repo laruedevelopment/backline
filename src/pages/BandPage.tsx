@@ -90,7 +90,7 @@ export default function BandPage() {
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
         <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
-          <span className="eyebrow">{roleLabel[band.role]}</span>
+          <span className="eyebrow">Banda · {roleLabel[band.role]}</span>
           <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)' }}>{band.name}</h1>
         </div>
       </div>
@@ -118,8 +118,7 @@ export default function BandPage() {
               setPublicBusy(false)
             }} />
             <span>
-              <b>Perfil público de la banda</b><br />
-              Las demás personas con cuenta podrán encontrarla en Comunidad y ver su logo, géneros, descripción, redes y fotos. El repertorio, los setlists, la agenda y las reservas siguen siendo solo de la banda. Los integrantes solo aparecen si ellos mismos activaron su perfil público.
+              <b>Perfil público de la banda</b> <InfoTip label="Qué significa el perfil público" text="Las demás personas con cuenta podrán encontrarla en Comunidad y ver su logo, géneros, descripción, redes y fotos. El repertorio, los setlists, la agenda y las reservas siguen siendo solo de la banda. Los integrantes solo aparecen si ellos mismos activaron su perfil público." />
             </span>
           </label>
           {band.isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/bandas/${band.id}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo la ven los demás</Link></p>}

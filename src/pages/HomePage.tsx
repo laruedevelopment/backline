@@ -80,7 +80,7 @@ export default function HomePage() {
           </div>
         </section>
       )}
-      <nav className="quick" aria-label="Accesos rápidos">
+      <nav className="shortcuts" aria-label="Accesos rápidos">
         <Link to="/setlists"><span><ListMusic size={22} aria-hidden /></span>Setlists</Link>
         <Link to="/agenda"><span><CalendarPlus size={22} aria-hidden /></span>Agendar</Link>
         <Link to="/banda/chat"><span><MessageCircle size={22} aria-hidden /></span>Chat</Link>

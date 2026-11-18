@@ -246,14 +246,16 @@ export default function SetlistDetailPage() {
           </div>
         )}
         {canEdit && items.length > 0 && <div className="title-row"><span className="li-sub">Cómo se edita</span><InfoTip label="Cómo se edita un setlist" text="Arrastra los puntitos ⋮⋮ para cambiar el orden (también de las etiquetas). Toca una canción para editar sus detalles. Para cambiar el nombre, el link de Spotify, poner etiquetas a una canción o quitar elementos, pulsa «Editar setlist»." /></div>}
-        {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
-        {canEdit && <button className="btn block" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Agregar etiqueta</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
-        {spotify && <a className="btn block" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
-        {supabase && <button className="btn block" disabled={!items.length} onClick={() => void prepare()}>{prepared === 'ok' ? 'Listo: las letras quedan en este dispositivo' : prepared === 'fail' ? 'No se pudo: revisa la conexión' : 'Preparar para tocar sin conexión'}</button>}
         <button className="btn block" disabled={!items.length} onClick={() => setSharing(true)}>Compartir…</button>
+        <div className="act-grid">
+        {canEdit && <button className="btn" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
+        {canEdit && <button className="btn" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Agregar etiqueta</button>}
+        {spotify && <a className="btn" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
+        {supabase && <button className="btn" disabled={!items.length} onClick={() => void prepare()}>{prepared === 'ok' ? 'Listo: las letras quedan en este dispositivo' : prepared === 'fail' ? 'No se pudo: revisa la conexión' : 'Preparar para tocar sin conexión'}</button>}
+        </div>
         {canEdit && (
-          <button className="btn block" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>
+          <button className="btn block ghost" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>
         )}
       </div>
 

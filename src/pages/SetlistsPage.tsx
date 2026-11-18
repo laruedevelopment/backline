@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import PageHead from '../components/PageHead'
 import { ChevronRight, ExternalLink, Plus, Upload } from 'lucide-react'
 import { safeLink, tuningSignature } from '../lib/song'
 import { useActiveBand } from '../store/useBandSession'
@@ -30,19 +31,15 @@ export default function SetlistsPage() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Música</span>
-        <h1 className="page-title">Setlists</h1>
-      </div>
+      <PageHead eyebrow="Música" title="Setlists" />
       <MusicNav>
         {canEdit && (
           <>
             <button className="btn sm" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={16} aria-hidden /><span>Nuevo</span></button>
-            <button className="btn sm" onClick={() => setImporting(true)} aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span className="hide-sm">Importar</span></button>
+            <button className="btn sm" onClick={() => setImporting(true)} aria-label="Importar lista o foto"><Upload size={16} aria-hidden /><span>Importar</span></button>
           </>
         )}
       </MusicNav>
-      <button className="fab-round" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={26} aria-hidden /></button>
       {error && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{error}</p>}
       {loading && <ListSkeleton rows={3} />}
 

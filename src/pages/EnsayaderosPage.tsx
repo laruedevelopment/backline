@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHead from '../components/PageHead'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Search } from 'lucide-react'
 import AgendaNav from '../components/AgendaNav'
@@ -59,11 +60,7 @@ export default function EnsayaderosPage() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Agenda</span>
-        <h1 className="page-title">Salas de ensayos</h1>
-        <p className="page-sub">Encuentra una sala de ensayos, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda.</p>
-      </div>
+      <PageHead eyebrow="Agenda" title="Salas de ensayos" info="Encuentra una sala de ensayos, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda." />
       <AgendaNav />
       {upcoming.length > 0 && <PushPrompt text="Activa los avisos para saber al instante cuando la sala de ensayos responda tu solicitud." />}
 
@@ -92,7 +89,6 @@ export default function EnsayaderosPage() {
       )}
       {msg && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{msg}</p>}
 
-      <div className="section-title">Salas de ensayos</div>
       <label className="search">
         <Search size={18} aria-hidden />
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre o ciudad" aria-label="Buscar salas de ensayos" />

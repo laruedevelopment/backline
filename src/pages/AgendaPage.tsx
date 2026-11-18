@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { listGear } from '../lib/gear'
+import PageHead from '../components/PageHead'
 import { supabase } from '../lib/supabase'
 import EventGear from '../components/EventGear'
 import Sheet from '../components/Sheet'
@@ -56,11 +57,7 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Agenda</span>
-        <h1 className="page-title">Eventos</h1>
-        <p className="page-sub">Confirma si vas para que nadie tenga que preguntar en el chat.</p>
-      </div>
+      <PageHead eyebrow="Agenda" title="Eventos" info="Confirma si vas para que nadie tenga que preguntar en el chat." />
       <AgendaNav />
       <div className="filter-chips" role="group" aria-label="Rango" style={{ marginTop: 14 }}>
         <button className={!showPast ? 'active' : ''} aria-pressed={!showPast} onClick={() => setShowPast(false)}>Próximos{upcoming.length ? ` · ${upcoming.length}` : ''}</button>

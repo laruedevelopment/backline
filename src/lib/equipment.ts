@@ -4,7 +4,8 @@ export type ExtraUnit = 'hour' | 'session'
 
 export type Equipment = {
   id: string
-  roomId: string
+  /** null = alquiler del ensayadero entero (sin sala). */
+  roomId: string | null
   kind: EquipKind
   title: string
   quantity: number
@@ -16,6 +17,8 @@ export type Equipment = {
   included: boolean
   extraPrice: number | null
   extraUnit: ExtraUnit
+  /** Solo en el editor: la fila aún no existe en la base. */
+  isNew?: boolean
 }
 
 type KindInfo = {
@@ -99,6 +102,9 @@ export function dimensionsLabel(r: { widthM: number | null; lengthM: number | nu
 /** Agrupa por salas para consultarlo de una vez. */
 export function byRoom(items: Equipment[]): Map<string, Equipment[]> {
   const out = new Map<string, Equipment[]>()
-  for (const e of items) out.set(e.roomId, [...(out.get(e.roomId) ?? []), e])
+  for (const e of items) if (e.roomId) out.set(e.roomId, [...(out.get(e.roomId) ?? []), e])
   return out
 }
+
+/** Lo que se alquila en todo el ensayadero (sin sala). */
+export const venueRentals = (items: Equipment[]): Equipment[] => items.filter((e) => e.roomId === null && !e.included)

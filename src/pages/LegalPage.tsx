@@ -6,7 +6,7 @@ import { privacy, terms } from '../content/legal'
 export default function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
   const d = doc === 'privacy' ? privacy : terms
   return (
-    <div className="main" style={{ paddingTop: 16 }}>
+    <div className="main" style={{ paddingTop: 16, maxWidth: 760 }}>
       <Link to="/" className="back"><ArrowLeft size={18} aria-hidden /> Volver a Backline</Link>
       <div className="page-head">
         <span className="eyebrow">Legal</span>

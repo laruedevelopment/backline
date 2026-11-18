@@ -831,6 +831,15 @@ await ok('tarjetas de personas: solo de quien puedo conocer', async () => {
 })
 await ok('limpieza del muro', async () => { await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member]) })
 
+console.log('Alquiler del ensayadero')
+await ok('el alquiler es del ensayadero (sin sala); lo incluido exige sala; el tope y los permisos se respetan', async () => {
+  await as('owner', `insert into public.room_equipment (venue_id, kind, quantity, included, extra_price) values ($1,'guitar',3,false,15000)`, [venue])
+  eq((await pg.query(`select count(*)::int as n from public.room_equipment where venue_id=$1 and room_id is null`, [venue])).rows[0].n >= 1, true, 'no se guardó el alquiler')
+  await rejects_inline(() => as('owner', `insert into public.room_equipment (venue_id, kind, quantity, included) values ($1,'drums',1,true)`, [venue]), 'lo incluido sin sala')
+  await rejects_inline(() => as('leader', `insert into public.room_equipment (venue_id, kind, quantity, included) values ($1,'bass',1,false)`, [venue]), 'otra persona agregó alquiler')
+  await pg.query(`delete from public.room_equipment where venue_id=$1 and room_id is null`, [venue])
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

@@ -326,7 +326,7 @@ export async function syncCalendars(venueId: string, force = false): Promise<num
 
 // ───────── Equipo de cada sala ─────────
 type EquipRow = {
-  id: string; room_id: string; kind: Equipment['kind']; title: string | null; quantity: number; format: Equipment['format']
+  id: string; room_id: string | null; kind: Equipment['kind']; title: string | null; quantity: number; format: Equipment['format']
   brand: string | null; model: string | null; channels: number | null; details: string | null
   included: boolean; extra_price: number | null; extra_unit: Equipment['extraUnit']
 }
@@ -353,6 +353,38 @@ export async function saveEquipment(venueId: string, e: Equipment, isNew: boolea
     ? await db().from('room_equipment').insert({ room_id: e.roomId, venue_id: venueId, ...body })
     : await db().from('room_equipment').update(body).eq('id', e.id)
   if (res.error) throw res.error
+}
+
+/** Guarda de una vez todo el equipo de una sala (o el alquiler del ensayadero si `roomId` es null): crea, cambia y quita. */
+export async function saveEquipmentBatch(venueId: string, roomId: string | null, rows: Equipment[], removeIds: string[]) {
+  for (const id of removeIds) { const { error } = await db().from('room_equipment').delete().eq('id', id); if (error) throw error }
+  for (const [i, e] of rows.entries()) {
+    const body = {
+      kind: e.kind, title: e.kind === 'other' ? e.title.trim() || null : null, quantity: e.quantity, format: e.format,
+      brand: e.brand.trim() || null, model: e.model.trim() || null, channels: e.channels, details: e.details.trim() || null,
+      included: roomId !== null, extra_price: roomId !== null ? null : e.extraPrice, extra_unit: e.extraUnit,
+    }
+    const res = e.isNew
+      ? await db().from('room_equipment').insert({ room_id: roomId, venue_id: venueId, ...body })
+      : await db().from('room_equipment').update(body).eq('id', e.id)
+    if (res.error) throw res.error
+    void i
+  }
+}
+
+/** Copia el equipo incluido de una sala a otras (reemplaza lo que tuvieran). */
+export async function copyIncluded(venueId: string, from: Equipment[], toRoomIds: string[]) {
+  for (const rid of toRoomIds) {
+    const { error: delErr } = await db().from('room_equipment').delete().eq('venue_id', venueId).eq('room_id', rid)
+    if (delErr) throw delErr
+    for (const e of from) {
+      const { error } = await db().from('room_equipment').insert({
+        room_id: rid, venue_id: venueId, kind: e.kind, title: e.title || null, quantity: e.quantity, format: e.format, brand: e.brand || null,
+        model: e.model || null, channels: e.channels, details: e.details || null, included: true,
+      })
+      if (error) throw error
+    }
+  }
 }
 
 export async function deleteEquipment(id: string) {

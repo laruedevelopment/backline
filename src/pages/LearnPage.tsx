@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHead from '../components/PageHead'
 import { instruments, lessons, levelName, type InstrumentId } from '../lib/learn'
 import { useProgress } from '../store/useProgress'
 import MusicNav from '../components/MusicNav'
@@ -11,13 +12,9 @@ export default function LearnPage() {
   const finished = list.filter((l) => done.includes(l.id)).length
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Música</span>
-        <h1 className="page-title">Aprender</h1>
-      </div>
+      <PageHead eyebrow="Música" title="Aprender" info="Lecciones cortas con diagrama y metrónomo. Sube el tempo solo cuando salga limpio." />
       <MusicNav />
-      <p className="page-sub" style={{ marginTop: 12 }}>Lecciones cortas con diagrama y metrónomo. Sube el tempo solo cuando salga limpio.</p>
-      <div className="tabs" role="group" aria-label="Instrumento">
+      <div className="filter-chips" role="group" aria-label="Instrumento" style={{ marginTop: 14 }}>
         {instruments.map((i) => (
           <button key={i.id} aria-pressed={inst === i.id} className={inst === i.id ? 'active' : ''} onClick={() => setInst(i.id)}>{i.name}</button>
         ))}

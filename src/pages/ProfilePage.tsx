@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { purgeFolder } from '../lib/feed'
+import InfoTip from '../components/InfoTip'
 import { clearAvatar, confirmAdult, deleteAccount, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
 import { processImage } from '../lib/image'
@@ -184,23 +185,22 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
           </label>
           <fieldset style={{ border: 0, padding: 0 }}>
             <legend className="field" style={{ marginBottom: 6 }}>Lo que tocas (hasta 8)</legend>
-            <div className="chips" style={{ marginTop: 0 }}>
+            <div className="filter-chips wrap" role="group" aria-label="Lo que tocas">
               {instrumentOptions.map((i) => (
-                <button key={i} type="button" className={`tag ${instruments.includes(i) ? 'key' : ''}`} aria-pressed={instruments.includes(i)}
-                  style={{ background: 'none', cursor: 'pointer' }} onClick={() => { toggle(i); setStatus('') }}>{i}</button>
+                <button key={i} type="button" className={instruments.includes(i) ? 'active' : ''} aria-pressed={instruments.includes(i)} onClick={() => { toggle(i); setStatus('') }}>{i}</button>
               ))}
             </div>
           </fieldset>
           <label className="field">Ciudad
             <CityInput value={city} onChange={(c) => { setCity(c); setStatus('') }} />
           </label>
-          <label className="field">WhatsApp (opcional, solo se muestra si tu perfil es público)
+          <label className="field"><span className="title-row">WhatsApp (opcional) <InfoTip label="Sobre el WhatsApp" text="Solo se muestra si tu perfil es público. El contacto principal en Backline es el mensaje dentro de la app; el WhatsApp es una segunda opción para quien prefiera usarlo." /></span>
             <input type="tel" inputMode="tel" value={whatsapp} onChange={(e) => { setWhatsapp(e.target.value); setStatus('') }} maxLength={20} placeholder="300 123 4567" autoComplete="tel" />
           </label>
           <label className="field">Sobre ti
             <textarea rows={3} value={bio} onChange={(e) => { setBio(e.target.value); setStatus('') }} maxLength={300} placeholder="Qué tocas, qué escuchas, con quién has tocado. No pongas datos sensibles." />
           </label>
-          <button className="btn primary" disabled={status === 'saving'}>{status === 'saving' ? 'Guardando…' : 'Guardar perfil'}</button>
+          <button className="btn primary stage-save" disabled={status === 'saving'}>{status === 'saving' ? 'Guardando…' : 'Guardar perfil'}</button>
           {status === 'saved' && <p role="status" className="form-ok">Cambios guardados.</p>}
           {status === 'error' && <p className="form-error" role="alert">No pudimos guardar. Revisa tu nombre e intenta de nuevo.</p>}
         </form>
@@ -210,8 +210,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       <label className="check-row" style={{ alignItems: 'start' }}>
         <input type="checkbox" checked={isPublic} disabled={isMinor} onChange={(e) => void togglePublic(e.target.checked)} />
         <span>
-          <b>Perfil público</b><br />
-          Otras personas con cuenta en Backline podrán encontrarte en Comunidad y ver tu nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Tu correo nunca se muestra. Puedes apagarlo cuando quieras.
+          <b>Perfil público</b> <InfoTip label="Qué significa el perfil público" text="Otras personas con cuenta en Backline podrán encontrarte en Comunidad y ver tu nombre, instrumentos, ciudad, descripción, tus bandas públicas y tu WhatsApp si lo escribiste. Tu correo nunca se muestra. Puedes apagarlo cuando quieras." />
           {isMinor && ' Solo las personas mayores de edad pueden activarlo.'}
         </span>
       </label>

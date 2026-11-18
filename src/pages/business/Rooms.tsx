@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import CalendarSheet from '../../components/CalendarSheet'
 import EquipmentSheet from '../../components/EquipmentSheet'
+import { HelpRow } from '../../components/InfoTip'
 import ListSkeleton from '../../components/Skeleton'
 import { RoomForm } from '../../components/VenueForms'
 import { ask } from '../../lib/confirm'
-import { byRoom, dimensionsLabel, includedChips, rentals } from '../../lib/equipment'
+import { byRoom, dimensionsLabel, includedChips, quantityLabel, unitLabel, venueRentals } from '../../lib/equipment'
 import { money, weekOrder, weekdayNames } from '../../lib/slots'
 import { deleteRoom, listCalendarSources, listEquipment, listHours, listRooms, saveHours, saveRoom, syncCalendars, type Hours, type Room } from '../../lib/venues'
 import { useVenue } from './BusinessContext'
@@ -19,7 +20,7 @@ export default function BusinessRooms() {
   const { data: sources = [] } = useQuery({ queryKey: ['calendar-sources', venue.id], queryFn: () => listCalendarSources(venue.id) })
   const { data: equipment = [] } = useQuery({ queryKey: ['equipment', venue.id], queryFn: () => listEquipment(venue.id) })
   const equipByRoom = byRoom(equipment)
-  const [equipRoom, setEquipRoom] = useState<Room | null>(null)
+  const [equipRoom, setEquipRoom] = useState<Room | 'venue' | null>(null)
   const [calRoom, setCalRoom] = useState<Room | null>(null)
   const [syncing, setSyncing] = useState(false)
   const [editing, setEditing] = useState<Room | 'new' | null>(null)
@@ -44,7 +45,6 @@ export default function BusinessRooms() {
           const items = equipByRoom.get(r.id) ?? []
           const dims = dimensionsLabel(r)
           const included = includedChips(items)
-          const extra = rentals(items)
           return (
             <div key={r.id} className="li" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>
               <button className="li-main main-btn" onClick={() => setEditing(r)} aria-label={`Editar ${r.name}`}>
@@ -52,17 +52,25 @@ export default function BusinessRooms() {
                 <div className="li-sub">Hasta {r.capacity} personas{dims ? ` · ${dims}` : ''}</div>
                 {r.description && <div className="li-sub wrap">{r.description}</div>}
                 {included.length > 0 && <div className="chips">{included.map((c) => <span key={c} className="tag">{c}</span>)}</div>}
-                {extra.length > 0 && <div className="li-sub" style={{ marginTop: 6 }}>Alquiler aparte: {extra.map((x) => x.label).join(', ')}</div>}
               </button>
               <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
               <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
-                <button className="btn" onClick={() => setEquipRoom(r)}>Equipo{items.length ? ` · ${items.length}` : ''}</button>
+                <button className="btn" onClick={() => setEquipRoom(r)}>Equipo incluido{items.length ? ` · ${items.length}` : ''}</button>
               </div>
             </div>
           )
         })}
       </div>
       <button className="btn" style={{ marginTop: 12 }} onClick={() => setEditing('new')}>Agregar sala</button>
+
+      <div className="section-title">Alquiler de instrumentos y equipo</div>
+      <div className="card stack">
+        <HelpRow text="Lo que alquilas aparte (guitarras, bajos, batería, teclado…) vale para todas las salas del ensayadero y se toma por orden de llegada: no se reserva con la sala." />
+        {venueRentals(equipment).length === 0
+          ? <span className="li-sub">Aún no has marcado nada para alquilar.</span>
+          : <div className="chips">{venueRentals(equipment).map((e) => <span key={e.id} className="tag">{quantityLabel(e)}{e.extraPrice != null ? ` · ${money(e.extraPrice)} ${unitLabel[e.extraUnit]}` : ''}</span>)}</div>}
+        <button className="btn" onClick={() => setEquipRoom('venue')}>Editar alquiler del ensayadero</button>
+      </div>
 
       <div className="section-title">Calendario de Google</div>
       <p className="li-sub wrap">Conecta el Google Calendar de cada sala y lo que ya anotas allí bloquea esas horas solo. Es opcional.</p>
@@ -95,7 +103,7 @@ export default function BusinessRooms() {
       <div className="section-title">Horario de atención</div>
       <HoursEditor venueId={venue.id} initial={hours} />
 
-      {equipRoom && <EquipmentSheet venueId={venue.id} room={equipRoom} onClose={() => setEquipRoom(null)} />}
+      {equipRoom && <EquipmentSheet venueId={venue.id} room={equipRoom === 'venue' ? undefined : equipRoom} rooms={rooms} onClose={() => setEquipRoom(null)} />}
       {calRoom && <CalendarSheet venueId={venue.id} room={calRoom} otherRooms={rooms.filter((r) => r.id !== calRoom.id)} source={sources.find((x) => x.roomId === calRoom.id)} onChanged={refreshCalendars} onClose={() => setCalRoom(null)} />}
       {editing && (
         <RoomForm

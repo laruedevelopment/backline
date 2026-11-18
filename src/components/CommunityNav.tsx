@@ -1,5 +1,7 @@
-import { NavLink } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useSocialBadge } from '../lib/useLive'
+import PageHead from './PageHead'
 
 /**
  * Encabezado de Comunidad y su submenú: sección → página → submenú, igual que Música, Agenda y Banda.
@@ -7,15 +9,15 @@ import { useSocialBadge } from '../lib/useLive'
  */
 export default function CommunityNav({ title, sub, onChange }: { title: string; sub?: string; onChange?: () => void }) {
   const pending = useSocialBadge()
+  const ref = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
+  // En el celular la pestaña activa se centra: nunca queda cortada.
+  useEffect(() => { ref.current?.querySelector<HTMLElement>('a.active')?.scrollIntoView({ inline: 'center', block: 'nearest' }) }, [pathname])
   const cls = ({ isActive }: { isActive: boolean }) => (isActive ? 'active' : '')
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Comunidad</span>
-        <h1 className="page-title">{title}</h1>
-        {sub && <p className="page-sub">{sub}</p>}
-      </div>
-      <div className="seg" role="navigation" aria-label="Comunidad" onClick={onChange}>
+      <PageHead eyebrow="Comunidad" title={title} info={sub} />
+      <div className="seg" ref={ref} role="navigation" aria-label="Comunidad" onClick={onChange}>
         <NavLink to="/explorar/muro" className={cls}>Muro</NavLink>
         <NavLink to="/explorar/mercado" className={cls}>Mercado</NavLink>
         <NavLink to="/explorar" end className={cls}>Bandas</NavLink>
