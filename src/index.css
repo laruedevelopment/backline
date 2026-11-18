@@ -1054,3 +1054,8 @@ input, select, textarea { border-radius: var(--r-m); }
 .legal-toc { margin: 14px 0 6px; }
 .legal-toc ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; }
 .legal-toc .link-btn { text-align: left; min-height: 36px; padding: 0; }
+
+/* Selector de modo (Músico | Negocio) en la barra superior */
+.modeseg { flex: none; padding: 3px; }
+.modeseg button { min-height: 36px; padding: 0 12px; font-size: 0.85rem; }
+@media (max-width: 520px) { .modeseg button { padding: 0 10px; font-size: 0.8rem; } .bandbtn { padding-left: 0; } }
