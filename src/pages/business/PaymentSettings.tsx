@@ -41,19 +41,20 @@ export default function PaymentSettings({ venue }: { venue: Venue }) {
           <input value={f.notes} maxLength={300} placeholder="Ej.: pon tu nombre y la fecha en el mensaje" onChange={(e) => set({ notes: e.target.value })} />
         </label>
         <div className="grid-row">
-          <label className="field grow">Anticipo
+          <label className="field grow">Cobro por adelantado
             <select value={f.depositPct ?? ''} onChange={(e) => set({ depositPct: e.target.value ? Number(e.target.value) : null })}>
-              <option value="">Pago total por adelantado</option>
-              <option value="30">30 % (el resto en la sala)</option>
-              <option value="50">50 % (el resto en la sala)</option>
+              <option value="">Pago total</option>
+              <option value="30">Anticipo 30 %</option>
+              <option value="50">Anticipo 50 %</option>
             </select>
           </label>
-          <label className="field grow">Esperar el pago hasta
+          <label className="field grow">Plazo para pagar
             <select value={f.holdHours} onChange={(e) => set({ holdHours: Number(e.target.value) })}>
               {HOLDS.map((h) => <option key={h} value={h}>{h} horas</option>)}
             </select>
           </label>
         </div>
+        <p className="li-sub wrap">{f.depositPct ? `El cliente paga el ${f.depositPct} % al reservar y el resto en la sala.` : 'El cliente paga todo al reservar.'} Si no adjunta el comprobante en {f.holdHours} horas, la reserva se cancela sola.</p>
         {f.required && !hasMethod && <p className="form-error" role="status">Escribe al menos un método de pago para activar el cobro.</p>}
         <div className="row">
           <button className="btn primary" disabled={save.isPending || (f.required && !hasMethod)} onClick={() => save.mutate(f)}>{save.isPending ? 'Guardando…' : 'Guardar pagos'}</button>

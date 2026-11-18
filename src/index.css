@@ -1041,3 +1041,12 @@ input, select, textarea { border-radius: var(--r-m); }
 .song > .li { align-items: flex-start; }
 .song > .li > .dot { margin-top: 8px; }
 .song > .li > .btn.listen { align-self: flex-start; margin-top: 2px; }
+
+/* Horario de atención: cada día en una sola línea también en el celular */
+@media (max-width: 520px) {
+  .hours-row { flex-wrap: nowrap; gap: 8px; }
+  .hours-row .check-row { grid-template-columns: 24px 74px; gap: 8px; }
+  .hours-times { gap: 6px; }
+  .hours-times input { width: 98px; padding: 8px 6px; font-size: 0.85rem; }
+  .hours-times input::-webkit-calendar-picker-indicator { display: none; }
+}
