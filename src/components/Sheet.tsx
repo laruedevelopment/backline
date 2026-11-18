@@ -26,7 +26,9 @@ export default function Sheet({ title, onClose, children, onSubmit, dismissOnBac
     const opener = document.activeElement as HTMLElement | null
     const node = ref.current
     const first = node?.querySelector<HTMLElement>('input, textarea, select') ?? node?.querySelector<HTMLElement>(FOCUSABLE)
-    ;(first ?? node)?.focus()
+    // En pantallas táctiles no se enfoca un campo al abrir: el teclado taparía el formulario.
+    const touch = window.matchMedia('(pointer: coarse)').matches
+    ;(touch ? node : first ?? node)?.focus()
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
 

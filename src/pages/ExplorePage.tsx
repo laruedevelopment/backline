@@ -50,8 +50,8 @@ export default function ExplorePage() {
   return (
     <>
       <div className="page-head">
-        <span className="eyebrow">Comunidad</span>
-        <h1 className="page-title">Explorar</h1>
+        <span className="eyebrow">Bandas y músicos</span>
+        <h1 className="page-title">Comunidad</h1>
         <p className="page-sub">Bandas y músicos que decidieron hacerse visibles. Encuentra con quién tocar, a quién invitar o qué se mueve en tu ciudad.</p>
       </div>
       <CommunityNav onChange={() => setTag('')} />

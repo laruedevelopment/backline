@@ -867,3 +867,14 @@ input, select, textarea { border-radius: var(--r-m); }
 @media (max-width: 520px) { .gear-row { grid-template-columns: minmax(0, 1fr) auto; } .gear-row select { grid-column: 1 / -1; order: 3; } }
 
 .recap { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--sage); background: var(--sunk); border-radius: 0 var(--r-m) var(--r-m) 0; white-space: pre-line; font-size: 0.95rem; }
+
+/* Secciones plegables del formulario de canción */
+.fold { margin: 12px 0; border: 1px solid var(--line); border-radius: var(--r-l); background: var(--raise); }
+.fold > summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 16px; font-weight: 700; cursor: pointer; list-style: none; }
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after { content: ''; margin-left: auto; width: 9px; height: 9px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .15s; flex: none; }
+.fold[open] > summary::after { transform: rotate(-135deg); }
+.fold > summary small { color: var(--amber); font-weight: 600; font-size: 0.8rem; }
+.fold-body { display: grid; gap: 10px; padding: 0 16px 16px; }
+.fold-sub { margin: 10px 0 0; font-size: 0.95rem; color: var(--text); }
+.fold .section-title { font-size: 1rem; margin: 14px 0 4px; }

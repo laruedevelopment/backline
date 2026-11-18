@@ -109,7 +109,9 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         </select>
       </label>
 
-      <h3 className="section-title">Quién toca</h3>
+      <details className="fold">
+        <summary>Quién toca{(s.lineup ?? []).length ? <small>{(s.lineup ?? []).length}</small> : null}</summary>
+        <div className="fold-body">
       <p className="li-sub wrap">Qué instrumentos lleva la canción y quién lo toca: alguien de la banda o un invitado.</p>
       {(s.lineup ?? []).map((l, i) => (
         <div className="subform" key={i}>
@@ -152,7 +154,13 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         )}
       </div>
 
-      <h3 className="section-title">Afinación por instrumento</h3>
+        </div>
+      </details>
+
+      <details className="fold">
+        <summary>Afinación y cambios{s.tunings.length || s.keyChanges.length ? <small>{s.tunings.length} afin.{s.keyChanges.length ? ` · ${s.keyChanges.length} de tono` : ''}</small> : null}</summary>
+        <div className="fold-body">
+      <h4 className="fold-sub">Afinación por instrumento</h4>
       <p className="li-sub wrap">«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento.</p>
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
@@ -182,7 +190,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         <Plus size={16} aria-hidden /> Otra afinación
       </button>
 
-      <h3 className="section-title">Cambios de tono</h3>
+      <h4 className="fold-sub">Cambios de tono</h4>
       {s.keyChanges.map((k, i) => (
         <div className="grid-row" key={i} style={{ alignItems: 'end' }}>
           <label className="field grow">Sección
@@ -203,7 +211,13 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         <Plus size={16} aria-hidden /> Agregar cambio de tono
       </button>
 
-      <h3 className="section-title">Notas por instrumento</h3>
+        </div>
+      </details>
+
+      <details className="fold">
+        <summary>Notas y comentarios{noteRows.length ? <small>{noteRows.length} por instrumento</small> : null}</summary>
+        <div className="fold-body">
+      <h4 className="fold-sub">Notas por instrumento</h4>
       <p className="li-sub wrap">Lo que cada integrante necesita saber de esta canción. En el modo escenario cada quien ve la nota de su instrumento.</p>
       {noteRows.map((r, i) => (
         <div className="subform" key={i}>
@@ -230,7 +244,12 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       {song && band && <MemberNotes songId={song.id} bandId={band.id} canWrite canManage={band.role === 'owner' || band.role === 'admin'} />}
       {song && band && <SongComments songId={song.id} bandId={band.id} canWrite={band.role !== 'guest'} canModerate={band.role === 'owner' || band.role === 'admin'} />}
 
-      <h3 className="section-title">Escuchar y notas</h3>
+        </div>
+      </details>
+
+      <details className="fold">
+        <summary>Links, invitado y letra{(s.links.youtube || s.links.spotify || s.lyrics || loadedLyrics) ? <small>{[s.links.youtube && 'YouTube', s.links.spotify && 'Spotify', (s.lyrics || loadedLyrics) && 'letra'].filter(Boolean).join(' · ')}</small> : null}</summary>
+        <div className="fold-body">
       <label className="field">Link de YouTube
         <input type="url" value={s.links.youtube ?? ''} onChange={(e) => patch({ links: { ...s.links, youtube: e.target.value } })} placeholder="https://youtu.be/…" />
       </label>
@@ -248,6 +267,9 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
           placeholder={'[Verso]\nAm        F\nHoy vuelvo a casa\n\nO así: Hoy [Am]vuelvo a [F]casa'} />
         <span className="li-sub wrap">Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella.</span>
       </label>
+
+        </div>
+      </details>
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
