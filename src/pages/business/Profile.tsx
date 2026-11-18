@@ -52,14 +52,16 @@ export default function BusinessProfile() {
     <>
       <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Perfil" info="Lo que ven las bandas de tu sala de ensayos: nombre, descripción, fotos, contacto y cómo se confirman las reservas." />
       <div className="section-title">Publicación</div>
-      <div className="checklist">
-        {steps.map((s) => (
-          <div key={s.label} className={`check ${s.done ? 'done' : ''}`}>
-            <span className="box" aria-hidden>{s.done ? '✓' : ''}</span>
-            <span className="check-label">{s.label}</span>
-          </div>
-        ))}
-      </div>
+      {!ready && (
+        <div className="checklist">
+          {steps.map((s) => (
+            <div key={s.label} className={`check ${s.done ? 'done' : ''}`}>
+              <span className="box" aria-hidden>{s.done ? '✓' : ''}</span>
+              <span className="check-label">{s.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="stack" style={{ marginTop: 12 }}>
         {venue.isPublished
           ? <button className="btn" disabled={publish.isPending} onClick={() => publish.mutate(false)}>Dejar de publicar (ocultar la sala de ensayos)</button>
