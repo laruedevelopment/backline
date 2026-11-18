@@ -947,6 +947,9 @@ await ok('con reservas en el rango avisa y no bloquea hasta confirmar', async ()
 await ok('cerrar todo el negocio bloquea todas las salas', async () => {
   eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(46, '00:00'), t(46, '23:00')]))[0].n, 1, 'sala')
 })
+await ok('quien mira la sala ve los cierres del negocio (solo fechas)', async () => {
+  eq((await as('leader', `select * from public.venue_closures($1)`, [venue])).length, 1, 'cierre')
+})
 await ok('el dueño ve y borra sus bloqueos; otros no los ven', async () => {
   const mine = await as('owner', `select id from public.room_blocks where venue_id=$1`, [venue]); blk = mine[0].id
   eq((await as('leader', `select id from public.room_blocks`)).length, 0, 'ajeno ve')

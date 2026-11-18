@@ -40,7 +40,7 @@ export default function BlocksSection({ venueId, rooms }: { venueId: string; roo
   return (
     <>
       <div className="section-title">Cierres y bloqueos</div>
-      <HelpRow text="Cierra el negocio por unos días o bloquea una sala (mejoras, evento privado, vacaciones). Mientras esté bloqueado nadie puede reservar esas horas. Si ya había reservas, te preguntamos antes de cancelarlas." />
+      <HelpRow text="Si te vas de vacaciones o cierras unos días, elige las fechas: las bandas ven la sala como cerrada y no pueden reservar. También puedes bloquear una sola sala (mejoras, evento privado). Si ya había reservas, te preguntamos antes de cancelarlas." />
       {blocks.length === 0 && <p className="li-sub wrap">No tienes cierres programados.</p>}
       {blocks.length > 0 && (
         <div className="list">
@@ -57,7 +57,7 @@ export default function BlocksSection({ venueId, rooms }: { venueId: string; roo
         </div>
       )}
       <div className="row" style={{ marginTop: 12, flexWrap: 'wrap' }}>
-        <button className="btn" onClick={() => setOpen({ all: true })}>Cerrar el negocio</button>
+        <button className="btn" onClick={() => setOpen({ all: true })}>Modo vacaciones o cierre</button>
         <button className="btn" onClick={() => setOpen({ all: false })} disabled={rooms.length === 0}>Bloquear una sala</button>
       </div>
       {err && <p className="form-error" role="alert">{err}</p>}
@@ -99,7 +99,7 @@ function BlockSheet({ venueId, rooms, startAll, onClose, onSaved }: { venueId: s
   }
 
   return (
-    <Sheet title={roomId ? 'Bloquear una sala' : 'Cerrar el negocio'} onClose={onClose} onSubmit={submit}>
+    <Sheet title={roomId ? 'Bloquear una sala' : 'Modo vacaciones o cierre'} onClose={onClose} onSubmit={submit}>
       <label className="field">Qué se bloquea
         <select value={roomId} onChange={(e) => setRoomId(e.target.value)}>
           <option value="">Todo el negocio (todas las salas)</option>

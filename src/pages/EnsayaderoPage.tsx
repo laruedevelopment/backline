@@ -11,7 +11,7 @@ import { mapLinks, osmEmbedUrl } from '../lib/geo'
 import { waLink } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
 import { money, weekOrder, weekdayNames } from '../lib/slots'
-import { getVenue, kindLabel, listEquipment, listHours, listRooms } from '../lib/venues'
+import { getVenue, kindLabel, listEquipment, listHours, listRooms, venueClosures } from '../lib/venues'
 import { useAuth } from '../store/useAuth'
 
 const hm = (t: string) => {
@@ -30,6 +30,7 @@ export default function EnsayaderoPage() {
   const venueQ = useQuery({ queryKey: ['venue', id], queryFn: () => getVenue(id!), enabled: !!id })
   const { data: rooms = [] } = useQuery({ queryKey: ['venue-rooms', id], queryFn: () => listRooms(id!), enabled: !!id })
   const { data: hours = [] } = useQuery({ queryKey: ['venue-hours', id], queryFn: () => listHours(id!), enabled: !!id })
+  const { data: closures = [] } = useQuery({ queryKey: ['venue-closures', id], queryFn: () => venueClosures(id!), enabled: !!id })
   const { data: equipment = [] } = useQuery({ queryKey: ['equipment', id], queryFn: () => listEquipment(id!), enabled: !!id })
   const equipByRoom = byRoom(equipment)
 
@@ -80,6 +81,12 @@ export default function EnsayaderoPage() {
           <Link to="/mi-negocio/perfil" style={{ color: 'var(--amber)', fontWeight: 600 }}>Administrar</Link>
         </p>
       )}
+      {closures.map((c) => {
+        const s = new Date(c.startsAt), last = new Date(new Date(c.endsAt).getTime() - 1000)
+        const fmt = (d: Date) => d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'long' })
+        const same = fmt(s) === fmt(last)
+        return <p key={c.startsAt} className="notice" role="status" style={{ marginTop: 12 }}>{new Date(c.startsAt) <= new Date() ? 'Cerrado ahora' : 'Cerrará'}: {same ? `el ${fmt(s)}` : `del ${fmt(s)} al ${fmt(last)}`}. Esos días no se puede reservar.</p>
+      })}
       {venue.description && <p style={{ marginTop: 14, maxWidth: '60ch', whiteSpace: 'pre-line' }}>{venue.description}</p>}
       {venue.amenities.length > 0 && <div className="chips">{venue.amenities.map((a) => <span key={a} className="tag">{a}</span>)}</div>}
 

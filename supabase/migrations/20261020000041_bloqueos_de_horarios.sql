@@ -194,3 +194,16 @@ begin
   if st = 'confirmed' then perform public.booking_to_event(new_id); end if;
   return new_id;
 end $$;
+
+-- Cierres de todo el negocio, visibles para quien mira una sala publicada (solo fechas, sin motivo).
+create or replace function public.venue_closures(p_venue uuid)
+returns table (starts_at timestamptz, ends_at timestamptz)
+language sql stable security definer set search_path = '' as $$
+  select k.starts_at, k.ends_at
+  from public.room_blocks k join public.venues v on v.id = k.venue_id
+  where k.venue_id = p_venue and k.room_id is null and k.ends_at > now() and k.starts_at < now() + interval '400 days'
+    and (v.is_published or v.owner_id = (select auth.uid()))
+  order by k.starts_at limit 10;
+$$;
+revoke all on function public.venue_closures from public, anon;
+grant execute on function public.venue_closures to authenticated;

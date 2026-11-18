@@ -499,3 +499,10 @@ export async function setExternalIgnored(roomId: string, e: ExternalBusy, ignore
   const { error } = await db().rpc('set_external_ignored', { p_room: roomId, p_start: e.startsAt, p_end: e.endsAt, p_ignored: ignored })
   if (error) throw error
 }
+
+/** Cierres de todo el negocio (vacaciones, remodelación…), solo fechas. */
+export async function venueClosures(venueId: string): Promise<{ startsAt: string; endsAt: string }[]> {
+  const { data, error } = await db().rpc('venue_closures', { p_venue: venueId })
+  if (error) throw error
+  return (data as { starts_at: string; ends_at: string }[]).map((r) => ({ startsAt: r.starts_at, endsAt: r.ends_at }))
+}
