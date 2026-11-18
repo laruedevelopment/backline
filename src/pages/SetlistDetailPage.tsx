@@ -74,6 +74,7 @@ export default function SetlistDetailPage() {
   const [spotifyDraft, setSpotifyDraft] = useState<string | null>(null)
   const [spotifyError, setSpotifyError] = useState('')
   const [guestDraft, setGuestDraft] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [editingSong, setEditingSong] = useState<Song | null>(null)
   const [picked, setPicked] = useState<string[]>([])
@@ -127,7 +128,7 @@ export default function SetlistDetailPage() {
   const entryIds = entries.map((e) => e.id)
   const minutes = items.reduce((t, x) => t + x.minutes, 0)
   const changes = items.filter((x, i) => i > 0 && tuningSignature(x) !== tuningSignature(items[i - 1])).length
-  const saveEntries = (next: SetlistItem[]) => void save(withItems(list, next))
+  const saveEntries = (next: SetlistItem[]) => { setSaveError(''); save(withItems(list, next)).catch(() => setSaveError('No se pudo guardar el cambio del setlist. Revisa tu conexión e inténtalo de nuevo.')) }
   const rows = buildRows(entries, songById)
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
@@ -331,6 +332,7 @@ export default function SetlistDetailPage() {
           onClose={() => setTagSheet(null)}
         />
       )}
+      {saveError && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{saveError}</p>}
       {sharing && <ShareSetlistSheet name={list.name} setlistId={list.id} canShareLink={band?.role === 'owner' || band?.role === 'admin'} entries={entries} songs={songById} lyrics={lyricsById ?? new Map(Object.entries(offlineLyrics))} onClose={() => setSharing(false)} />}
       {stage && <StageMode songs={stageSongs} instrument={myInstrument} onClose={() => setStage(false)} />}
     </>

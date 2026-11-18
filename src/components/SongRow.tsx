@@ -40,7 +40,7 @@ export default function SongRow({ song, onEdit }: Props) {
             {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}
           </div>
         </Main>
-        <div className="readout key" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
+        <div className="readout key" role="group" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
           <b>{song.key || '—'}</b>
           {song.bpm} bpm
         </div>

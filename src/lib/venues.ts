@@ -127,10 +127,8 @@ export async function listHours(venueId: string): Promise<Hours[]> {
 
 /** Reemplaza el horario semanal completo. */
 export async function saveHours(venueId: string, rows: Hours[]) {
-  const del = await db().from('venue_hours').delete().eq('venue_id', venueId)
-  if (del.error) throw del.error
-  if (!rows.length) return
-  const { error } = await db().from('venue_hours').insert(rows.map((h) => ({ venue_id: venueId, weekday: h.weekday, opens: h.opens, closes: h.closes })))
+  // Una sola operación en la base: el horario se guarda entero o no se cambia (antes se borraba y luego se insertaba).
+  const { error } = await db().rpc('save_venue_hours', { p_venue: venueId, p_rows: rows.map((h) => ({ weekday: h.weekday, opens: h.opens, closes: h.closes })) })
   if (error) throw error
 }
 

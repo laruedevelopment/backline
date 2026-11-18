@@ -168,7 +168,7 @@ function AuthGate() {
 
 function Splash() {
   return (
-    <div className="fullscreen-msg" aria-busy="true" aria-label="Cargando">
+    <div className="fullscreen-msg" role="status" aria-busy="true" aria-label="Cargando">
       <div className="brand-big">back<span>line</span></div>
       <div className="skeleton" style={{ width: 140, height: 4 }} />
     </div>

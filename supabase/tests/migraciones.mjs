@@ -680,6 +680,25 @@ await ok('el resumen del toque lo escribe quien edita y lo lee la banda; no pasa
   await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
 })
 
+console.log('Integridad')
+await ok('al borrar una canción se quita de los setlists (lista e items) y las demás quedan', async () => {
+  const [a] = await as('leader', `insert into public.songs (band_id, title) values ($1,'A borrar') returning id`, [band])
+  const [b] = await as('leader', `insert into public.songs (band_id, title) values ($1,'Se queda') returning id`, [band])
+  const items = JSON.stringify([{ t: 's', id: a.id, tags: ['Solo'] }, { t: 'l', id: 'l1', text: 'Pausa' }, { t: 's', id: b.id }])
+  const [sl] = await as('leader', `insert into public.setlists (band_id, name, song_ids, items) values ($1,'Con borrada',$2::uuid[],$3::jsonb) returning id`, [band, `{${a.id},${b.id}}`, items])
+  await as('leader', `delete from public.songs where id=$1`, [a.id])
+  const [r] = await as('leader', `select song_ids, items from public.setlists where id=$1`, [sl.id])
+  eq(r.song_ids, [b.id], 'song_ids'); eq(r.items.map((x) => x.id), ['l1', b.id], 'items')
+  await pg.query(`delete from public.setlists where id=$1`, [sl.id]); await pg.query(`delete from public.songs where id=$1`, [b.id])
+})
+await ok('el dueño guarda el horario de su sala de una vez y otro no puede', async () => {
+  await as('owner', `select public.save_venue_hours($1, $2::jsonb)`, [venue, JSON.stringify([{ weekday: 1, opens: '09:00', closes: '21:00' }, { weekday: 2, opens: '09:00', closes: '21:00' }])])
+  eq((await pg.query(`select count(*)::int as n from public.venue_hours where venue_id=$1`, [venue])).rows[0].n, 2, 'horario')
+  await rejects_inline(() => as('leader', `select public.save_venue_hours($1, '[]'::jsonb)`, [venue]), 'otro cambió el horario')
+  await rejects_inline(() => as('owner', `select public.save_venue_hours($1, $2::jsonb)`, [venue, JSON.stringify([{ weekday: 1, opens: '22:00', closes: '09:00' }])]), 'aceptó horas inválidas')
+  eq((await pg.query(`select count(*)::int as n from public.venue_hours where venue_id=$1`, [venue])).rows[0].n, 2, 'el horario cambió aunque falló')
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)
