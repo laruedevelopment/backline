@@ -45,9 +45,10 @@ export default function SongRow({ song, onEdit }: Props) {
           {song.bpm} bpm
         </div>
         {embeds.map((e, i) => (
-          <button key={e.provider} className={`btn ${open === i ? 'primary' : 'ghost'}`} aria-pressed={open === i}
-            aria-label={`${open === i ? 'Cerrar' : 'Escuchar'} ${song.title} en ${e.label}`} onClick={() => setOpen(open === i ? null : i)}>
-            {open === i ? <Pause size={18} aria-hidden /> : <Play size={18} aria-hidden />}
+          <button key={e.provider} className={`btn listen ${e.provider} ${open === i ? 'primary' : 'ghost'}`} aria-pressed={open === i}
+            aria-label={`${open === i ? 'Cerrar' : 'Escuchar'} ${song.title} en ${e.label}`} title={`Escuchar en ${e.label}`} onClick={() => setOpen(open === i ? null : i)}>
+            {open === i ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
+            <span className="listen-label">{e.label}</span>
           </button>
         ))}
       </div>

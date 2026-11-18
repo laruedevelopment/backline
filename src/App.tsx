@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
-import { BrowserRouter, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { CalendarClock, CalendarDays, Compass, DoorOpen, GraduationCap, Home, Music2, Store, Users } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
@@ -222,6 +222,13 @@ function Shell() {
     return () => { if (idle) window.cancelIdleCallback(id); else window.clearTimeout(id) }
   }, [])
   const band = useActiveBand()
+  const nav = useNavigate()
+  // Al cambiar de banda estando dentro de un setlist, ese setlist no existe en la otra: se vuelve a la lista de setlists.
+  const lastBand = useRef(band?.id)
+  useEffect(() => {
+    if (lastBand.current && band?.id && lastBand.current !== band.id && /^\/setlists\/[^/]+/.test(window.location.pathname.replace(import.meta.env.BASE_URL.replace(/\/$/, ''), ''))) nav('/setlists', { replace: true })
+    lastBand.current = band?.id
+  }, [band?.id, nav])
   const wide = useWide(1240)
   return (
     <div className="shell">

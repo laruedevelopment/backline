@@ -835,3 +835,11 @@ input, select, textarea { border-radius: var(--r-m); }
 .tonight { margin: 4px 0 14px; padding: 18px 18px 16px; border-radius: var(--r-l); display: grid; gap: 6px; background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 26%, var(--raise)), var(--raise) 70%); border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line)); box-shadow: var(--shadow); }
 .tonight h2 { font-size: clamp(1.6rem, 6vw, 2.2rem); text-transform: uppercase; line-height: 1.05; }
 .tonight .row { margin-top: 8px; flex-wrap: wrap; }
+
+/* Botón de escuchar: indica la plataforma (YouTube o Spotify) con su color y su nombre */
+.btn.listen { min-height: 38px; padding: 0 12px; gap: 6px; font-size: 0.8rem; border: 1px solid var(--line-2); }
+.btn.listen.youtube { color: #ff6b6b; border-color: color-mix(in srgb, #ff6b6b 45%, var(--line)); }
+.btn.listen.spotify { color: #1ed760; border-color: color-mix(in srgb, #1ed760 45%, var(--line)); }
+.btn.listen.primary { background: var(--amber); border-color: var(--amber); color: var(--amber-ink); }
+.btn.listen:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+@media (max-width: 520px) { .btn.listen { padding: 0 10px; } .btn.listen .listen-label { font-size: 0.7rem; } }

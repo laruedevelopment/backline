@@ -1,20 +1,18 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Users } from 'lucide-react'
 import { useChatUnread, useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
+import { useDock } from '../store/useDock'
 import Avatar from './Avatar'
 import BandChat from './BandChat'
 import BandMark from './BandMark'
 import DirectThread from './DirectThread'
 
-type View = { kind: 'list' } | { kind: 'band' } | { kind: 'friend'; id: string }
-
 /** Panel de chat a un costado (en pantallas anchas): el chat de la banda y tus amigos, siempre a mano, como en Facebook. */
 export default function ChatDock() {
   const band = useActiveBand()
-  const [view, setView] = useState<View>({ kind: 'list' })
+  const { view, setView } = useDock()
   const unreadBand = useChatUnread(band?.id)
   const { data: all = [] } = useFriends()
   if (!supabase) return null
