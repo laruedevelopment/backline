@@ -1,12 +1,19 @@
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import ListSkeleton from '../components/Skeleton'
-import { getSharedSetlist } from '../lib/shareLink'
+import { getSharedSetlist, type SharedSetlist } from '../lib/shareLink'
 
 /** Setlist compartido por link (solo lectura, sin cuenta). */
 export default function SharedSetlistPage() {
   const { token } = useParams()
-  const { data, isLoading, isError } = useQuery({ queryKey: ['shared-setlist', token], queryFn: () => getSharedSetlist(token!), enabled: !!token, retry: false })
+  // Esta pantalla es pública y vive fuera del proveedor de datos de la app: se pide directo.
+  const [state, setState] = useState<{ data: SharedSetlist | null; loading: boolean; error: boolean }>({ data: null, loading: true, error: false })
+  useEffect(() => {
+    let alive = true
+    getSharedSetlist(token ?? '').then((data) => alive && setState({ data, loading: false, error: false }), () => alive && setState({ data: null, loading: false, error: true }))
+    return () => { alive = false }
+  }, [token])
+  const { data, loading: isLoading, error: isError } = state
   let n = 0
   return (
     <main className="content" style={{ maxWidth: 720, margin: '0 auto', padding: '16px' }}>
