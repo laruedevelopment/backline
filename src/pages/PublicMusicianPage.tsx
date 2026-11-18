@@ -57,17 +57,17 @@ export default function PublicMusicianPage() {
       {m.instruments.length > 0 && <div className="chips">{m.instruments.map((i) => <span key={i} className="tag key">{i}</span>)}</div>}
       {m.bio && <p style={{ marginTop: 14, maxWidth: '60ch', whiteSpace: 'pre-line' }}>{m.bio}</p>}
       <div className="row" style={{ marginTop: 14, flexWrap: 'wrap' }}>
-        {supabase && me && m.id !== me && (
-          rel?.direction === 'friend' ? <Link className="btn primary" to={`/explorar/amigos/${m.id}`}>Enviar mensaje</Link>
-          : rel?.direction === 'out' ? <button className="btn" disabled>Solicitud enviada</button>
-          : <button className="btn primary" disabled={ask.isPending} onClick={() => ask.mutate()}>{rel?.direction === 'in' ? 'Aceptar solicitud' : 'Agregar amigo'}</button>
+        {supabase && me && m.id !== me && <Link className="btn primary" to={`/explorar/amigos/${m.id}`}>Enviar mensaje</Link>}
+        {supabase && me && m.id !== me && rel?.direction !== 'friend' && (
+          rel?.direction === 'out' ? <button className="btn" disabled>Solicitud enviada</button>
+          : <button className="btn" disabled={ask.isPending} onClick={() => ask.mutate()}>{rel?.direction === 'in' ? 'Aceptar amistad' : 'Agregar amigo'}</button>
         )}
-        {wa && m.id !== me && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Escribirle por WhatsApp</a>}
         <button className="btn" onClick={() => void share()}>{copied ? 'Enlace copiado' : 'Copiar enlace'}</button>
         {m.id === me && <Link className="btn" to="/perfil">Editar mi perfil</Link>}
         <FollowButton kind="profile" id={m.id} />
         {m.id !== me && me && <button className="btn ghost" onClick={() => setReporting(true)}>Denunciar</button>}
       </div>
+      {wa && m.id !== me && <p className="li-sub" style={{ marginTop: 8 }}>También puedes escribirle por <a href={wa} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--amber)', fontWeight: 600 }}>WhatsApp</a>.</p>}
 
       {reporting && <ReportSheet target={{ kind: 'profile', id: m.id, label: `a ${m.name}` }} onClose={() => setReporting(false)} />}
       {friendError && <p className="form-error" role="alert">{friendError}</p>}

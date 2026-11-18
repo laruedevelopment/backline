@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import PageHead from '../../components/PageHead'
 import { useQuery } from '@tanstack/react-query'
 import DayTimeline from '../../components/DayTimeline'
 import ListSkeleton from '../../components/Skeleton'
@@ -37,11 +38,8 @@ export default function BusinessToday() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">{formatDay(board.now)}</span>
-        <h1 className="page-title">Hoy</h1>
-        <p className="page-sub">{venue.name}</p>
-      </div>
+      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Hoy" />
+      <p className="li-sub" style={{ marginTop: -6 }}>{formatDay(board.now)}</p>
 
       {!venue.isPublished && (
         <p className="notice" style={{ marginBottom: 14 }}>

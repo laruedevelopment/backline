@@ -10,8 +10,6 @@ import { ask } from '../lib/confirm'
 import { profileCards } from '../lib/feed'
 import { answerQuestion, askQuestion, conditionLabel, categoryLabel, deleteListing, deleteQuestion, getListing, listQuestions, marketUrls, price, setListingStatus } from '../lib/market'
 import { waLink } from '../lib/identity'
-import { requestFriend } from '../lib/social'
-import { useFriends } from '../lib/useLive'
 import { useAuth } from '../store/useAuth'
 import InfoTip from '../components/InfoTip'
 
@@ -30,19 +28,16 @@ export default function ListingPage() {
   const { data: qs = [] } = useQuery({ queryKey: ['listing-qs', id], queryFn: () => listQuestions(id!), enabled: !!l })
   const ids = [l?.seller ?? '', ...qs.map((q) => q.author)].filter(Boolean)
   const { data: cards } = useQuery({ queryKey: ['cards', ids.sort().join(',')], queryFn: () => profileCards(ids), enabled: ids.length > 0 })
-  const { data: friends = [] } = useFriends()
   const refresh = () => { void qc.invalidateQueries({ queryKey: ['listing', id] }); void qc.invalidateQueries({ queryKey: ['listings'] }) }
   const ask$ = useMutation({ mutationFn: () => askQuestion(id!, draft), onSuccess: async () => { setDraft(''); await qc.invalidateQueries({ queryKey: ['listing-qs', id] }) } })
   const reply = useMutation({ mutationFn: (v: { id: string; text: string }) => answerQuestion(v.id, v.text), onSuccess: async () => { setAnswering(null); await qc.invalidateQueries({ queryKey: ['listing-qs', id] }) } })
   const delQ = useMutation({ mutationFn: (qid: string) => deleteQuestion(qid), onSuccess: () => qc.invalidateQueries({ queryKey: ['listing-qs', id] }) })
   const status = useMutation({ mutationFn: (s: 'active' | 'sold' | 'paused') => setListingStatus(id!, s), onSuccess: refresh })
-  const addFriend = useMutation({ mutationFn: () => requestFriend(me!, l!.seller), onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }) })
 
   if (isLoading) return <ListSkeleton rows={4} />
   if (!l) return <p className="empty">Este anuncio ya no está disponible. <Link to="/explorar/mercado" style={{ color: 'var(--amber)' }}>Volver al Mercado</Link></p>
   const mine = l.seller === me
   const seller = cards?.get(l.seller)
-  const rel = friends.find((f) => f.id === l.seller)
   const wa = l.whatsapp ? waLink(l.whatsapp, `Hola, vi tu anuncio «${l.title}» en Backline.`) : undefined
 
   return (
@@ -76,10 +71,8 @@ export default function ListingPage() {
             <button className="icon-quiet" aria-label="Denunciar anuncio" onClick={() => setReport({ kind: 'listing', id: l.id, label: 'este anuncio', excerpt: l.title })}><Flag size={16} aria-hidden /></button>
           </div>
           <div className="row" style={{ flexWrap: 'wrap' }}>
-            {wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>}
-            {rel?.direction === 'friend' ? <Link className="btn" to={`/explorar/amigos/${l.seller}`}><MessageCircle size={16} aria-hidden /> Mensaje directo</Link>
-              : rel?.direction === 'out' ? <button className="btn" disabled>Solicitud enviada</button>
-              : <button className="btn" disabled={addFriend.isPending} onClick={() => addFriend.mutate()}>Agregar para escribirle</button>}
+            <Link className="btn primary" to={`/explorar/amigos/${l.seller}`}><MessageCircle size={16} aria-hidden /> Enviar mensaje</Link>
+            {wa && <a className="btn ghost" href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
           </div>
           <div className="safety">Encuéntrense en un lugar público, no adelantes dinero y revisa el equipo antes de pagar. Backline no cobra ni garantiza el trato. <InfoTip label="Más sobre la seguridad" text="Si algo te parece una estafa o el equipo es robado o falso, denuncia el anuncio. Desconfía de precios demasiado bajos, de quien tiene prisa o de quien pide pagar por adelantado." /></div>
         </div>

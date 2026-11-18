@@ -59,11 +59,15 @@ Deno.serve(async (req) => {
     // Solo se avisa entre amigos que no se hayan bloqueado (el mensaje pudo enviarse justo antes de un bloqueo).
     const pair = `and(requester.eq.${caller},addressee.eq.${m.recipient}),and(requester.eq.${m.recipient},addressee.eq.${caller})`
     const blockPair = `and(blocker.eq.${caller},blocked.eq.${m.recipient}),and(blocker.eq.${m.recipient},blocked.eq.${caller})`
-    const [{ data: friends }, { data: blocks }] = await Promise.all([
+    const lo = caller < m.recipient ? caller : m.recipient
+    const hi = caller < m.recipient ? m.recipient : caller
+    const [{ data: friends }, { data: blocks }, { data: contact }] = await Promise.all([
       admin.from('friendships').select('id').eq('status', 'accepted').or(pair).limit(1),
       admin.from('user_blocks').select('blocker').or(blockPair).limit(1),
+      admin.from('dm_contacts').select('status').eq('lo', lo).eq('hi', hi).neq('status', 'declined').limit(1),
     ])
-    if (!friends?.length || blocks?.length) return json({ ok: true, sent: 0 })
+    // Entre amigos, o con una solicitud de mensaje vigente (no rechazada); nunca si hay bloqueo.
+    if ((!friends?.length && !contact?.length) || blocks?.length) return json({ ok: true, sent: 0 })
     const { data: claimed } = await admin.from('direct_messages').update({ notified_at: new Date().toISOString() }).eq('id', id).is('notified_at', null).select('id')
     if (!claimed?.length) return json({ ok: true, sent: 0 })
     to = [m.recipient]

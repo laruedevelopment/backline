@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { myVenues, venueBookings } from './venues'
 import { unreadMessages, type Post } from './api'
-import { listFriends } from './social'
+import { listConversations, listFriends } from './social'
 import { useAuth } from '../store/useAuth'
 
 /**
@@ -74,7 +74,7 @@ export function useLiveSocial() {
   const userId = useAuth((s) => s.session?.user.id)
   useEffect(() => {
     if (!supabase || !userId) return
-    const refresh = () => { for (const key of ['friends', 'dm']) void qc.invalidateQueries({ queryKey: [key] }) }
+    const refresh = () => { for (const key of ['friends', 'dm', 'conversations']) void qc.invalidateQueries({ queryKey: [key] }) }
     const channel = supabase
       .channel(`social-${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages', filter: `recipient=eq.${userId}` }, refresh)
@@ -91,8 +91,15 @@ export function useFriends() {
   return useQuery({ queryKey: ['friends', userId], queryFn: listFriends, enabled: !!supabase && !!userId, staleTime: 60_000 })
 }
 
-/** Mensajes sin leer + solicitudes por responder. */
+/** Conversaciones con quien no es amigo (solicitudes de mensaje y chats aceptados). */
+export function useConversations() {
+  const userId = useAuth((s) => s.session?.user.id)
+  return useQuery({ queryKey: ['conversations', userId], queryFn: listConversations, enabled: !!supabase && !!userId, staleTime: 60_000 })
+}
+
+/** Mensajes sin leer + solicitudes de amistad y de mensaje por responder. */
 export function useSocialBadge(): number {
   const { data = [] } = useFriends()
-  return data.reduce((n, f) => n + f.unread + (f.direction === 'in' ? 1 : 0), 0)
+  const { data: convs = [] } = useConversations()
+  return data.reduce((n, f) => n + f.unread + (f.direction === 'in' ? 1 : 0), 0) + convs.reduce((n, c) => n + c.unread + (c.state === 'request_in' && c.unread === 0 ? 1 : 0), 0)
 }

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ChevronsRight, MessageCircle, Users } from 'lucide-react'
-import { useChatUnread, useFriends } from '../lib/useLive'
+import { useChatUnread, useConversations, useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
 import { useDock } from '../store/useDock'
@@ -15,13 +15,16 @@ export default function ChatDock() {
   const { view, setView, collapsed, setCollapsed } = useDock()
   const unreadBand = useChatUnread(band?.id)
   const { data: all = [] } = useFriends()
+  const { data: convs = [] } = useConversations()
   if (!supabase) return null
   const friends = all.filter((f) => f.direction === 'friend').sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
   const requests = all.filter((f) => f.direction === 'in').length
-  const friend = view.kind === 'friend' ? friends.find((f) => f.id === view.id) : undefined
+  const others = convs.filter((c) => c.state !== 'request_in').sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
+  const msgRequests = convs.filter((c) => c.state === 'request_in').length
+  const friend = view.kind === 'friend' ? (friends.find((f) => f.id === view.id) ?? convs.find((c) => c.id === view.id)) : undefined
   const open = view.kind === 'band' && band ? 'band' : friend ? 'friend' : 'list'
 
-  const unreadTotal = unreadBand + friends.reduce((n, f) => n + f.unread, 0) + requests
+  const unreadTotal = unreadBand + friends.reduce((n, f) => n + f.unread, 0) + convs.reduce((n, c) => n + c.unread, 0) + requests + msgRequests
 
   // Contraído: una burbuja flotante (como en Messenger) y la pantalla recupera todo el ancho.
   if (collapsed) {
@@ -54,7 +57,15 @@ export default function ChatDock() {
                 {f.unread > 0 && <span className="seg-badge" aria-label={`${f.unread} sin leer`}>{f.unread}</span>}
               </button>
             ))}
-            {friends.length === 0 && <p className="li-sub dock-empty">Aún no tienes amigos. Busca músicos en <Link to="/explorar/musicos" style={{ color: 'var(--amber)' }}>Comunidad</Link>.</p>}
+            {others.map((c) => (
+              <button key={c.id} className="dock-row" onClick={() => setView({ kind: 'friend', id: c.id })}>
+                <Avatar name={c.name} url={c.avatarUrl} />
+                <span className="dock-name"><b>{c.name}</b><small>{c.state === 'request_out' ? 'Esperando respuesta' : 'Mensaje'}</small></span>
+                {c.unread > 0 && <span className="seg-badge" aria-label={`${c.unread} sin leer`}>{c.unread}</span>}
+              </button>
+            ))}
+            {msgRequests > 0 && <Link to="/explorar/amigos" className="dock-more">{msgRequests} solicitud{msgRequests === 1 ? '' : 'es'} de mensaje</Link>}
+            {friends.length === 0 && others.length === 0 && <p className="li-sub dock-empty">Aún no tienes amigos. Busca músicos en <Link to="/explorar/musicos" style={{ color: 'var(--amber)' }}>Comunidad</Link>.</p>}
             <Link to="/explorar/amigos" className="dock-more"><Users size={16} aria-hidden /> Administrar amigos y solicitudes</Link>
           </div>
         </>

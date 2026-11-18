@@ -53,7 +53,8 @@ export default function Thread({ posts, members, userId, canDelete, onDelete, on
       await onSend(body)
       setDraft('')
     } catch (e) {
-      setError(/demasiados/.test(String((e as { message?: string })?.message)) ? 'Vas muy rápido: espera unos segundos.' : 'No se pudo enviar. Revisa tu conexión.')
+      const m = String((e as { message?: string })?.message)
+      setError(/demasiados/.test(m) ? 'Vas muy rápido: espera unos segundos.' : /espera a que te respondan/.test(m) ? 'Ya enviaste varios mensajes. Espera a que te respondan.' : /no recibe mensajes/.test(m) ? 'Esta persona no recibe mensajes tuyos.' : /no puedes escribirle/.test(m) ? 'No puedes escribirle a esta persona.' : 'No se pudo enviar. Revisa tu conexión.')
     } finally {
       setBusy(false)
     }

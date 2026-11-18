@@ -6,8 +6,6 @@ import { Plus } from 'lucide-react'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
 import { createOpening, deleteOpening, kindText, listBandOpenings, listReplies, setOpeningStatus, type MyOpening, type NewOpening } from '../lib/openings'
-import { requestFriend } from '../lib/social'
-import { useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import Avatar from './Avatar'
@@ -84,23 +82,13 @@ export default function BandOpenings({ bandId, bandName, city, isPublic }: { ban
 }
 
 function Replies({ opening, onClose }: { opening: MyOpening; onClose: () => void }) {
-  const me = useAuth((s) => s.session?.user.id)
-  const qc = useQueryClient()
   const { data: replies, isLoading } = useQuery({ queryKey: ['opening-replies', opening.id], queryFn: () => listReplies(opening.id) })
-  const { data: friends = [] } = useFriends()
-  const [error, setError] = useState('')
-  const add = useMutation({
-    mutationFn: (id: string) => requestFriend(me!, id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friends'] }),
-    onError: () => setError('No se pudo enviar la solicitud. Las amistades son solo entre mayores de edad.'),
-  })
   return (
     <Sheet title={`Respuestas · ${opening.instrument}`} onClose={onClose}>
       {isLoading && <p className="li-sub">Cargando…</p>}
       {replies && replies.length === 0 && <p className="li-sub">Todavía nadie respondió.</p>}
       <div className="list">
         {replies?.map((r) => {
-          const rel = friends.find((f) => f.id === r.profileId)
           return (
             <div key={r.id} className="li" style={{ alignItems: 'flex-start' }}>
               <Avatar name={r.name} url={r.avatarUrl} />
@@ -109,9 +97,7 @@ function Replies({ opening, onClose }: { opening: MyOpening; onClose: () => void
                 <div className="li-sub">{[r.instruments.slice(0, 3).join(' · '), r.city].filter(Boolean).join(' · ')}</div>
                 <p className="opening-details">{r.message}</p>
                 <div className="row" style={{ marginTop: 6 }}>
-                  {rel?.direction === 'friend' ? <Link className="btn sm primary" to={`/explorar/amigos/${r.profileId}`} onClick={onClose}>Escribirle</Link>
-                    : rel?.direction === 'out' ? <button className="btn sm" disabled>Solicitud enviada</button>
-                    : <button className="btn sm primary" disabled={add.isPending} onClick={() => add.mutate(r.profileId)}>Agregar amigo para escribirle</button>}
+                  <Link className="btn sm primary" to={`/explorar/amigos/${r.profileId}`} onClick={onClose}>Escribirle</Link>
                   <Link className="btn sm" to={`/explorar/musicos/${r.profileId}`} onClick={onClose}>Ver perfil</Link>
                 </div>
               </div>
@@ -119,7 +105,7 @@ function Replies({ opening, onClose }: { opening: MyOpening; onClose: () => void
           )
         })}
       </div>
-      {error && <p className="form-error" role="alert">{error}</p>}
     </Sheet>
   )
 }
+

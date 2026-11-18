@@ -84,6 +84,7 @@ export default function EnsayaderoPage() {
       {venue.amenities.length > 0 && <div className="chips">{venue.amenities.map((a) => <span key={a} className="tag">{a}</span>)}</div>}
 
       <div className="links-row" style={{ marginTop: 14 }}>
+        {!isOwner && <Link to={`/explorar/amigos/${venue.ownerId}`}>Escribir a la sala</Link>}
         {wa && <a href={wa} target="_blank" rel="noopener noreferrer">WhatsApp</a>}
         {venue.bookingUrl && <a href={venue.bookingUrl} target="_blank" rel="noopener noreferrer">Reservar en su sistema</a>}
         {socials.map(([k, url]) => <a key={k} href={url} target="_blank" rel="noopener noreferrer">{socialLabels[k]}</a>)}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import PageHead from '../../components/PageHead'
 import CalendarSheet from '../../components/CalendarSheet'
 import EquipmentSheet from '../../components/EquipmentSheet'
 import { HelpRow } from '../../components/InfoTip'
@@ -36,8 +37,7 @@ export default function BusinessRooms() {
 
   return (
     <>
-      <h1 className="sr-only">Salas</h1>
-      <div className="section-title">Salas de ensayo</div>
+      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Salas" info="Cada sala se reserva por separado: define su capacidad, medidas, precio y el equipo que incluye. El alquiler de instrumentos vale para todo el ensayadero." />
       {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && rooms.length === 0 && <p className="li-sub wrap">Agrega al menos una sala para poder publicar tu sala de ensayos: cada una se reserva por separado.</p>}
       <div className="list cols" style={{ borderTop: rooms.length ? undefined : 0 }}>

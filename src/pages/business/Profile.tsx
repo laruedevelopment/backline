@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHead from '../../components/PageHead'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import LocationEditor from '../../components/LocationEditor'
 import { VenueForm } from '../../components/VenueForms'
@@ -48,7 +49,7 @@ export default function BusinessProfile() {
 
   return (
     <>
-      <h1 className="sr-only">Perfil de la sala de ensayos</h1>
+      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Perfil" info="Lo que ven las bandas de tu sala de ensayos: nombre, descripción, fotos, contacto y cómo se confirman las reservas." />
       <div className="section-title">Publicación</div>
       <div className="checklist">
         {steps.map((s) => (

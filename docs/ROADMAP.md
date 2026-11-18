@@ -78,3 +78,8 @@ Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos
 
 ## Monetización (luego)
 Plan Pro para bandas (más almacenamiento, finanzas, EPK avanzado), comisión por reservas y ventas, anuncios destacados de salas/luthiers. Por ahora todo gratis.
+
+## Contacto dentro de la app (2026-11)
+- [x] El contacto principal es el mensaje dentro de Backline (sala de ensayos, anuncio, perfil de músico, respuestas a «Se busca»); WhatsApp queda como segunda opción. Se puede escribir a una persona adulta sin ser amigos si hay un motivo (perfil público, anuncio, sala, banda); el primer mensaje es una solicitud (hasta 3 mensajes) que la otra persona acepta, rechaza o bloquea (migración 0039).
+- [x] Equipo con casillas y alquiler de instrumentos a nivel de todo el ensayadero (migración 0038).
+- [ ] Pagos de reservas sin intermediar: datos de pago del dueño (Nequi, Bre-B, link de pasarela) y estado «pagado» marcado a mano.

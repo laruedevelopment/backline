@@ -308,6 +308,7 @@ language sql stable security definer set search_path = '' as $$
                                or (x.visibility = 'friends' and public.are_friends(x.author, (select auth.uid())))
                                or (x.visibility = 'band' and x.band_id is not null and public.is_band_member(x.band_id))))))
       or exists (select 1 from public.listings l where l.seller = p.id and l.status = 'active' and public.is_adult((select auth.uid())))
+      or exists (select 1 from public.venues v where v.owner_id = p.id and v.is_published)
       or exists (select 1 from public.listing_questions q join public.listings l on l.id = q.listing_id where q.author = p.id
                  and ((l.seller = (select auth.uid())) or (l.status = 'active' and public.is_adult((select auth.uid()))))));
 $$;

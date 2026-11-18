@@ -4,7 +4,7 @@ import Avatar from '../components/Avatar'
 import ListSkeleton from '../components/Skeleton'
 import CommunityNav from '../components/CommunityNav'
 import { acceptFriend, removeFriendship, type Friend } from '../lib/social'
-import { useFriends } from '../lib/useLive'
+import { useConversations, useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
 
 const hora = (iso: string | null) => {
@@ -18,6 +18,7 @@ const hora = (iso: string | null) => {
 export default function FriendsPage() {
   const qc = useQueryClient()
   const { data: all, isLoading, isError } = useFriends()
+  const { data: convs = [] } = useConversations()
   const refresh = () => qc.invalidateQueries({ queryKey: ['friends'] })
   const accept = useMutation({ mutationFn: (f: Friend) => acceptFriend(f.friendshipId), onSuccess: refresh })
   const drop = useMutation({ mutationFn: (f: Friend) => removeFriendship(f.friendshipId), onSuccess: refresh })
@@ -26,17 +27,37 @@ export default function FriendsPage() {
   const incoming = (all ?? []).filter((f) => f.direction === 'in')
   const friends = (all ?? []).filter((f) => f.direction === 'friend').sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
   const sent = (all ?? []).filter((f) => f.direction === 'out')
+  const msgReq = convs.filter((c) => c.state === 'request_in')
+  const chats = convs.filter((c) => c.state !== 'request_in').sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
 
   return (
     <>
       <CommunityNav title="Amigos" sub="Tus amigos, las solicitudes y tus conversaciones." />
       {isLoading && <ListSkeleton rows={3} />}
       {isError && <p className="empty">No pudimos cargar tus amigos. Revisa tu conexión.</p>}
-      {all && all.length === 0 && (
+      {all && all.length === 0 && convs.length === 0 && (
         <div className="empty">
           <h3>Todavía no tienes amigos aquí</h3>
           <p>Busca músicos en <Link to="/explorar/musicos" style={{ color: 'var(--amber)' }}>Comunidad</Link> y envíales una solicitud. Cuando la acepten podrán escribirse.</p>
         </div>
+      )}
+
+      {msgReq.length > 0 && (
+        <>
+          <div className="section-title">Solicitudes de mensaje · {msgReq.length}</div>
+          <div className="list">
+            {msgReq.map((c) => (
+              <Link key={c.id} to={`/explorar/amigos/${c.id}`} className="li" style={{ minHeight: 64 }}>
+                <Avatar name={c.name} url={c.avatarUrl} />
+                <div className="li-main">
+                  <div className="li-title">{c.name}</div>
+                  <div className="li-sub">{c.lastBody || 'Quiere escribirte'}</div>
+                </div>
+                {c.unread > 0 && <span className="seg-badge" aria-label={`${c.unread} sin leer`}>{c.unread}</span>}
+              </Link>
+            ))}
+          </div>
+        </>
       )}
 
       {incoming.length > 0 && (
@@ -71,6 +92,25 @@ export default function FriendsPage() {
                 </div>
                 {f.lastAt && <span className="li-sub">{hora(f.lastAt)}</span>}
                 {f.unread > 0 && <span className="seg-badge" aria-label={`${f.unread} sin leer`}>{f.unread}</span>}
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {chats.length > 0 && (
+        <>
+          <div className="section-title">Mensajes · {chats.length}</div>
+          <div className="list">
+            {chats.map((c) => (
+              <Link key={c.id} to={`/explorar/amigos/${c.id}`} className="li" style={{ minHeight: 64 }}>
+                <Avatar name={c.name} url={c.avatarUrl} />
+                <div className="li-main">
+                  <div className="li-title">{c.name}</div>
+                  <div className="li-sub">{c.state === 'request_out' ? 'Esperando respuesta · ' : ''}{c.lastBody}</div>
+                </div>
+                {c.lastAt && <span className="li-sub">{hora(c.lastAt)}</span>}
+                {c.unread > 0 && <span className="seg-badge" aria-label={`${c.unread} sin leer`}>{c.unread}</span>}
               </Link>
             ))}
           </div>

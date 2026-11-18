@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Member } from '../lib/api'
 import { ask } from '../lib/confirm'
-import { deleteDirect, listDirect, markDirectRead, sendDirect, type Friend } from '../lib/social'
+import { deleteDirect, listDirect, markDirectRead, sendDirect } from '../lib/social'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 import ListSkeleton from './Skeleton'
@@ -10,7 +10,8 @@ import Thread from './Thread'
 import { ReportSheet, type ReportTarget } from './ReportSheet'
 
 /** Conversación con un amigo (la usan la pantalla de mensajes y el panel lateral). Al verla se da por leída. */
-export default function DirectThread({ friend }: { friend: Friend }) {
+export type Person = { id: string; name: string; avatarUrl: string | null; instruments: string[] }
+export default function DirectThread({ friend }: { friend: Person }) {
   const me = useAuth((s) => s.session?.user.id)
   const qc = useQueryClient()
   const id = friend.id

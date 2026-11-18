@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from 'react-router-dom'
 import { waLink } from '../lib/identity'
 import { bogotaDate, buildSlots, formatDay, formatTime, money, todayBogota, weekdayOf, type Slot } from '../lib/slots'
 import { bookingError, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
@@ -85,9 +86,9 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
             ? `Tu franja ya está confirmada${bandId ? ' y el ensayo quedó en la agenda de tu banda' : ''}. La sala de ensayos fue avisada.`
             : `La sala de ensayos responderá la solicitud. Verás el estado en «Mis reservas»${bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.`}
         </p>
-        {!venue.autoConfirm && wa && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Avisarles por WhatsApp</a>}
-        {!venue.autoConfirm && wa && <p className="li-sub wrap">Escríbeles para que sepan que hay una solicitud nueva: así la ven rápido.</p>}
-        <button className="btn" onClick={onClose}>Listo</button>
+        <Link className="btn" to={`/explorar/amigos/${venue.ownerId}`} onClick={onClose}>Escribirles dentro de Backline</Link>
+        {!venue.autoConfirm && wa && <a className="btn ghost" href={wa} target="_blank" rel="noopener noreferrer">O avisarles por WhatsApp</a>}
+        <button className="btn primary" onClick={onClose}>Listo</button>
       </Sheet>
     )
   }

@@ -1,5 +1,6 @@
 import ListSkeleton from '../../components/Skeleton'
 import { dayKey, formatDay } from '../../lib/slots'
+import PageHead from '../../components/PageHead'
 import type { Booking } from '../../lib/venues'
 import { useVenue } from './BusinessContext'
 import BookingRow from './BookingRow'
@@ -19,12 +20,8 @@ export default function BusinessBookings() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">{venue.name}</span>
-        <h1 className="page-title">Reservas</h1>
-        <p className="page-sub">Lo que viene, día por día. Las que llegan por WhatsApp o llamada puedes anotarlas aquí para que las bandas vean la disponibilidad real.</p>
-      </div>
-      <button className="btn" onClick={board.addManual} disabled={board.rooms.length === 0}>Anotar una reserva</button>
+      <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Reservas" info="Lo que viene, día por día. Las que llegan por WhatsApp o llamada puedes anotarlas aquí para que las bandas vean la disponibilidad real." />
+      <div className="toolbar"><button className="btn primary" onClick={board.addManual} disabled={board.rooms.length === 0}>Anotar una reserva</button></div>
       {board.msg && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{board.msg}</p>}
       {board.isLoading && <ListSkeleton rows={4} />}
       {!board.isLoading && active.length === 0 && (

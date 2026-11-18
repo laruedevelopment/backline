@@ -85,3 +85,16 @@ export async function markDirectRead(me: string, other: string) {
   const { error } = await db().from('direct_messages').update({ read_at: new Date().toISOString() }).eq('sender', other).eq('recipient', me).is('read_at', null)
   if (error) throw error
 }
+
+/** Conversación con alguien que no es amigo: solicitud recibida, enviada o aceptada. */
+export type Conversation = { id: string; name: string; avatarUrl: string | null; instruments: string[]; city: string; state: 'accepted' | 'request_in' | 'request_out'; unread: number; lastAt: string | null; lastBody: string }
+export async function listConversations(): Promise<Conversation[]> {
+  const { data, error } = await db().rpc('conversations')
+  if (error) throw error
+  type R = { other_id: string; display_name: string; avatar_path: string | null; instruments: string[] | null; city: string | null; state: Conversation['state']; unread: number | string; last_at: string | null; last_body: string | null }
+  return (data as R[]).map((r) => ({ id: r.other_id, name: r.display_name || 'Músico', avatarUrl: avatarUrl(r.avatar_path), instruments: r.instruments ?? [], city: r.city ?? '', state: r.state, unread: Number(r.unread), lastAt: r.last_at, lastBody: r.last_body ?? '' }))
+}
+export async function respondRequest(otherId: string, accept: boolean) {
+  const { error } = await db().rpc('respond_dm_request', { p_other: otherId, p_accept: accept })
+  if (error) throw error
+}
