@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { notifySocial } from './push'
 import type { SetlistItem } from './setlistItems'
 import type { Song } from './song'
 
@@ -401,8 +402,9 @@ export async function listMessages(bandId: string): Promise<Post[]> {
   return (data as PostRow[]).map(fromPost).reverse()
 }
 export async function sendMessage(bandId: string, userId: string, body: string) {
-  const { error } = await db().from('band_messages').insert({ band_id: bandId, profile_id: userId, body: body.trim().slice(0, 2000) })
+  const { data, error } = await db().from('band_messages').insert({ band_id: bandId, profile_id: userId, body: body.trim().slice(0, 2000) }).select('id').single()
   if (error) throw error
+  void notifySocial('band_message', data.id)
 }
 export async function deleteMessage(id: string) {
   const { error } = await db().from('band_messages').delete().eq('id', id)

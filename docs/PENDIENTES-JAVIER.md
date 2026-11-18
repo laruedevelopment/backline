@@ -64,3 +64,10 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
 - **Google Play:** cuenta de desarrollador, pago único (~US$25).
 - **App Store:** Apple Developer Program, pago anual (~US$99) y un Mac o servicio de compilación para iOS.
 - Se publica la misma web envuelta con Capacitor; no hace falta reescribirla. Hasta entonces la PWA instalable cubre el celular sin costo.
+
+## Avisos push del chat, mensajes directos y amistades
+1. En el editor SQL del proyecto **backline** corre `supabase/migrations/20261020000033_avisos_sociales.sql`.
+2. Publica la función (la clave de la CLI da 403 desde el agente; hazlo tú): `npx supabase login` y luego
+   `npx supabase functions deploy notify-social --project-ref xmhwgdqcjvpsfezxnjuz --use-api`.
+   Usa las mismas llaves VAPID que `notify-booking` (ya configuradas).
+3. En la app, cada persona activa los avisos en su perfil (Avisos en este dispositivo).

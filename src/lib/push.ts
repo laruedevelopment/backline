@@ -54,6 +54,12 @@ export async function disablePush(): Promise<PushState> {
   return 'off'
 }
 
+/** Avisa por push de un mensaje del chat, un mensaje directo o una solicitud de amistad. Si falla no importa: lo escrito ya quedó guardado. */
+export async function notifySocial(kind: 'band_message' | 'direct' | 'friend_request' | 'friend_accepted', id: string): Promise<void> {
+  if (!supabase || !PUBLIC_KEY) return
+  try { await supabase.functions.invoke('notify-social', { body: { kind, id } }) } catch { /* sin aviso */ }
+}
+
 /** Avisa a la otra parte de una reserva. Si falla, no importa: la reserva ya quedó guardada. */
 export async function notifyBooking(bookingId: string): Promise<void> {
   if (!supabase || !PUBLIC_KEY) return

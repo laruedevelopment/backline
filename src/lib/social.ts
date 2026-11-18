@@ -1,5 +1,6 @@
 // Amigos y mensajes directos. Solo entre mayores de edad; solo se escribe entre amigos (lo hace cumplir la base de datos).
 import { avatarUrl, type Post } from './api'
+import { notifySocial } from './push'
 import { supabase } from './supabase'
 
 const db = () => {
@@ -35,14 +36,16 @@ export async function listFriends(): Promise<Friend[]> {
 }
 
 export async function requestFriend(me: string, other: string) {
-  const { error } = await db().from('friendships').insert({ requester: me, addressee: other })
+  const { data, error } = await db().from('friendships').insert({ requester: me, addressee: other }).select('id').single()
   if (error) throw error
+  void notifySocial('friend_request', data.id)
 }
 
 export async function acceptFriend(friendshipId: string) {
   const { data, error } = await db().from('friendships').update({ status: 'accepted', responded_at: new Date().toISOString() }).eq('id', friendshipId).select('id')
   if (error) throw error
   if (!data.length) throw new Error('La solicitud ya no existe')
+  void notifySocial('friend_accepted', friendshipId)
 }
 
 /** Rechazar una solicitud, cancelar la que enviaste o dejar de ser amigos: todo es borrar la fila. */
@@ -68,8 +71,9 @@ export async function listDirect(me: string, other: string): Promise<Post[]> {
 }
 
 export async function sendDirect(me: string, other: string, body: string) {
-  const { error } = await db().from('direct_messages').insert({ sender: me, recipient: other, body: body.trim().slice(0, 2000) })
+  const { data, error } = await db().from('direct_messages').insert({ sender: me, recipient: other, body: body.trim().slice(0, 2000) }).select('id').single()
   if (error) throw error
+  void notifySocial('direct', data.id)
 }
 
 export async function deleteDirect(id: string) {
