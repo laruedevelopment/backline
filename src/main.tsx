@@ -7,6 +7,9 @@ import '@fontsource/ibm-plex-mono/500.css'
 import '@fontsource/ibm-plex-mono/600.css'
 import './index.css'
 import App from './App.tsx'
+import { installErrorLog } from './lib/errorLog'
+
+installErrorLog()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

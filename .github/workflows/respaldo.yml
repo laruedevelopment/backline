@@ -1,0 +1,39 @@
+name: Respaldo cifrado de la base
+
+# Cada semana descarga la base de datos (esquema y datos de la app), la cifra con una frase secreta y la guarda 30 días como artefacto.
+# IMPORTANTE: este repositorio es público, así que el artefacto es descargable por cualquiera con cuenta de GitHub; por eso va cifrado
+# (AES-256). Sin la frase BACKUP_PASSPHRASE no se puede leer. No cubre las fotos (Storage). Ver docs/PENDIENTES-JAVIER.md.
+on:
+  schedule:
+    - cron: '23 8 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Comprobar secretos
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PASS" ]; then echo "Faltan los secretos SUPABASE_DB_URL y BACKUP_PASSPHRASE (ver docs/PENDIENTES-JAVIER.md)"; exit 1; fi
+      - name: Volcar y cifrar
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PASS: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          docker run --rm postgres:17 pg_dump "$DB" --schema=public --no-owner --no-privileges | gzip -9 > respaldo.sql.gz
+          test -s respaldo.sql.gz
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASS" --symmetric --cipher-algo AES256 -o "respaldo-$(date +%F).sql.gz.gpg" respaldo.sql.gz
+          rm respaldo.sql.gz
+          ls -l respaldo-*.gpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-cifrado
+          path: respaldo-*.gpg
+          retention-days: 30

@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { reportError } from '../lib/errorLog'
 import { CHUNK, reloadForNewVersion } from '../lib/reload'
 type Props = { children: ReactNode; compact?: boolean }
 type State = { error: Error | null }
@@ -14,6 +15,7 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('Error de pantalla', error, info.componentStack)
+    reportError(error, info.componentStack ?? undefined)
     if (CHUNK.test(String(error?.message ?? error))) reloadForNewVersion()
   }
 

@@ -976,6 +976,13 @@ await ok('descargar mis datos devuelve solo lo mío', async () => {
   eq(o.d.mis_negocios.length >= 1, true, 'negocio propio')
 })
 await rejects('sin sesión no se descargan datos', () => pg.query(`select public.export_my_data()`), /no autenticado|permission|null/)
+await ok('el registro de errores guarda, recorta y limita a 20 por hora', async () => {
+  for (let i = 0; i < 25; i++) await as('leader', `select public.log_client_error($1, $2)`, ['fallo ' + i, 'x'.repeat(3000)])
+  const [r] = (await pg.query(`select count(*)::int as n, max(length(stack))::int as len from public.client_errors where user_id=$1`, [U.leader])).rows
+  eq(r.n, 20, 'límite'); eq(r.len, 1500, 'recorte')
+})
+await rejects('nadie lee el registro de errores directo', () => as('leader', `select * from public.client_errors`), /permission denied/)
+await ok('sin sesión no se registra nada', async () => { await pg.query(`select public.log_client_error('anon')`); eq((await pg.query(`select count(*)::int as n from public.client_errors where message='anon'`)).rows[0].n, 0, 'anon') })
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

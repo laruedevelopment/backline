@@ -97,7 +97,7 @@ export const privacy: LegalDoc = {
     },
     {
       title: '9. Seguridad',
-      paragraphs: ['Conexión cifrada, contraseñas cifradas y control de acceso por banda. Ningún sistema es 100 % seguro: avísanos si detectas un problema.'],
+      paragraphs: ['Conexión cifrada, contraseñas cifradas y control de acceso por banda. Si la app falla guardamos un registro técnico (mensaje del error, pantalla, tipo de dispositivo y tu identificador) para poder corregirlo; se borra a los 30 días. Ningún sistema es 100 % seguro: avísanos si detectas un problema.'],
     },
     {
       title: '10. Cambios',

@@ -85,3 +85,15 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
 - El workflow `vencer-reservas.yml` usa las mismas variables del repo que `salud-supabase.yml`; sin costo.
 - Backline no recibe dinero: el pago va directo a la cuenta del dueño. Aun así, Lucía debe revisar los términos antes de abrir reservas con cobro.
 - Bloqueos de horario y «Ignorar» eventos del calendario (migración 0041): también va en `supabase/pendiente.sql` (ahora 0037 a 0041).
+
+## Monitoreo y respaldos (migración 0043 y workflows)
+- **Vigilancia del sitio** (`vigilancia.yml`, cada 15 min): ya funciona sola con las variables del repo. Si la web o Supabase caen, GitHub te manda un correo de «workflow failed». Revisa que las notificaciones de Actions estén activas en GitHub → Settings → Notifications.
+- **Registro de errores propio** (migración 0043): correr `supabase/pendiente.sql`. Para leerlo, en el SQL Editor: `select created_at, message, url, left(agent, 60) as dispositivo, user_id from public.client_errors order by created_at desc limit 50;` (se borra solo a los 30 días).
+- **Respaldo cifrado semanal** (`respaldo.yml`), pasos tuyos:
+  1. Supabase → Connect → «Session pooler» → copia la cadena `postgresql://…` y pon tu contraseña de base de datos (Settings → Database; se puede restablecer ahí mismo).
+  2. GitHub → repo → Settings → Secrets and variables → Actions → New repository secret: `SUPABASE_DB_URL` con esa cadena.
+  3. Otro secreto `BACKUP_PASSPHRASE` con una frase larga que solo tú guardes (en tu gestor de contraseñas). Sin ella el respaldo no se puede abrir.
+  4. Actions → «Respaldo cifrado de la base» → Run workflow para probarlo; baja el artefacto y guárdalo en un lugar privado (Drive).
+  - Nota: el repositorio es público; el artefacto va cifrado pero es descargable. No cubre las fotos (Storage). Para restaurar: `gpg -d archivo.gpg | gunzip | psql <cadena>`.
+- **Sentry** (opcional, ya tienes cuenta `jrdev-cg`): mandaría datos de errores a un tercero; si lo quieres, hay que actualizar la política de privacidad y subir la versión de términos. Dime y lo dejo conectado.
+- El texto de privacidad (9. Seguridad) ya menciona el registro técnico de errores; Lucía debe revisarlo junto con el resto antes de abrir.

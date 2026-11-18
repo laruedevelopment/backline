@@ -1,0 +1,32 @@
+name: Vigilancia del sitio
+
+# Cada 15 minutos revisa que la web y la API respondan. Si algo falla, el workflow falla y GitHub avisa por correo a quien lo mantiene.
+# (Los cron de GitHub pueden retrasarse unos minutos; sirve para enterarse de una caída, no para medir tiempos.)
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Revisar la web y la API
+        env:
+          URL: ${{ vars.VITE_SUPABASE_URL }}
+          KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          fallo=0
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 "https://laruedevelopment.github.io/backline/")
+          echo "web: $code"; [ "$code" = "200" ] || fallo=1
+          if [ -n "$URL" ] && [ -n "$KEY" ]; then
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 -H "apikey: $KEY" "$URL/auth/v1/health")
+            echo "auth: $code"; [ "$code" = "200" ] || fallo=1
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "$URL/rest/v1/profiles?select=id&limit=1")
+            echo "api: $code"; case "$code" in 200|401|403) ;; *) fallo=1 ;; esac
+          fi
+          exit $fallo
