@@ -26,7 +26,7 @@ export function useBookingBoard(venue: Venue) {
     onError: (e) => { setMsg(bookingError(e)); void refresh() },
   })
   const review = useMutation({
-    mutationFn: (v: { id: string; action: 'paid' | 'reject'; note: string }) => reviewPayment(v.id, v.action, v.note),
+    mutationFn: (v: { id: string; action: 'paid' | 'reject' | 'refunded' | 'no_refund'; note: string }) => reviewPayment(v.id, v.action, v.note),
     onSuccess: refresh,
     onError: (e) => { setMsg(bookingError(e)); void refresh() },
   })
@@ -55,6 +55,7 @@ export function useBookingBoard(venue: Venue) {
 
   return {
     bookings, rooms, isLoading, pending, confirmed, history, msg, now, sheets, busy: respond.isPending || cancel.isPending || review.isPending,
+    refund: (b: Booking, action: 'refunded' | 'no_refund') => { setMsg(''); review.mutate({ id: b.id, action, note: '' }) },
     markPaid: (b: Booking) => { setMsg(''); review.mutate({ id: b.id, action: 'paid', note: '' }) },
     rejectProof: (b: Booking) => { setMsg(''); const note = window.prompt('¿Qué pasó con el comprobante? (opcional, se lo mostramos al cliente)', 'No se alcanza a ver el valor o la fecha') ; if (note !== null) review.mutate({ id: b.id, action: 'reject', note }) },
     confirm: (b: Booking) => { setMsg(''); respond.mutate({ id: b.id, status: 'confirmed', note: '' }) },

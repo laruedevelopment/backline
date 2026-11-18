@@ -46,6 +46,15 @@ export default function BookingRow({ b, venue, board, showDay = true }: { b: Boo
           <button className="btn primary" disabled={board.busy} onClick={() => board.confirm(b)}>Confirmar</button>
         </div>
       )}
+      {b.status === 'cancelled' && b.payStatus === 'refund_due' && (
+        <div style={{ width: '100%' }}>
+          <p className="li-sub wrap"><b>Devolución pendiente:</b> esta reserva estaba pagada y se canceló. Devuelve el dinero según tu política de cancelación y márcalo aquí.</p>
+          <div className="row" style={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            <button className="btn" disabled={board.busy} onClick={() => board.refund(b, 'no_refund')}>No aplica devolución</button>
+            <button className="btn primary" disabled={board.busy} onClick={() => board.refund(b, 'refunded')}>Ya devolví el dinero</button>
+          </div>
+        </div>
+      )}
       {b.status === 'confirmed' && b.payStatus === 'proof_sent' && (
         <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
           <button className="btn" disabled={board.busy} onClick={() => board.rejectProof(b)}>Pedir otro comprobante</button>

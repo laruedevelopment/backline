@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.8'
+export const TERMS_VERSION = '0.9'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -21,6 +21,8 @@ export const privacy: LegalDoc = {
         'En tu perfil, de forma opcional: foto, instrumentos que tocas, ciudad, una descripción corta y un número de WhatsApp. La foto se recorta y se reduce en tu dispositivo y se le quita la ubicación (EXIF) antes de subirla.',
         'Datos de tu banda y de tu uso: bandas a las que perteneces y tu rol, repertorio, setlists, ensayos y toques, tu respuesta de asistencia y el instrumento que tocas en cada banda.',
         'Si reservas una sala de ensayo: la franja que pides, tu nombre, la nota y, si lo escribes, tu teléfono. Se comparten con el dueño de esa sala de ensayos para que pueda confirmarte. Si publicas tu propia sala de ensayos: sus datos de contacto, fotos, horarios y precios, visibles para las personas con cuenta en Backline.',
+        'Comprobantes de pago: si pagas una reserva, subes una imagen del comprobante. Se guarda en un espacio privado y solo la ven tú, las personas de tu banda que administran la reserva y la sala a la que le pagaste, para verificar el pago. No subas datos que no hacen falta (tu cédula completa, el saldo de tu cuenta): puedes tapar esas partes. Se borran a los 90 días de terminada la reserva (a los 30 días si se canceló), o antes si borras tu cuenta. La sala recibe tu nombre, teléfono y comprobante solo para esa reserva y es responsable del tratamiento que les dé; Backline le exige usarlos únicamente para atenderla. Guardamos también la fecha en que aceptaste las condiciones de pago y la política de cancelación que viste.',
+        'Registro técnico de errores: cuando la app falla guardamos el mensaje del error, la pantalla, el tipo de dispositivo, la versión y tu identificador interno, solo para corregir el problema. Se borra a los 30 días, no se usa para publicidad y no se comparte.',
         'Logo y fotos de la banda que suban sus líderes o administradores. Antes de subirlas se reducen y se les quita la ubicación (EXIF).',
         'Enlaces de YouTube o Spotify, notas y, si la banda los escribe, la letra y los acordes de sus canciones.',
         'Los códigos y enlaces de invitación que generen los administradores de una banda (vencen a los 7 días).',
@@ -112,11 +114,11 @@ export const terms: LegalDoc = {
   sections: [
     {
       title: '1. Qué es Backline',
-      paragraphs: ['Una herramienta para organizar bandas: repertorio, setlists, ensayos y toques. Hoy es gratuita y está en desarrollo; puede cambiar, tener errores o interrumpirse.'],
+      paragraphs: ['Una herramienta para organizar bandas: repertorio, setlists, ensayos y toques. Es gratuita para las personas usuarias y está en desarrollo; puede cambiar, tener errores o interrumpirse. Los pagos de reservas se hacen directamente a cada sala.'],
     },
     {
       title: '2. Tu cuenta',
-      paragraphs: ['Debes dar datos verdaderos, cuidar tu contraseña y responder por lo que se haga con tu cuenta. Edad mínima: 18 años. Entre 14 y 17 años solo con autorización del padre, la madre o el representante legal. Menores de 14 años no pueden usar Backline.'],
+      paragraphs: ['Debes dar datos verdaderos, cuidar tu contraseña y responder por lo que se haga con tu cuenta. Edad mínima: 18 años. Entre 14 y 17 años solo con autorización del padre, la madre o el representante legal. Menores de 14 años no pueden usar Backline. Reservar y pagar salas de ensayos con cobro es solo para personas mayores de edad.'],
     },
     {
       title: '3. Tu contenido',
@@ -143,14 +145,19 @@ export const terms: LegalDoc = {
       title: '5 ter. Muro y Mercado',
       paragraphs: [
         'El muro y el Mercado son solo para personas mayores de edad; las personas menores solo ven lo que su banda publica para sus integrantes. Cada persona es responsable de lo que publica y de tener el derecho y el permiso de quienes aparecen en sus fotos; no publiques fotos de menores de edad ni de personas que no quieran aparecer. Puedes denunciar cualquier publicación, comentario, anuncio o perfil, y podemos retirarlos y suspender cuentas.',
-        'El Mercado es solo un tablón de anuncios entre personas: Backline no vende, no cobra, no procesa pagos, no entrega ni garantiza productos, ni verifica a quien publica. Publica solo equipo que sea tuyo y descríbelo con sinceridad. Encuéntrate en un lugar público, no adelantes dinero y revisa el equipo antes de pagar. Está prohibido publicar equipo robado, falsificado o ilegal. Si más adelante hay pagos dentro de la app, se aplicarán los derechos del consumidor (Ley 1480 de 2011).',
+        'El Mercado es solo un tablón de anuncios entre personas particulares (entre particulares no suele aplicar la garantía legal de un comercio; quien venda de forma habitual como negocio puede estar sujeto a las normas del consumidor): Backline no vende, no cobra, no procesa pagos, no entrega ni garantiza productos, ni verifica a quien publica. Publica solo equipo que sea tuyo y descríbelo con sinceridad. Encuéntrate en un lugar público, no adelantes dinero y revisa el equipo antes de pagar. Está prohibido publicar equipo robado, falsificado o ilegal. Si más adelante hay pagos dentro de la app, se aplicarán los derechos del consumidor (Ley 1480 de 2011).',
       ],
     },
     {
       title: '6. Salas de ensayos y reservas',
       paragraphs: [
-        'Backline conecta bandas con salas de ensayos y otros negocios musicales; no es parte del contrato entre ellos. Una solicitud solo se vuelve reserva cuando la sala de ensayos la confirma. Backline no cobra ni procesa pagos: el pago y las condiciones de uso de la sala se acuerdan directamente con ella.',
-        'Quien publica una sala de ensayos responde por la veracidad de sus datos, horarios y precios, y por atender o cancelar a tiempo las reservas que confirme. Quien reserva debe cancelar con anticipación si no puede asistir.',
+        'Backline pone en contacto a bandas con salas de ensayos y otros negocios musicales. El alquiler de la sala es un contrato solo entre quien reserva y la sala: Backline no es parte, no es dueña ni administradora de las salas y no recibe dinero. Una solicitud solo se vuelve reserva cuando la sala la confirma (o si la sala confirma sola).',
+        'Pagos. Si la sala pide pago, le pagas directamente a ella (Nequi, Bre-B o el enlace que indique). Backline no recibe, guarda ni devuelve ese dinero. Antes de reservar verás quién es la sala (nombre y documento), el precio total, el anticipo, el plazo y su política de cancelación y devolución, y debes aceptarlos marcando una casilla; guardamos la fecha de esa aceptación y la política que viste.',
+        'Comprobante y plazo. Para mantener la reserva debes adjuntar el comprobante en la app dentro del plazo que la sala definió. Si no lo haces, la reserva se cancela sola y la franja queda libre. Si adjuntaste el comprobante a tiempo, la reserva se mantiene mientras la sala lo revisa: la demora en revisarlo es de la sala y no te quita la reserva. Esta regla no limita tus derechos como consumidor.',
+        'Cancelación y devolución. Cada sala que cobra publica su política de cancelación y devolución. Si una reserva pagada se cancela (por ti, por la sala o porque la sala bloqueó esas fechas), queda marcada como «devolución pendiente» y la sala debe devolverte el dinero según su política y marcarlo en la app. Si la sala cancela o no presta el servicio, debe devolverte lo pagado.',
+        'Retracto. Estas reservas se hacen a distancia, pero son servicios con día y hora fijos, que la ley exceptúa del derecho de retracto (Ley 1480 de 2011, art. 47). Lo que puedes cancelar y cuánto te devuelven lo dice la política de la sala. [Borrador: un abogado debe confirmar este texto.]',
+        'Responsabilidad de la sala. Quien publica una sala declara su nombre o razón social y su documento, que está autorizada para ofrecer el servicio y que los precios incluyen los impuestos que correspondan; responde por la veracidad de sus datos, horarios, precios, equipos y fotos, por prestar el servicio reservado y por devolver lo que corresponda. Usará los datos de quien reserva (nombre, teléfono, comprobante) solo para atender esa reserva y no los compartirá ni los usará para publicidad.',
+        `Si hay un problema, escríbele primero a la sala desde Backline. Si no responde, escríbenos a ${CONTACT_EMAIL} con tu reserva y el comprobante: te ayudaremos a contactarla y, si hace falta, a retirar su publicación, pero no podemos devolver dinero que no recibimos. También puedes acudir a la Superintendencia de Industria y Comercio.`,
       ],
     },
     {
@@ -171,7 +178,7 @@ export const terms: LegalDoc = {
     },
     {
       title: '11. Ley aplicable y contacto',
-      paragraphs: [`Ley colombiana. Dudas o reclamos: ${CONTACT_EMAIL}. Hoy el servicio es gratuito; si más adelante hay cobros, se aplicarán también los derechos de la Ley 1480 de 2011.`],
+      paragraphs: [`Ley colombiana. Dudas o reclamos: ${CONTACT_EMAIL}. Backline es gratuito para las personas usuarias; los pagos por reservas se hacen directamente a cada sala, y a esas reservas se aplican los derechos del consumidor de la Ley 1480 de 2011.`],
     },
   ],
 }

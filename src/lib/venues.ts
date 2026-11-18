@@ -20,7 +20,7 @@ export type Venue = {
   amenities: string[]; whatsapp: string; links: BandLinks; bookingUrl: string
   logoPath: string | null; logoUrl: string | null; isPublished: boolean; autoConfirm: boolean
   lat: number | null; lng: number | null
-  payRequired: boolean; payDepositPct: number | null; payHoldHours: number
+  payRequired: boolean; payDepositPct: number | null; payHoldHours: number; cancelPolicy: string
 }
 export type Room = {
   id: string; venueId: string; name: string; capacity: number; pricePerHour: number; description: string
@@ -33,23 +33,23 @@ export type Booking = {
   id: string; venueId: string; roomId: string; bandId: string | null; status: BookingStatus
   startsAt: string; endsAt: string; note: string; responseNote: string
   contactName: string; contactPhone: string; source: 'app' | 'owner'
-  venueName: string; venueCity: string; roomName: string
+  venueName: string; venueCity: string; roomName: string; venueOwnerId: string
   totalAmount: number | null; depositAmount: number | null; payStatus: PayStatus; payDueAt: string | null; proofPath: string | null; payNote: string
 }
-export type PayStatus = 'not_required' | 'awaiting' | 'proof_sent' | 'paid'
+export type PayStatus = 'not_required' | 'awaiting' | 'proof_sent' | 'paid' | 'refund_due' | 'refunded' | 'no_refund'
 
 type VenueRow = {
   id: string; owner_id: string; kind: VenueKind; name: string; city: string; address: string; description: string | null
   amenities: string[]; whatsapp: string | null; links: BandLinks; booking_url: string | null; logo_path: string | null; is_published: boolean; auto_confirm: boolean
-  lat: number | null; lng: number | null; pay_required: boolean; pay_deposit_pct: number | null; pay_hold_hours: number
+  lat: number | null; lng: number | null; pay_required: boolean; pay_deposit_pct: number | null; pay_hold_hours: number; cancel_policy: string | null
 }
 const toVenue = (r: VenueRow): Venue => ({
   id: r.id, ownerId: r.owner_id, kind: r.kind, name: r.name, city: r.city, address: r.address, description: r.description ?? '',
   amenities: r.amenities, whatsapp: r.whatsapp ?? '', links: r.links, bookingUrl: r.booking_url ?? '',
   logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published, autoConfirm: r.auto_confirm, lat: r.lat, lng: r.lng,
-  payRequired: r.pay_required, payDepositPct: r.pay_deposit_pct, payHoldHours: r.pay_hold_hours,
+  payRequired: r.pay_required, payDepositPct: r.pay_deposit_pct, payHoldHours: r.pay_hold_hours, cancelPolicy: r.cancel_policy ?? '',
 })
-const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm, lat, lng, pay_required, pay_deposit_pct, pay_hold_hours'
+const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm, lat, lng, pay_required, pay_deposit_pct, pay_hold_hours, cancel_policy'
 
 export async function listVenues(): Promise<Venue[]> {
   const { data, error } = await db().from('venues').select(VENUE_COLS).eq('is_published', true).order('name')
@@ -203,9 +203,9 @@ export async function roomBusy(roomId: string, from: Date, to: Date): Promise<Bu
   return data as Busy[]
 }
 
-export async function requestBooking(v: { roomId: string; start: Date; end: Date; bandId: string | null; note: string; phone: string }): Promise<string> {
+export async function requestBooking(v: { roomId: string; start: Date; end: Date; bandId: string | null; note: string; phone: string; accepted?: boolean }): Promise<string> {
   const { data, error } = await db().rpc('request_booking', {
-    p_room: v.roomId, p_start: v.start.toISOString(), p_end: v.end.toISOString(), p_band: v.bandId, p_note: v.note || null, p_phone: v.phone || null,
+    p_room: v.roomId, p_start: v.start.toISOString(), p_end: v.end.toISOString(), p_band: v.bandId, p_note: v.note || null, p_phone: v.phone || null, p_accepted: !!v.accepted,
   })
   if (error) throw error
   void notifyBooking(data as string)
@@ -245,16 +245,16 @@ async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   const venueIds = [...new Set(rows.map((r) => r.venue_id))]
   const roomIds = [...new Set(rows.map((r) => r.room_id))]
   const [v, r] = await Promise.all([
-    db().from('venues').select('id, name, city').in('id', venueIds),
+    db().from('venues').select('id, name, city, owner_id').in('id', venueIds),
     db().from('venue_rooms').select('id, name').in('id', roomIds),
   ])
-  const venues = new Map((v.data ?? []).map((x: { id: string; name: string; city: string }) => [x.id, x]))
+  const venues = new Map((v.data ?? []).map((x: { id: string; name: string; city: string; owner_id: string }) => [x.id, x]))
   const rooms = new Map((r.data ?? []).map((x: { id: string; name: string }) => [x.id, x.name]))
   return rows.map((b) => ({
     id: b.id, venueId: b.venue_id, roomId: b.room_id, bandId: b.band_id, status: b.status, startsAt: b.starts_at, endsAt: b.ends_at,
     note: b.note ?? '', responseNote: b.response_note ?? '', contactName: b.contact_name, contactPhone: b.contact_phone ?? '', source: b.source,
     totalAmount: b.total_amount, depositAmount: b.deposit_amount, payStatus: b.pay_status, payDueAt: b.pay_due_at, proofPath: b.proof_path, payNote: b.pay_note ?? '',
-    venueName: venues.get(b.venue_id)?.name ?? 'Sala de ensayos', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '',
+    venueName: venues.get(b.venue_id)?.name ?? 'Sala de ensayos', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '', venueOwnerId: venues.get(b.venue_id)?.owner_id ?? '',
   }))
 }
 
@@ -273,7 +273,16 @@ export async function venueBookings(venueId: string): Promise<Booking[]> {
 
 // ───────── Pagos de reservas (el dinero va directo al dueño; Backline solo guarda el comprobante) ─────────
 export type PayInfo = { nequi: string; breb: string; link: string; notes: string }
-export type PaySettings = { required: boolean; nequi: string; breb: string; link: string; notes: string; depositPct: number | null; holdHours: number }
+export type PaySettings = { required: boolean; nequi: string; breb: string; link: string; notes: string; depositPct: number | null; holdHours: number; legalName: string; taxId: string; cancelPolicy: string }
+export type LegalInfo = { legalName: string; taxId: string }
+
+/** Nombre legal y documento de la sala, para quien va a reservar. */
+export async function venueLegalInfo(venueId: string): Promise<LegalInfo | null> {
+  const { data, error } = await db().rpc('venue_legal_info', { p_venue: venueId })
+  if (error) throw error
+  const r = (data as { legal_name: string | null; tax_id: string | null }[])[0]
+  return r ? { legalName: r.legal_name ?? '', taxId: r.tax_id ?? '' } : null
+}
 
 export async function bookingPayInfo(bookingId: string): Promise<PayInfo | null> {
   const { data, error } = await db().rpc('booking_pay_info', { p_id: bookingId })
@@ -285,14 +294,15 @@ export async function bookingPayInfo(bookingId: string): Promise<PayInfo | null>
 export async function getPaySettings(venueId: string): Promise<PaySettings> {
   const { data, error } = await db().rpc('my_pay_settings', { p_venue: venueId })
   if (error) throw error
-  const r = (data as { required: boolean; nequi: string | null; breb: string | null; link: string | null; notes: string | null; deposit_pct: number | null; hold_hours: number }[])[0]
-  return { required: r?.required ?? false, nequi: r?.nequi ?? '', breb: r?.breb ?? '', link: r?.link ?? '', notes: r?.notes ?? '', depositPct: r?.deposit_pct ?? null, holdHours: r?.hold_hours ?? 24 }
+  const r = (data as { required: boolean; nequi: string | null; breb: string | null; link: string | null; notes: string | null; deposit_pct: number | null; hold_hours: number; legal_name: string | null; tax_id: string | null; cancel_policy: string | null }[])[0]
+  return { required: r?.required ?? false, nequi: r?.nequi ?? '', breb: r?.breb ?? '', link: r?.link ?? '', notes: r?.notes ?? '', depositPct: r?.deposit_pct ?? null, holdHours: r?.hold_hours ?? 24, legalName: r?.legal_name ?? '', taxId: r?.tax_id ?? '', cancelPolicy: r?.cancel_policy ?? '' }
 }
 
 export async function savePaySettings(venueId: string, p: PaySettings) {
   const { error } = await db().from('venues').update({
     pay_required: p.required, pay_nequi: p.nequi.trim() || null, pay_breb: p.breb.trim() || null, pay_link: p.link.trim() || null,
     pay_notes: p.notes.trim() || null, pay_deposit_pct: p.depositPct, pay_hold_hours: p.holdHours,
+    legal_name: p.legalName.trim() || null, tax_id: p.taxId.trim() || null, cancel_policy: p.cancelPolicy.trim() || null,
   }).eq('id', venueId)
   if (error) throw error
 }
@@ -314,9 +324,11 @@ export async function proofUrl(path: string): Promise<string | null> {
   return data?.signedUrl ?? null
 }
 
-export async function reviewPayment(id: string, action: 'paid' | 'reject', note = '') {
-  const { error } = await db().rpc('review_payment', { p_id: id, p_action: action, p_note: note || null })
+export async function reviewPayment(id: string, action: 'paid' | 'reject' | 'refunded' | 'no_refund', note = '') {
+  const { data, error } = await db().rpc('review_payment', { p_id: id, p_action: action, p_note: note || null })
   if (error) throw error
+  // Supabase no permite borrar archivos con SQL: la base devuelve la ruta del comprobante rechazado y se borra aquí con la API de Storage.
+  if (action === 'reject' && typeof data === 'string' && data) await db().storage.from(PROOF_BUCKET).remove([data]).catch(() => {})
   void notifyBooking(id)
 }
 
@@ -335,7 +347,9 @@ export function bookingError(e: unknown): string {
   if (/duración/i.test(m)) return 'La duración debe estar entre 30 minutos y 12 horas.'
   if (/propia sala/i.test(m)) return 'No puedes reservar en tu propia sala de ensayos desde aquí.'
   if (/no está pendiente|ya no se puede/i.test(m)) return 'Esa reserva ya cambió. Recarga para ver su estado.'
-  if (/ya no espera un pago|no hay un comprobante|no está confirmada/i.test(m)) return 'Esa reserva ya cambió (puede que venció el plazo de pago). Recarga para ver su estado.'
+  if (/aceptar las condiciones/i.test(m)) return 'Marca que leíste y aceptas las condiciones de pago para poder reservar.'
+  if (/mayores de edad/i.test(m)) return 'Las reservas con pago son solo para mayores de edad.'
+  if (/ya no espera un pago|no hay un comprobante|no está confirmada|devolución pendiente/i.test(m)) return 'Esa reserva ya cambió (puede que venció el plazo de pago). Recarga para ver su estado.'
   if (/no disponible/i.test(m)) return 'Esa sala de ensayos o esa sala ya no está disponible.'
   return 'No pudimos completar la reserva. Intenta de nuevo.'
 }

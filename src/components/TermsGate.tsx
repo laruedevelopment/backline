@@ -23,7 +23,7 @@ export default function TermsGate() {
     <div className="terms-gate" role="alertdialog" aria-modal="true" aria-labelledby="terms-title">
       <div className="terms-card">
         <h2 id="terms-title">Actualizamos los términos y la política de datos</h2>
-        <p>Agregamos lo nuevo de Backline: chat, mensajes directos, amistades, «Se busca músico», invitados por días, links de setlists y avisos. También quedó claro que cada persona es responsable del contenido que sube y que puedes denunciar lo que no te parezca bien.</p>
+        <p>Agregamos lo nuevo de Backline: reservas de salas con pago directo a la sala (con comprobante dentro de la app, plazo, política de cancelación y devoluciones), muro y Mercado, mensajes sin ser amigos con solicitud, descarga de tus datos y un registro técnico de errores que se borra a los 30 días. Backline sigue sin recibir dinero. Cada persona es responsable del contenido que sube y puedes denunciar lo que no te parezca bien.</p>
         <p><a href={`${base}terminos`} target="_blank" rel="noopener noreferrer">Leer los términos</a> · <a href={`${base}privacidad`} target="_blank" rel="noopener noreferrer">Leer la política de datos</a> (versión {TERMS_VERSION})</p>
         {accept.isError && <p className="form-error" role="alert">No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.</p>}
         <button className="btn primary block" disabled={accept.isPending} onClick={() => accept.mutate()}>{accept.isPending ? 'Guardando…' : 'Acepto'}</button>

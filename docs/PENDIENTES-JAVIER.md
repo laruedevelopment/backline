@@ -97,3 +97,18 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
   - Nota: el repositorio es público; el artefacto va cifrado pero es descargable. No cubre las fotos (Storage). Para restaurar: `gpg -d archivo.gpg | gunzip | psql <cadena>`.
 - **Sentry** (opcional, ya tienes cuenta `jrdev-cg`): mandaría datos de errores a un tercero; si lo quieres, hay que actualizar la política de privacidad y subir la versión de términos. Dime y lo dejo conectado.
 - El texto de privacidad (9. Seguridad) ya menciona el registro técnico de errores; Lucía debe revisarlo junto con el resto antes de abrir.
+
+## Protección al consumidor en reservas con pago (migración 0044) — informes de Lucía y Daniela
+Antes de publicar este cambio:
+1. Correr `supabase/pendiente.sql` (0043 + 0044) en el proyecto «backline».
+2. Desplegar la función de limpieza: `npx supabase functions deploy housekeeping --project-ref xmhwgdqcjvpsfezxnjuz --use-api` (borra comprobantes viejos con la API de Storage y errores de más de 30 días; la llama el workflow cada hora).
+3. Avisarme para publicar (el cliente nuevo necesita las columnas y funciones nuevas).
+
+Qué cambió: la sala que cobra debe poner nombre legal, documento y política de cancelación; el cliente los ve y marca una casilla antes de reservar (queda registro); reservas con cobro solo para mayores de edad; una reserva pagada que se cancela queda en «devolución pendiente» y la sala la marca; los comprobantes se suben solo a una reserva propia que espera pago, se verifican y se borran (30/90 días); términos y política en versión 0.9 (todos deberán aceptarlos de nuevo).
+
+**Requiere abogado (no resuelto en código):**
+- Si Backline es «portal de contacto» o proveedor frente a la Ley 1480 (art. 53) dado que opera el vencimiento y la regla de culpa del dueño.
+- Texto exacto del retracto (art. 47), reversión del pago (art. 51) y plazos de reembolso: el borrador usa la excepción de servicios con fecha determinada.
+- Si un menor de 14 a 17 años puede contratar; hoy se bloquea para pagos, y el consentimiento del representante solo se declara (no se verifica).
+- Constitución de la entidad (NIT, dirección), registro de bases de datos en la SIC, plazo legal de conservación de comprobantes, y Ley 2300 para mensajes sin amistad.
+- Revisar la política de privacidad completa (mencionar DM sin amistad, mercado, finalidades) antes de abrir al público.

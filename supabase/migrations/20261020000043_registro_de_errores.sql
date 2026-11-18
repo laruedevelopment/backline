@@ -23,6 +23,7 @@ declare uid uuid := (select auth.uid());
 begin
   if uid is null or p_message is null or trim(p_message) = '' then return; end if;
   if (select count(*) from public.client_errors where user_id = uid and created_at > now() - interval '1 hour') >= 20 then return; end if;
+  if (select count(*) from public.client_errors where user_id = uid and created_at > now() - interval '1 day') >= 100 then return; end if;
   insert into public.client_errors (user_id, message, stack, url, agent, version)
   values (uid, left(p_message, 300), left(p_stack, 1500), left(p_url, 200), left(p_agent, 120), left(p_version, 30));
   if random() < 0.02 then delete from public.client_errors where created_at < now() - interval '30 days'; end if;

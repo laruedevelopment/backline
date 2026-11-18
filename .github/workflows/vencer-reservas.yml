@@ -21,3 +21,12 @@ jobs:
         run: |
           if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Faltan las variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY"; exit 1; fi
           curl -sf --max-time 30 -X POST -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}' "$URL/rest/v1/rpc/expire_unpaid_bookings"
+      - name: Limpieza de comprobantes y errores viejos
+        env:
+          URL: ${{ vars.VITE_SUPABASE_URL }}
+          KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          # La función housekeeping se despliega aparte; si aún no está, solo avisa (no falla el workflow).
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}' "$URL/functions/v1/housekeeping")
+          echo "housekeeping respondió $code"
+          if [ "$code" != "200" ]; then echo "::warning::La función housekeeping no respondió 200 (¿falta desplegarla?)"; fi

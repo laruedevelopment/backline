@@ -20,6 +20,7 @@ export default function PaymentSettings({ venue }: { venue: Venue }) {
   if (!f) return null
   const set = (p: Partial<PaySettings>) => { setMsg(''); setF({ ...f, ...p }) }
   const hasMethod = !!(f.nequi.trim() || f.breb.trim() || f.link.trim())
+  const hasLegal = f.legalName.trim().length >= 3 && f.taxId.trim().length >= 5 && f.cancelPolicy.trim().length >= 10
 
   return (
     <>
@@ -28,6 +29,15 @@ export default function PaymentSettings({ venue }: { venue: Venue }) {
         <input type="checkbox" checked={f.required} onChange={(e) => set({ required: e.target.checked })} /> <span><b>Pedir pago para mantener la reserva</b></span>
       </label>
       <div className="stack" style={{ marginTop: 10 }}>
+        <label className="field">Nombre o razón social de la sala
+          <input value={f.legalName} maxLength={100} placeholder="Como aparece en tu RUT o cédula" onChange={(e) => set({ legalName: e.target.value })} />
+        </label>
+        <label className="field">Cédula o NIT
+          <input value={f.taxId} maxLength={20} placeholder="900123456" onChange={(e) => set({ taxId: e.target.value })} />
+        </label>
+        <label className="field">Política de cancelación y devolución
+          <textarea rows={3} value={f.cancelPolicy} maxLength={500} placeholder="Ej.: Cancelas hasta 24 horas antes y te devolvemos todo. Después no se devuelve el anticipo. Si cancelamos nosotros, devolvemos todo en 3 días hábiles." onChange={(e) => set({ cancelPolicy: e.target.value })} />
+        </label>
         <label className="field">Nequi (número)
           <input inputMode="tel" value={f.nequi} maxLength={20} placeholder="300 123 4567" onChange={(e) => set({ nequi: e.target.value.replace(/[^\d +]/g, '') })} />
         </label>
@@ -54,10 +64,11 @@ export default function PaymentSettings({ venue }: { venue: Venue }) {
             </select>
           </label>
         </div>
-        <p className="li-sub wrap">{f.depositPct ? `El cliente paga el ${f.depositPct} % al reservar y el resto en la sala.` : 'El cliente paga todo al reservar.'} Si no adjunta el comprobante en {f.holdHours} horas, la reserva se cancela sola.</p>
+        <p className="li-sub wrap">{f.depositPct ? `El cliente paga el ${f.depositPct} % al reservar y el resto en la sala.` : 'El cliente paga todo al reservar.'} Si no adjunta el comprobante en {f.holdHours} horas, la reserva se cancela sola. Si cancelas una reserva ya pagada, tú debes devolver el dinero según tu política.</p>
         {f.required && !hasMethod && <p className="form-error" role="status">Escribe al menos un método de pago para activar el cobro.</p>}
+        {f.required && !hasLegal && <p className="form-error" role="status">Para cobrar, completa tu nombre o razón social, tu cédula o NIT y tu política de cancelación: las bandas los ven antes de reservar.</p>}
         <div className="row">
-          <button className="btn primary" disabled={save.isPending || (f.required && !hasMethod)} onClick={() => save.mutate(f)}>{save.isPending ? 'Guardando…' : 'Guardar pagos'}</button>
+          <button className="btn primary" disabled={save.isPending || (f.required && (!hasMethod || !hasLegal))} onClick={() => save.mutate(f)}>{save.isPending ? 'Guardando…' : 'Guardar pagos'}</button>
           {msg && <span className="li-sub" role="status">{msg}</span>}
         </div>
       </div>

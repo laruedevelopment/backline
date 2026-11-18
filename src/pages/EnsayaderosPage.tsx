@@ -42,6 +42,7 @@ export default function EnsayaderosPage() {
     return (venues ?? []).filter((v) => !needle || norm(`${v.name} ${v.city} ${v.address}`).includes(needle))
   }, [venues, q])
 
+  const refunds = bookings.filter((b) => b.status === 'cancelled' && (b.payStatus === 'refund_due' || b.payStatus === 'refunded' || b.payStatus === 'no_refund'))
   const upcoming = bookings.filter((b) => (b.status === 'requested' || b.status === 'confirmed') && new Date(b.endsAt) > now).reverse()
 
   async function onCancel(b: Booking) {
@@ -86,6 +87,28 @@ export default function EnsayaderosPage() {
                 </div>
               )
             })}
+          </div>
+        </>
+      )}
+      {refunds.length > 0 && (
+        <>
+          <div className="section-title">Devoluciones</div>
+          <div className="list">
+            {refunds.slice(0, 5).map((b) => (
+              <div key={b.id} className="li" style={{ alignItems: 'flex-start' }}>
+                <div className="li-main">
+                  <Link to={`/ensayaderos/${b.venueId}`} className="li-title" style={{ display: 'block' }}>{b.venueName} · {b.roomName}</Link>
+                  <div className="li-sub">{formatDay(new Date(b.startsAt))} · cancelada</div>
+                  <div className="li-sub wrap">
+                    {b.payStatus === 'refund_due' && 'Pagaste esta reserva. La sala debe devolverte el dinero según su política; si no lo hace, escríbele desde Backline.'}
+                    {b.payStatus === 'refunded' && `La sala marcó el dinero como devuelto.${b.payNote ? ` Nota: ${b.payNote}` : ''}`}
+                    {b.payStatus === 'no_refund' && `La sala indicó que no aplica devolución según su política.${b.payNote ? ` Nota: ${b.payNote}` : ''}`}
+                  </div>
+                  {b.payStatus === 'refund_due' && <Link className="btn sm" style={{ marginTop: 6 }} to={`/explorar/amigos/${b.venueOwnerId}`}>Escribir a la sala</Link>}
+                </div>
+                <span className={`tag ${b.payStatus === 'refund_due' ? 'key' : ''}`}>{b.payStatus === 'refund_due' ? 'Devolución pendiente' : b.payStatus === 'refunded' ? 'Devuelto' : 'Sin devolución'}</span>
+              </div>
+            ))}
           </div>
         </>
       )}

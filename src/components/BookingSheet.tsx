@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { waLink } from '../lib/identity'
 import { bogotaDate, buildSlots, formatDay, formatTime, money, todayBogota, weekdayOf, type Slot } from '../lib/slots'
-import { bookingError, myBookings, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
+import { bookingError, myBookings, requestBooking, venueLegalInfo, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
 import { useBands } from '../store/useBandSession'
 import { useAuth } from '../store/useAuth'
 import DayTimeline from './DayTimeline'
@@ -38,6 +38,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   const [note, setNote] = useState('')
   const [done, setDone] = useState(false)
   const [bookingId, setBookingId] = useState('')
+  const [accepted, setAccepted] = useState(false)
   const [error, setError] = useState('')
 
   const room = rooms.find((r) => r.id === roomId)
@@ -58,7 +59,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   const free = slots.filter((s) => s.free).length
 
   const book = useMutation({
-    mutationFn: () => requestBooking({ roomId, start: slot!.start, end: slot!.end, bandId: bandId || null, note: note.trim(), phone: phone.trim() }),
+    mutationFn: () => requestBooking({ roomId, start: slot!.start, end: slot!.end, bandId: bandId || null, note: note.trim(), phone: phone.trim(), accepted }),
     onSuccess: async (id) => {
       setBookingId(id)
       await Promise.all([qc.invalidateQueries({ queryKey: ['my-bookings'] }), qc.invalidateQueries({ queryKey: ['busy'] })])
@@ -69,6 +70,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
   const total = room && slot ? Math.round((room.pricePerHour * minutes) / 60) : 0
   const charge = venue.payRequired && total > 0
+  const { data: legal } = useQuery({ queryKey: ['venue-legal', venue.id], queryFn: () => venueLegalInfo(venue.id), enabled: venue.payRequired })
   const deposit = charge ? (venue.payDepositPct ? Math.round((total * venue.payDepositPct) / 100) : total) : 0
   const myBooking = useQuery({ queryKey: ['my-bookings'], queryFn: myBookings, enabled: done && !!bookingId })
   const created = myBooking.data?.find((x) => x.id === bookingId)
@@ -79,6 +81,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!slot || book.isPending) return
+    if (charge && !accepted) return setError('Marca que leíste y aceptas las condiciones de pago para poder reservar.')
     setError('')
     book.mutate()
   }
@@ -151,6 +154,20 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
             Después de reservar adjuntas aquí el comprobante en máximo <b>{venue.payHoldHours} horas</b>; si no, la reserva se cancela sola. Si ya lo enviaste y la sala no alcanza a revisarlo, tu reserva se mantiene.
           </p>
         )}
+        {slot && charge && (
+          <div className="card stack" style={{ marginTop: 8 }}>
+            <div className="eyebrow">Antes de reservar</div>
+            <p className="li-sub wrap">
+              <b>Quién te presta el servicio:</b> {legal?.legalName || venue.name}{legal?.taxId ? ` (documento ${legal.taxId})` : ''}{venue.address ? ` · ${venue.address}` : ''}. Le pagas directamente a la sala: Backline no recibe ni devuelve ese dinero.
+            </p>
+            <p className="li-sub wrap"><b>Cancelación y devolución de la sala:</b> {venue.cancelPolicy || 'La sala no ha publicado su política. Pregúntale antes de pagar.'}</p>
+            <p className="li-sub wrap"><b>Retracto:</b> es un ensayo con día y hora fijos; la ley exceptúa de retracto los servicios con fecha determinada. Lo que puedes cancelar y cuánto te devuelven lo dice la política de la sala.</p>
+            <label className="check-row">
+              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+              <span>He leído y acepto el precio, el plazo de pago y la política de cancelación de esta sala, y los <a href={`${APP_URL}terminos`} target="_blank" rel="noopener noreferrer">términos</a>.</span>
+            </label>
+          </div>
+        )}
       </div>
 
       {editableBands.length > 0 && (
@@ -171,7 +188,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="btn primary block" disabled={!slot || book.isPending || !userId}>{book.isPending ? 'Enviando…' : slot ? (venue.autoConfirm ? 'Reservar esta franja' : 'Pedir esta franja') : 'Elige una hora'}</button>
+        <button className="btn primary block" disabled={!slot || book.isPending || !userId || (charge && !accepted)}>{book.isPending ? 'Enviando…' : slot ? (venue.autoConfirm ? 'Reservar esta franja' : 'Pedir esta franja') : 'Elige una hora'}</button>
       </div>
     </Sheet>
   )

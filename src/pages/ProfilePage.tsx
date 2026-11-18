@@ -4,7 +4,7 @@ import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { purgeFolder } from '../lib/feed'
 import InfoTip from '../components/InfoTip'
-import { clearAvatar, confirmAdult, deleteAccount, exportMyData, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
+import { checkDeleteAccount, clearAvatar, confirmAdult, deleteAccount, exportMyData, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
 import { processImage } from '../lib/image'
 import Avatar from '../components/Avatar'
@@ -140,6 +140,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
     if (!(await ask({ title: '¿Borrar tu cuenta?', body: 'Se eliminan tu perfil, tus respuestas de asistencia y las bandas en las que seas el único integrante. No se puede deshacer.', confirmLabel: 'Borrar mi cuenta', typeToConfirm: 'BORRAR' }))) return
     setDanger('')
     try {
+      await checkDeleteAccount() // antes de borrar archivos: si hay que traspasar una banda, no se pierde nada
       // Las bandas donde eres el único integrante se borran con la cuenta: se limpian antes sus archivos.
       for (const b of bands.filter((x) => x.role === 'owner')) {
         if ((await listMembers(b.id)).length === 1) await purgeBandMedia(b.id).catch(() => {})

@@ -287,6 +287,12 @@ export async function exportMyData(): Promise<Blob> {
   return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
 }
 
+/** Comprueba (sin borrar nada) que la cuenta se puede borrar; si no, lanza «traspasa tus bandas…». */
+export async function checkDeleteAccount() {
+  const { error } = await db().rpc('check_delete_account')
+  if (error) throw error
+}
+
 export async function deleteAccount() {
   const { error } = await db().rpc('delete_account')
   if (error) throw error
