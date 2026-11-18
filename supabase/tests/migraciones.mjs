@@ -966,6 +966,16 @@ await ok('el dueño ignora un evento del calendario y la franja se libera', asyn
   eq((await as('leader', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(55, '00:00'), t(55, '23:00')]))[0].n, 0, 'sigue ocupada')
 })
 
+await ok('descargar mis datos devuelve solo lo mío', async () => {
+  const [r] = await as('leader', `select public.export_my_data() as d`)
+  eq(r.d.perfil.id, U.leader, 'perfil')
+  eq(Array.isArray(r.d.bandas), true, 'bandas')
+  eq(r.d.mis_negocios.length, 0, 'negocios ajenos')
+  eq(JSON.stringify(r.d).includes(U.owner) && (r.d.mis_negocios.length > 0), false, 'datos del dueño')
+  const [o] = await as('owner', `select public.export_my_data() as d`)
+  eq(o.d.mis_negocios.length >= 1, true, 'negocio propio')
+})
+await rejects('sin sesión no se descargan datos', () => pg.query(`select public.export_my_data()`), /no autenticado|permission|null/)
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

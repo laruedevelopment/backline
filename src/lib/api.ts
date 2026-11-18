@@ -280,6 +280,13 @@ export async function deleteBand(id: string) {
   if (error) throw error
 }
 
+/** Todo lo que la persona tiene en Backline, en un archivo JSON (derecho de acceso, Ley 1581). */
+export async function exportMyData(): Promise<Blob> {
+  const { data, error } = await db().rpc('export_my_data')
+  if (error) throw error
+  return new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+}
+
 export async function deleteAccount() {
   const { error } = await db().rpc('delete_account')
   if (error) throw error

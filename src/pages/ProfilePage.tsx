@@ -4,7 +4,7 @@ import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { purgeFolder } from '../lib/feed'
 import InfoTip from '../components/InfoTip'
-import { clearAvatar, confirmAdult, deleteAccount, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
+import { clearAvatar, confirmAdult, deleteAccount, exportMyData, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
 import { processImage } from '../lib/image'
 import Avatar from '../components/Avatar'
@@ -147,6 +147,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       await purgeAvatars(userId!).catch(() => {})
       await purgeFolder('feed-media', userId!).catch(() => {})
       await purgeFolder('market-media', userId!).catch(() => {})
+      await purgeFolder('payment-proofs', userId!).catch(() => {})
       await deleteAccount()
       clearDeviceData()
       await supabase!.auth.signOut()
@@ -155,6 +156,18 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         ? 'Eres líder de una banda con más integrantes. Traspasa el liderazgo desde Banda antes de borrar tu cuenta.'
         : 'No pudimos borrar la cuenta. Intenta de nuevo.')
     }
+  }
+
+  const [exporting, setExporting] = useState(false)
+  async function downloadData() {
+    setExporting(true); setDanger('')
+    try {
+      const url = URL.createObjectURL(await exportMyData())
+      const a = document.createElement('a')
+      a.href = url; a.download = `backline-mis-datos-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a); a.click(); a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 10_000)
+    } catch { setDanger('No pudimos preparar tus datos. Intenta de nuevo.') } finally { setExporting(false) }
   }
 
   return (
@@ -250,9 +263,10 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       <div className="section-title">Cuenta</div>
       <div className="stack">
         <button className="btn" onClick={() => void supabase!.auth.signOut()}>Cerrar sesión</button>
+        <button className="btn" disabled={exporting} onClick={() => void downloadData()}>{exporting ? 'Preparando…' : 'Descargar mis datos'}</button>
         <button className="btn danger" onClick={() => void removeAccount()}>Borrar mi cuenta</button>
         {danger && <p className="form-error" role="alert">{danger}</p>}
-        <p className="li-sub wrap">Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia, y también los datos guardados en este dispositivo. Si eres el único integrante de una banda, se borra esa banda.</p>
+        <p className="li-sub wrap">«Descargar mis datos» te entrega un archivo con todo lo tuyo en Backline. Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia, y también los datos guardados en este dispositivo. Si eres el único integrante de una banda, se borra esa banda.</p>
       </div>
     </>
   )

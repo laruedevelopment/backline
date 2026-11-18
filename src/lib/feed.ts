@@ -135,7 +135,7 @@ export async function amAdult(userId: string): Promise<boolean> {
 }
 
 /** Borra las fotos de la persona en un espacio privado (al borrar la cuenta). */
-export async function purgeFolder(bucket: 'feed-media' | 'market-media', userId: string) {
+export async function purgeFolder(bucket: 'feed-media' | 'market-media' | 'payment-proofs', userId: string) {
   const store = db().storage.from(bucket)
   const { data: dirs } = await store.list(userId, { limit: 200 })
   for (const d of dirs ?? []) {
