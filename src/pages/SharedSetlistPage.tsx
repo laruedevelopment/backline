@@ -17,7 +17,7 @@ export default function SharedSetlistPage() {
   let n = 0
   return (
     <main className="content" style={{ maxWidth: 720, margin: '0 auto', padding: '16px' }}>
-      <div className="wordmark" style={{ display: 'block', marginBottom: 12 }}>back<span>line</span></div>
+      <div style={{ fontFamily: 'var(--display)', fontStretch: '75%', fontWeight: 900, fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.02em', marginBottom: 12 }}>back<span style={{ color: 'var(--amber)' }}>line</span></div>
       {isLoading && <ListSkeleton rows={4} />}
       {(isError || (!isLoading && !data)) && <p className="empty">Este link ya no está disponible. Pide a la banda uno nuevo.</p>}
       {data && (
