@@ -33,3 +33,13 @@ describe('instrumentos', () => {
     expect(otherNotes(song, null)).toHaveLength(2)
   })
 })
+
+describe('afinación por persona', () => {
+  const song = { id: 's', title: 'x', artist: '', key: '', bpm: 100, minutes: 4, status: 'ready' as const, keyChanges: [], links: {},
+    tunings: [{ instrument: 'Guitarra', tuning: 'Drop D' }, { instrument: 'Guitarra', tuning: 'C#', profileId: 'javi' }, { instrument: 'Bajo', tuning: 'E' }] }
+  it('la afinación de una persona solo le sale a ella; las demás, a quien toca el instrumento', () => {
+    expect(tuningsFor(song, 'Guitarra', 'javi').map((t) => t.tuning)).toEqual(['Drop D', 'C#'])
+    expect(tuningsFor(song, 'Guitarra', 'otro').map((t) => t.tuning)).toEqual(['Drop D'])
+    expect(tuningsFor(song, 'Bajo', 'otro').map((t) => t.tuning)).toEqual(['E'])
+  })
+})

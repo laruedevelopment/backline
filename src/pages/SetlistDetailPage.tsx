@@ -73,6 +73,7 @@ export default function SetlistDetailPage() {
   const [adding, setAdding] = useState(false)
   const [spotifyDraft, setSpotifyDraft] = useState<string | null>(null)
   const [spotifyError, setSpotifyError] = useState('')
+  const [guestDraft, setGuestDraft] = useState('')
   const [nameDraft, setNameDraft] = useState<string | null>(null)
   const [editingSong, setEditingSong] = useState<Song | null>(null)
   const [picked, setPicked] = useState<string[]>([])
@@ -133,7 +134,7 @@ export default function SetlistDetailPage() {
     const from = entryIds.indexOf(String(active.id)), to = entryIds.indexOf(String(over.id))
     if (from >= 0 && to >= 0) saveEntries(arrayMove(entries, from, to))
   }
-  const marks = stageMarks(entries)
+  const marks = stageMarks(entries, userId)
   // Cada quien lleva al escenario solo su propia anotación de cada canción.
   const stageSongs = items.map((x) => ({ ...x, lyrics: x.lyrics ?? (lyricsById ? lyricsById.get(x.id) : offlineLyrics[x.id]), ...marks.get(x.id), myRole: x.lineup?.find((l) => l.profileId === userId)?.instrument, personal: memberNotes.find((n) => n.songId === x.id && n.profileId === userId)?.note }))
   const saveName = () => {
@@ -174,7 +175,7 @@ export default function SetlistDetailPage() {
                 return (
                   <SortableRow key={e.id} id={e.id} title={e.text} handle={grip} className={`paper-label-row ${grip ? 'has-grip' : ''}`}>
                     {canEdit ? (
-                      <button type="button" className="paper-label" onClick={() => setLabelSheet({ id: e.id })} aria-label={`Editar etiqueta ${e.text}`}>{e.text}</button>
+                      <button type="button" className="paper-label" onClick={() => setLabelSheet({ id: e.id })} aria-label={`Editar etiqueta ${e.text}`}>{e.text}{e.who?.length ? <small className="label-who"> · solo {e.who.map((id) => members.find((m) => m.profileId === id)?.name.split(' ')[0] ?? '…').join(', ')}</small> : null}</button>
                     ) : (
                       <div className="paper-label">{e.text}</div>
                     )}
@@ -228,6 +229,19 @@ export default function SetlistDetailPage() {
               onChange={(e) => { setSpotifyDraft(e.target.value); setSpotifyError('') }} onBlur={saveSpotify} />
           </label>
           {spotifyError && <p className="form-error" role="alert">{spotifyError}</p>}
+          <div className="field">
+            <span>Invitados de este setlist</span>
+            <span className="li-sub wrap">Personas que tocan en este toque sin ser de la banda. Después los eliges en «Quién toca» de cada canción. Para que alguien con cuenta vea el toque y su parte, invítalo en Banda como «Invitado de un toque».</span>
+            <div className="chips">
+              {(list.guests ?? []).map((g) => (
+                <span key={g.id} className="tag key">{g.name} <button type="button" className="msg-del" aria-label={`Quitar a ${g.name}`} onClick={() => void save({ ...list, guests: (list.guests ?? []).filter((x) => x.id !== g.id) })}>×</button></span>
+              ))}
+            </div>
+            <form className="row" onSubmit={(e) => { e.preventDefault(); const name = guestDraft.trim().slice(0, 40); if (!name || (list.guests ?? []).some((g) => g.name.toLowerCase() === name.toLowerCase()) || (list.guests ?? []).length >= 20) return; void save({ ...list, guests: [...(list.guests ?? []), { id: crypto.randomUUID(), name }] }); setGuestDraft('') }}>
+              <input value={guestDraft} maxLength={40} placeholder="Nombre del invitado" aria-label="Nombre del invitado" onChange={(e) => setGuestDraft(e.target.value)} />
+              <button className="btn" disabled={!guestDraft.trim()}>Agregar</button>
+            </form>
+          </div>
           </div>
         )}
         {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden (también las etiquetas). Toca una canción para editar sus detalles. Para cambiar el nombre, el link de Spotify, poner etiquetas a una canción o quitar elementos, pulsa «Editar setlist».</p>}
@@ -293,7 +307,7 @@ export default function SetlistDetailPage() {
         </Sheet>
       )}
       {editingSong && (
-        <SongForm song={editingSong} onClose={() => setEditingSong(null)}
+        <SongForm song={editingSong} guestNames={(list.guests ?? []).map((g) => g.name)} onClose={() => setEditingSong(null)}
           onSave={async (s) => { await saveSong(s); setEditingSong(null) }}
           onDelete={async () => { await removeSong(editingSong.id); setEditingSong(null) }} />
       )}
@@ -302,7 +316,9 @@ export default function SetlistDetailPage() {
           positions={items.map((x) => ({ id: x.id, title: x.title }))}
           initial={labelSheet.id ? (entries.find((x) => x.id === labelSheet.id && x.t === 'l') as Extract<SetlistItem, { t: 'l' }> | undefined)?.text : undefined}
           defaultBefore={labelSheet.before ?? null}
-          onSave={(text, before) => saveEntries(labelSheet.id ? editLabel(entries, labelSheet.id, text) : insertLabel(entries, text, before))}
+          people={members.map((m) => ({ id: m.profileId, name: m.name }))}
+          initialWho={labelSheet.id ? (entries.find((x) => x.id === labelSheet.id && x.t === 'l') as Extract<SetlistItem, { t: 'l' }> | undefined)?.who : undefined}
+          onSave={(text, before, who) => saveEntries(labelSheet.id ? editLabel(entries, labelSheet.id, text, who) : insertLabel(entries, text, before, undefined, who))}
           onDelete={labelSheet.id ? () => saveEntries(entries.filter((x) => x.id !== labelSheet.id)) : undefined}
           onClose={() => setLabelSheet(null)}
         />

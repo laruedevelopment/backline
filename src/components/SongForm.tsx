@@ -10,6 +10,7 @@ import { useActiveBand } from '../store/useBandSession'
 import MemberNotes from './MemberNotes'
 import SongComments from './SongComments'
 import Sheet from './Sheet'
+import InstrumentPicker from './InstrumentPicker'
 
 const empty = (): Song => ({
   id: crypto.randomUUID(),
@@ -24,9 +25,10 @@ const empty = (): Song => ({
   links: {},
 })
 
-type Props = { song?: Song; onSave: (s: Song) => Promise<unknown>; onDelete?: () => Promise<unknown>; onClose: () => void }
+/** `guestNames`: invitados del setlist desde el que se edita la canción (aparecen como opción en «Quién toca»). */
+type Props = { song?: Song; guestNames?: string[]; onSave: (s: Song) => Promise<unknown>; onDelete?: () => Promise<unknown>; onClose: () => void }
 
-export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
+export default function SongForm({ song, guestNames = [], onSave, onDelete, onClose }: Props) {
   const [s, setS] = useState<Song>(() => song ?? empty())
   const band = useActiveBand()
   // Con cuenta, la lista de canciones no trae las letras: se piden al abrir el editor (y solo se envían si se tocan).
@@ -64,7 +66,7 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
         artist: s.artist.trim(),
         bpm: Math.min(300, Math.max(30, Number(bpm) || 100)),
         minutes: Math.min(30, Math.max(1, Number(minutes) || 4)),
-        tunings: s.tunings.filter((t) => t.tuning.trim()),
+        tunings: s.tunings.filter((t) => t.tuning.trim()).map((t) => (t.profileId ? t : { instrument: t.instrument, tuning: t.tuning, ...(t.capo ? { capo: t.capo } : {}) })),
         lineup: (s.lineup ?? []).filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, guest: l.profileId ? undefined : l.guest?.trim() })),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
@@ -112,25 +114,27 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       {(s.lineup ?? []).map((l, i) => (
         <div className="subform" key={i}>
           <div className="grid-row">
-            <label className="field grow">Instrumento
-              <select value={l.instrument} onChange={(e) => setSlot(i, { instrument: e.target.value })}>
-                {!instrumentOptions.includes(l.instrument) && <option value={l.instrument}>{l.instrument || 'Elige…'}</option>}
-                {instrumentOptions.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </label>
+            <div className="grow"><InstrumentPicker label="Instrumento" value={l.instrument} onChange={(v) => setSlot(i, { instrument: v })} /></div>
             <label className="field grow">Quién
-              <select value={l.profileId ?? (l.guest !== undefined ? '__guest' : '')}
-                onChange={(e) => setSlot(i, e.target.value === '__guest' ? { profileId: undefined, guest: l.guest ?? '' } : e.target.value ? { profileId: e.target.value, guest: undefined } : { profileId: undefined, guest: undefined })}>
+              <select value={l.profileId ?? (l.guest !== undefined ? (guestNames.includes(l.guest) ? `g:${l.guest}` : '__guest') : '')}
+                onChange={(e) => {
+                  const v = e.target.value
+                  if (v === '__guest') setSlot(i, { profileId: undefined, guest: l.guest && !guestNames.includes(l.guest) ? l.guest : '' })
+                  else if (v.startsWith('g:')) setSlot(i, { profileId: undefined, guest: v.slice(2) })
+                  else if (v) setSlot(i, { profileId: v, guest: undefined })
+                  else setSlot(i, { profileId: undefined, guest: undefined })
+                }}>
                 <option value="">Sin asignar</option>
-                {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}
-                <option value="__guest">Invitado…</option>
+                {members.length > 0 && <optgroup label="La banda">{members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}</optgroup>}
+                {guestNames.length > 0 && <optgroup label="Invitados de este setlist">{guestNames.map((g) => <option key={g} value={`g:${g}`}>{g}</option>)}</optgroup>}
+                <option value="__guest">Otro invitado (escribir)…</option>
               </select>
             </label>
             <button type="button" className="btn ghost icon" style={{ alignSelf: 'end' }} aria-label={`Quitar ${l.instrument || 'instrumento'} de quién toca`} onClick={() => patch({ lineup: (s.lineup ?? []).filter((_, j) => j !== i) })}>
               <Trash2 size={18} aria-hidden />
             </button>
           </div>
-          {l.guest !== undefined && !l.profileId && (
+          {l.guest !== undefined && !l.profileId && !guestNames.includes(l.guest) && (
             <label className="field">Nombre del invitado
               <input value={l.guest} maxLength={60} placeholder="Camilo (trompeta)" onChange={(e) => setSlot(i, { guest: e.target.value })} />
             </label>
@@ -152,12 +156,15 @@ export default function SongForm({ song, onSave, onDelete, onClose }: Props) {
       <p className="li-sub wrap">«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento.</p>
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
-          <label className="field">Instrumento
-            <select value={t.instrument} onChange={(e) => setTuning(i, { instrument: e.target.value })}>
-              {!['Todos', ...instrumentOptions].includes(t.instrument) && <option value={t.instrument}>{t.instrument || 'Elige…'}</option>}
-              {['Todos', ...instrumentOptions].map((o) => <option key={o} value={o}>{o}</option>)}
-            </select>
-          </label>
+          <InstrumentPicker label="Instrumento" includeAll first={(s.lineup ?? []).map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
+          {members.length > 0 && (
+            <label className="field">Para
+              <select value={t.profileId ?? ''} onChange={(e) => setTuning(i, { profileId: e.target.value || undefined })}>
+                <option value="">Todos los que toquen ese instrumento</option>
+                {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}
+              </select>
+            </label>
+          )}
           <div className="grid-row">
             <label className="field grow">Afinación
               <input value={t.tuning} placeholder="Drop D" maxLength={30} onChange={(e) => setTuning(i, { tuning: e.target.value })} />

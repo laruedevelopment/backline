@@ -1,5 +1,6 @@
 export type SongStatus = 'ready' | 'learning' | 'paused'
-export type Tuning = { instrument: string; tuning: string; capo?: number }
+/** `profileId`: si se pone, esa afinación es solo de esa persona (dos guitarristas con afinaciones distintas). */
+export type Tuning = { instrument: string; tuning: string; capo?: number; profileId?: string }
 export type KeyChange = { section: string; from: string; to: string }
 
 export type Song = {

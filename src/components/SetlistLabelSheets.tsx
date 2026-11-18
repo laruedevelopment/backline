@@ -6,23 +6,27 @@ import Sheet from './Sheet'
 type Position = { id: string; title: string }
 
 /** Etiqueta suelta entre canciones: «Afinar a Drop C», «Pausa», «Cambio de guitarra»… Se arrastra a su lugar o se elige dónde va. */
-export function LabelSheet({ positions, initial, defaultBefore, onSave, onDelete, onClose }: {
+export function LabelSheet({ positions, people = [], initial, initialWho = [], defaultBefore, onSave, onDelete, onClose }: {
   positions: Position[]
   initial?: string
   defaultBefore?: string | null
-  onSave: (text: string, beforeId: string | null) => void
+  /** Integrantes a quienes se puede dirigir el aviso. */
+  people?: { id: string; name: string }[]
+  initialWho?: string[]
+  onSave: (text: string, beforeId: string | null, who: string[]) => void
   onDelete?: () => void
   onClose: () => void
 }) {
   const [text, setText] = useState(initial ?? '')
   const [before, setBefore] = useState<string>(defaultBefore ?? '')
+  const [who, setWho] = useState<string[]>(initialWho)
   const editing = initial !== undefined
 
   function submit(e: React.FormEvent) {
     e.preventDefault()
     const t = cleanLabel(text)
     if (!t) return
-    onSave(t, before || null)
+    onSave(t, before || null, who)
     onClose()
   }
 
@@ -35,6 +39,19 @@ export function LabelSheet({ positions, initial, defaultBefore, onSave, onDelete
       <div className="chips" role="group" aria-label="Sugerencias">
         {LABEL_PRESETS.map((p) => <button key={p} type="button" className="tag" onClick={() => setText(p)}>{p}</button>)}
       </div>
+      {people.length > 0 && (
+        <fieldset className="share-fields">
+          <legend className="li-sub" style={{ marginBottom: 4 }}>¿Para quién es? <b>{who.length ? '' : 'Toda la banda'}</b></legend>
+          <div className="share-checks">
+            {people.map((m) => (
+              <label key={m.id} className="check-row">
+                <input type="checkbox" checked={who.includes(m.id)} onChange={(e) => setWho(e.target.checked ? [...who, m.id] : who.filter((x) => x !== m.id))} /> {m.name}
+              </label>
+            ))}
+          </div>
+          <span className="li-sub wrap">Si marcas a alguien, el aviso solo le sale a esa persona en el modo escenario (por ejemplo, el cambio de guitarra del guitarrista).</span>
+        </fieldset>
+      )}
       {!editing && (
         <label className="field">Dónde va
           <select value={before} onChange={(e) => setBefore(e.target.value)}>

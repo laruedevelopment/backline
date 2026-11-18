@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Users } from 'lucide-react'
+import { ArrowLeft, ChevronsRight, MessageCircle, Users } from 'lucide-react'
 import { useChatUnread, useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
@@ -12,7 +12,7 @@ import DirectThread from './DirectThread'
 /** Panel de chat a un costado (en pantallas anchas): el chat de la banda y tus amigos, siempre a mano, como en Facebook. */
 export default function ChatDock() {
   const band = useActiveBand()
-  const { view, setView } = useDock()
+  const { view, setView, collapsed, setCollapsed } = useDock()
   const unreadBand = useChatUnread(band?.id)
   const { data: all = [] } = useFriends()
   if (!supabase) return null
@@ -21,11 +21,25 @@ export default function ChatDock() {
   const friend = view.kind === 'friend' ? friends.find((f) => f.id === view.id) : undefined
   const open = view.kind === 'band' && band ? 'band' : friend ? 'friend' : 'list'
 
+  const unreadTotal = unreadBand + friends.reduce((n, f) => n + f.unread, 0) + requests
+
+  if (collapsed) {
+    return (
+      <aside className="dock collapsed" aria-label="Chat (contraído)">
+        <button className="dock-tab" onClick={() => setCollapsed(false)} aria-label={`Abrir el chat${unreadTotal ? `, ${unreadTotal} sin leer` : ''}`}>
+          <MessageCircle size={22} aria-hidden />
+          {unreadTotal > 0 && <span className="seg-badge">{unreadTotal > 99 ? '99+' : unreadTotal}</span>}
+          <span className="dock-tab-label">Chat</span>
+        </button>
+      </aside>
+    )
+  }
   return (
     <aside className="dock" aria-label="Chat">
       {open === 'list' ? (
         <>
-          <div className="dock-head"><b>Chat</b>{requests > 0 && <Link to="/explorar/amigos" className="seg-badge" aria-label={`${requests} solicitudes de amistad`}>{requests}</Link>}</div>
+          <div className="dock-head"><b>Chat</b>{requests > 0 && <Link to="/explorar/amigos" className="seg-badge" aria-label={`${requests} solicitudes de amistad`}>{requests}</Link>}
+            <button className="btn ghost icon dock-collapse" onClick={() => setCollapsed(true)} aria-label="Contraer el chat"><ChevronsRight size={18} aria-hidden /></button></div>
           <div className="dock-list">
             {band && (
               <button className="dock-row" onClick={() => setView({ kind: 'band' })}>
@@ -53,6 +67,7 @@ export default function ChatDock() {
             {open === 'band' && band ? <><BandMark name={band.name} logoUrl={band.logoUrl} /><b>{band.name}</b></> : friend && (
               <Link to={`/explorar/musicos/${friend.id}`} className="dock-who"><Avatar name={friend.name} url={friend.avatarUrl} /><b>{friend.name}</b></Link>
             )}
+            <button className="btn ghost icon dock-collapse" onClick={() => setCollapsed(true)} aria-label="Contraer el chat"><ChevronsRight size={18} aria-hidden /></button>
           </div>
           <div className="dock-body">{open === 'band' ? <BandChat /> : friend && <DirectThread friend={friend} />}</div>
         </>

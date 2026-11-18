@@ -24,12 +24,14 @@ type Props = {
   placeholder: string
   max: number
   emptyText: string
+  /** Respuestas de un toque (por ejemplo «Voy»): envían el texto y, si hay, hacen algo más. */
+  quick?: { label: string; text: string; also?: () => void }[]
   /** `chat`: la lista llena el alto y se queda abajo; `inline`: lista corta dentro de un formulario. */
   variant: 'chat' | 'inline'
 }
 
 /** Lista de mensajes con caja de escritura: la usan el chat de la banda y los comentarios de cada canción. */
-export default function Thread({ posts, members, userId, canDelete, onDelete, onSend, placeholder, max, emptyText, variant }: Props) {
+export default function Thread({ posts, members, userId, canDelete, onDelete, onSend, placeholder, max, emptyText, variant, quick }: Props) {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -82,6 +84,16 @@ export default function Thread({ posts, members, userId, canDelete, onDelete, on
         })}
         <div ref={endRef} />
       </div>
+      {onSend && quick && quick.length > 0 && (
+        <div className="quick-replies" role="group" aria-label="Respuestas rápidas">
+          {quick.map((q) => (
+            <button key={q.label} type="button" className="quick-chip" disabled={busy} onClick={async () => {
+              setBusy(true); setError('')
+              try { await onSend(q.text); q.also?.() } catch { setError('No se pudo enviar. Revisa tu conexión.') } finally { setBusy(false) }
+            }}>{q.label}</button>
+          ))}
+        </div>
+      )}
       {onSend ? (
         <form className="thread-form" onSubmit={(e) => { e.preventDefault(); void send() }}>
           <textarea rows={variant === 'chat' ? 1 : 2} value={draft} maxLength={max} placeholder={placeholder} aria-label={placeholder}

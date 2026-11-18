@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, X } from 'lucide-react'
 import { useKeepAwake } from '../lib/keepAwake'
+import { useAuth } from '../store/useAuth'
 import { parseChart, transposeChordLine, wrapAligned, transposeLabel, type ChartLine } from '../lib/chart'
 import { instrumentOptions } from '../lib/identity'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
@@ -45,6 +46,7 @@ function toBlocks(chart: ChartLine[], shiftLine: (s: string) => string, mono: bo
 /** `instrument`: lo que toca quien lo abre. Con eso ve primero lo suyo: su afinación, su nota y, según el instrumento, la letra o los acordes. */
 export default function StageMode({ songs, instrument, onClose }: { songs: StageSong[]; instrument?: string | null; onClose: () => void }) {
   const [i, setI] = useState(0)
+  const me = useAuth((a) => a.session?.user.id)
   const [picked, setPicked] = useState<string | null>(readInstrument)
   const [picking, setPicking] = useState(false)
   // Lo que toca esta persona en esta canción: el que le asignaron en «Quién toca» o, si no, el de la banda o el que eligió aquí.
@@ -87,7 +89,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     const all = cur.lyrics ? parseChart(cur.lyrics) : []
     return kind === 'rhythm' ? [] : kind === 'voice' ? all.filter((l) => l.kind !== 'chords') : all
   }, [cur.lyrics, kind])
-  const forView = (s: Song): Song => (view ? { ...s, tunings: tuningsFor(s, view) } : s)
+  const forView = (s: Song): Song => (view ? { ...s, tunings: tuningsFor(s, view, me) } : s)
   const myNote = view ? noteFor(cur, view) : ''
   // En «mi vista» solo lo mío; las notas de los demás instrumentos se ven en «Todo».
   const others = view ? [] : otherNotes(cur, null)

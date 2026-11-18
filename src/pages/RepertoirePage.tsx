@@ -49,7 +49,7 @@ export default function RepertoirePage() {
           </>
         )}
       </MusicNav>
-      {canEdit && <button className="fab" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={26} aria-hidden /></button>}
+      {canEdit && <button className="fab-round" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={26} aria-hidden /></button>}
 
       {songs.length > 0 && (
         <>
