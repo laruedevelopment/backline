@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { purgeFolder } from '../lib/feed'
 import { clearAvatar, confirmAdult, deleteAccount, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
 import { processImage } from '../lib/image'
@@ -143,6 +144,8 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         if ((await listMembers(b.id)).length === 1) await purgeBandMedia(b.id).catch(() => {})
       }
       await purgeAvatars(userId!).catch(() => {})
+      await purgeFolder('feed-media', userId!).catch(() => {})
+      await purgeFolder('market-media', userId!).catch(() => {})
       await deleteAccount()
       clearDeviceData()
       await supabase!.auth.signOut()

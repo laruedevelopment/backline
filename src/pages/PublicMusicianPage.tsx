@@ -9,6 +9,7 @@ import { getPublicMusician, musicianBands } from '../lib/community'
 import { waLink } from '../lib/identity'
 import { useAuth } from '../store/useAuth'
 import { ReportSheet } from '../components/ReportSheet'
+import FollowButton from '../components/FollowButton'
 import { acceptFriend, requestFriend } from '../lib/social'
 import { useFriends } from '../lib/useLive'
 import { supabase } from '../lib/supabase'
@@ -44,7 +45,7 @@ export default function PublicMusicianPage() {
 
   return (
     <>
-      <Link to="/explorar/musicos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Comunidad</Link>
+      <Link to="/explorar/musicos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Músicos</Link>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
         <Avatar name={m.name} url={m.avatarUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
@@ -64,6 +65,7 @@ export default function PublicMusicianPage() {
         {wa && m.id !== me && <a className="btn primary" href={wa} target="_blank" rel="noopener noreferrer">Escribirle por WhatsApp</a>}
         <button className="btn" onClick={() => void share()}>{copied ? 'Enlace copiado' : 'Copiar enlace'}</button>
         {m.id === me && <Link className="btn" to="/perfil">Editar mi perfil</Link>}
+        <FollowButton kind="profile" id={m.id} />
         {m.id !== me && me && <button className="btn ghost" onClick={() => setReporting(true)}>Denunciar</button>}
       </div>
 

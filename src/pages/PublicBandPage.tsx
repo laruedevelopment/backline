@@ -10,6 +10,7 @@ import { listPhotos } from '../lib/api'
 import { bandMembers, getPublicBand } from '../lib/community'
 import { safeSocials, socialLabels } from '../lib/links'
 import { useBands } from '../store/useBandSession'
+import FollowButton from '../components/FollowButton'
 
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
 
@@ -40,7 +41,7 @@ export default function PublicBandPage() {
 
   return (
     <>
-      <Link to="/explorar" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Comunidad</Link>
+      <Link to="/explorar" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Bandas</Link>
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
         <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
@@ -57,6 +58,7 @@ export default function PublicBandPage() {
         </div>
       )}
       <div className="row" style={{ marginTop: 14, flexWrap: 'wrap' }}>
+        {!mine && <FollowButton kind="band" id={band.id} />}
         <button className="btn" onClick={() => void share()}>{copied ? 'Enlace copiado' : 'Copiar enlace'}</button>
         {mine && <Link className="btn" to="/banda">Administrar mi banda</Link>}
       </div>

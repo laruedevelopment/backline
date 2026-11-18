@@ -39,3 +39,14 @@ describe('compartir setlist', () => {
     expect(t).toBe('Toque\n\nHysteria\n— Pausa —\nMuse Song')
   })
 })
+
+import { ago } from './ago'
+describe('ago', () => {
+  const now = Date.parse('2026-11-18T12:00:00Z')
+  it('da el tiempo en palabras cercanas', () => {
+    expect(ago('2026-11-18T11:59:50Z', now)).toBe('ahora')
+    expect(ago('2026-11-18T11:30:00Z', now)).toBe('hace 30 min')
+    expect(ago('2026-11-18T09:00:00Z', now)).toBe('hace 3 h')
+    expect(ago('2026-11-17T08:00:00Z', now)).toBe('ayer')
+  })
+})

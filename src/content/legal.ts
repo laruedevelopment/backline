@@ -1,5 +1,5 @@
 /** Textos legales. BORRADOR: debe revisarlos un abogado antes de abrir la app a personas fuera de la banda. */
-export const TERMS_VERSION = '0.7'
+export const TERMS_VERSION = '0.8'
 export const CONTACT_EMAIL = 'javieruedase@gmail.com'
 export const RESPONSIBLE = 'Javier Rueda'
 
@@ -31,6 +31,9 @@ export const privacy: LegalDoc = {
         'Publicaciones «Se busca músico» de una banda pública y las respuestas de quienes se postulan, que ve la banda; quien responde comparte con la banda su nombre, foto, instrumentos, ciudad y el mensaje que escribe.',
         'Invitados por días: si una banda te invita como invitado, accedes a su repertorio, setlists, letras, notas y agenda hasta que venza el plazo; después sales sola de la banda.',
         'Avisos push: si los activas en tu perfil, guardamos la suscripción de tu navegador o dispositivo para avisarte de mensajes, solicitudes y reservas. Puedes desactivarlos cuando quieras.',
+        'Muro: lo que publicas (texto, fotos y links) y quién lo ve (público, amigos o tu banda), tus «me gusta», comentarios y a quién sigues. Las fotos del muro y del Mercado se guardan en un espacio privado: solo las ven las personas que pueden ver esa publicación o ese anuncio.',
+        'Mercado: los anuncios que publicas (título, descripción, precio, fotos, ciudad y, si tú lo decides, tu WhatsApp), las preguntas públicas y las respuestas.',
+        'Denuncias que envías sobre contenido o personas, con el motivo y un extracto; son privadas.',
         'Tu progreso de práctica, la banda activa y una copia de lo último que viste (para que la app funcione sin señal) se guardan en tu propio dispositivo.',
       ],
       paragraphs: [
@@ -135,6 +138,13 @@ export const terms: LegalDoc = {
     {
       title: '5 bis. Mensajes y comunicación',
       paragraphs: ['El chat de banda y los comentarios los ven todos los integrantes de esa banda, incluidos los administradores, que pueden borrarlos. Los mensajes directos no se revisan de forma habitual: solo si hay una denuncia o una obligación legal. No uses Backline para enviar publicidad o cobros a otras personas sin su autorización. Las personas menores de edad pueden estar en el chat de bandas que también tienen personas adultas; no pueden usar mensajes directos.'],
+    },
+    {
+      title: '5 ter. Muro y Mercado',
+      paragraphs: [
+        'El muro y el Mercado son solo para personas mayores de edad; las personas menores solo ven lo que su banda publica para sus integrantes. Cada persona es responsable de lo que publica y de tener el derecho y el permiso de quienes aparecen en sus fotos; no publiques fotos de menores de edad ni de personas que no quieran aparecer. Puedes denunciar cualquier publicación, comentario, anuncio o perfil, y podemos retirarlos y suspender cuentas.',
+        'El Mercado es solo un tablón de anuncios entre personas: Backline no vende, no cobra, no procesa pagos, no entrega ni garantiza productos, ni verifica a quien publica. Publica solo equipo que sea tuyo y descríbelo con sinceridad. Encuéntrate en un lugar público, no adelantes dinero y revisa el equipo antes de pagar. Está prohibido publicar equipo robado, falsificado o ilegal. Si más adelante hay pagos dentro de la app, se aplicarán los derechos del consumidor (Ley 1480 de 2011).',
+      ],
     },
     {
       title: '6. Salas de ensayos y reservas',

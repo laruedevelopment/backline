@@ -1,7 +1,7 @@
 // Denuncias de contenido o de personas. Quien administra Backline las revisa desde el panel de Supabase (tabla content_reports).
 import { supabase } from './supabase'
 
-export type ReportKind = 'profile' | 'band' | 'message' | 'comment' | 'dm' | 'opening'
+export type ReportKind = 'profile' | 'band' | 'message' | 'comment' | 'dm' | 'opening' | 'post' | 'post_comment' | 'listing' | 'listing_question'
 export const reportReasons: [string, string][] = [
   ['acoso', 'Acoso, amenazas o insultos'],
   ['spam', 'Spam o publicidad no pedida'],

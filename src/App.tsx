@@ -43,6 +43,9 @@ const pageLoaders = {
   LessonPage: () => import('./pages/LessonPage'),
   BandPage: () => import('./pages/BandPage'),
   ChatPage: () => import('./pages/ChatPage'),
+  MuroPage: () => import('./pages/MuroPage'),
+  MercadoPage: () => import('./pages/MercadoPage'),
+  ListingPage: () => import('./pages/ListingPage'),
   SharedSetlistPage: () => import('./pages/SharedSetlistPage'),
   FriendsPage: () => import('./pages/FriendsPage'),
   OpeningsPage: () => import('./pages/OpeningsPage'),
@@ -65,6 +68,9 @@ const LearnPage = lazy(pageLoaders.LearnPage)
 const LessonPage = lazy(pageLoaders.LessonPage)
 const BandPage = lazy(pageLoaders.BandPage)
 const ChatPage = lazy(pageLoaders.ChatPage)
+const MuroPage = lazy(pageLoaders.MuroPage)
+const MercadoPage = lazy(pageLoaders.MercadoPage)
+const ListingPage = lazy(pageLoaders.ListingPage)
 const SharedSetlistPage = lazy(pageLoaders.SharedSetlistPage)
 const FriendsPage = lazy(pageLoaders.FriendsPage)
 const OpeningsPage = lazy(pageLoaders.OpeningsPage)
@@ -79,7 +85,7 @@ const tabs = [
   { to: '/', label: 'Inicio', icon: Home, match: (p: string) => p === '/' },
   { to: '/repertorio', label: 'Música', icon: Music2, match: (p: string) => p.startsWith('/repertorio') || p.startsWith('/setlists') || p.startsWith('/aprender') },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays, match: (p: string) => p.startsWith('/agenda') || p.startsWith('/ensayaderos') },
-  { to: '/explorar', label: 'Comunidad', icon: Compass, match: (p: string) => p.startsWith('/explorar') },
+  { to: '/explorar/muro', label: 'Comunidad', icon: Compass, match: (p: string) => p.startsWith('/explorar') },
   { to: '/banda', label: 'Banda', icon: Users, match: (p: string) => p.startsWith('/banda') },
 ]
 
@@ -258,6 +264,9 @@ function Shell() {
               <Route path="/explorar" element={<ExplorePage />} />
               <Route path="/explorar/musicos" element={<ExplorePage />} />
               <Route path="/explorar/amigos" element={<FriendsPage />} />
+              <Route path="/explorar/muro" element={<MuroPage />} />
+              <Route path="/explorar/mercado" element={<MercadoPage />} />
+              <Route path="/explorar/mercado/:id" element={<Measure><ListingPage /></Measure>} />
               <Route path="/explorar/buscan" element={<OpeningsPage />} />
               <Route path="/explorar/amigos/:id" element={<Measure><DirectPage /></Measure>} />
               <Route path="/explorar/bandas/:id" element={<Measure><PublicBandPage /></Measure>} />

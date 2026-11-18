@@ -47,7 +47,7 @@ Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos
 - [ ] Comentarios por canción y chat de la banda (Realtime, anclado a canciones/eventos).
 - [x] Amigos (solicitud/aceptar/bloquear) y mensajes directos, solo entre mayores de edad (migración 0026). Avisos push de mensajes y solicitudes (función `notify-social`, migración 0033). Falta: ser invitado a una banda por un amigo.
 - [x] «Busco músico»: publicación de la banda pública (instrumento, temporal/definitivo, fecha, detalles) y respuestas al admin (migración 0027). Falta: avisos, vencimiento automático por fecha pasada en la lista del admin.
-- [ ] Perfil público de banda con seguidores (fans) y qué información es pública vs solo de la banda.
+- [x] Muro (publicaciones con fotos y links, «Para ti» y «Descubrir», me gusta, comentarios, seguir bandas y músicos) y Mercado de equipo (anuncios, preguntas públicas, sin pagos), solo para adultos, con fotos privadas y denuncias (migración 0037, términos 0.8). Falta: videos propios, avisos push de comentarios, buscar por ciudad.
 - [x] Exportar setlist a PDF (con letras y acordes o solo la lista) desde el diálogo de imprimir del navegador.
 - [x] Comentarios por canción y chat de la banda con contador de no leídos y tiempo real (migración 0025). Falta: avisos push de mensajes nuevos, mencionar a alguien, adjuntar imágenes.
 - [ ] Modo escenario: tablatura (texto monoespaciado ya se ve; archivos Guitar Pro/MusicXML necesitan un lector, evaluar alphaTab), vista «solo letra / letra y acordes / tablatura» por canción.
