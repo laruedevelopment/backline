@@ -2,6 +2,7 @@ import { supabase } from './supabase'
 import type { BandLinks } from './api'
 import type { Equipment } from './equipment'
 import { notifyBooking } from './push'
+import { processImage } from './image'
 import type { Busy } from './slots'
 
 const db = () => {
@@ -19,6 +20,7 @@ export type Venue = {
   amenities: string[]; whatsapp: string; links: BandLinks; bookingUrl: string
   logoPath: string | null; logoUrl: string | null; isPublished: boolean; autoConfirm: boolean
   lat: number | null; lng: number | null
+  payRequired: boolean; payDepositPct: number | null; payHoldHours: number
 }
 export type Room = {
   id: string; venueId: string; name: string; capacity: number; pricePerHour: number; description: string
@@ -32,19 +34,22 @@ export type Booking = {
   startsAt: string; endsAt: string; note: string; responseNote: string
   contactName: string; contactPhone: string; source: 'app' | 'owner'
   venueName: string; venueCity: string; roomName: string
+  totalAmount: number | null; depositAmount: number | null; payStatus: PayStatus; payDueAt: string | null; proofPath: string | null; payNote: string
 }
+export type PayStatus = 'not_required' | 'awaiting' | 'proof_sent' | 'paid'
 
 type VenueRow = {
   id: string; owner_id: string; kind: VenueKind; name: string; city: string; address: string; description: string | null
   amenities: string[]; whatsapp: string | null; links: BandLinks; booking_url: string | null; logo_path: string | null; is_published: boolean; auto_confirm: boolean
-  lat: number | null; lng: number | null
+  lat: number | null; lng: number | null; pay_required: boolean; pay_deposit_pct: number | null; pay_hold_hours: number
 }
 const toVenue = (r: VenueRow): Venue => ({
   id: r.id, ownerId: r.owner_id, kind: r.kind, name: r.name, city: r.city, address: r.address, description: r.description ?? '',
   amenities: r.amenities, whatsapp: r.whatsapp ?? '', links: r.links, bookingUrl: r.booking_url ?? '',
   logoPath: r.logo_path, logoUrl: r.logo_path ? publicUrl(r.logo_path) : null, isPublished: r.is_published, autoConfirm: r.auto_confirm, lat: r.lat, lng: r.lng,
+  payRequired: r.pay_required, payDepositPct: r.pay_deposit_pct, payHoldHours: r.pay_hold_hours,
 })
-const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm, lat, lng'
+const VENUE_COLS = 'id, owner_id, kind, name, city, address, description, amenities, whatsapp, links, booking_url, logo_path, is_published, auto_confirm, lat, lng, pay_required, pay_deposit_pct, pay_hold_hours'
 
 export async function listVenues(): Promise<Venue[]> {
   const { data, error } = await db().from('venues').select(VENUE_COLS).eq('is_published', true).order('name')
@@ -231,8 +236,9 @@ export async function cancelBooking(id: string) {
 type BookingRow = {
   id: string; venue_id: string; room_id: string; band_id: string | null; status: BookingStatus; starts_at: string; ends_at: string
   note: string | null; response_note: string | null; contact_name: string; contact_phone: string | null; source: 'app' | 'owner'
+  total_amount: number | null; deposit_amount: number | null; pay_status: PayStatus; pay_due_at: string | null; proof_path: string | null; pay_note: string | null
 }
-const BOOKING_COLS = 'id, venue_id, room_id, band_id, status, starts_at, ends_at, note, response_note, contact_name, contact_phone, source'
+const BOOKING_COLS = 'id, venue_id, room_id, band_id, status, starts_at, ends_at, note, response_note, contact_name, contact_phone, source, total_amount, deposit_amount, pay_status, pay_due_at, proof_path, pay_note'
 
 async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   if (!rows.length) return []
@@ -247,6 +253,7 @@ async function hydrate(rows: BookingRow[]): Promise<Booking[]> {
   return rows.map((b) => ({
     id: b.id, venueId: b.venue_id, roomId: b.room_id, bandId: b.band_id, status: b.status, startsAt: b.starts_at, endsAt: b.ends_at,
     note: b.note ?? '', responseNote: b.response_note ?? '', contactName: b.contact_name, contactPhone: b.contact_phone ?? '', source: b.source,
+    totalAmount: b.total_amount, depositAmount: b.deposit_amount, payStatus: b.pay_status, payDueAt: b.pay_due_at, proofPath: b.proof_path, payNote: b.pay_note ?? '',
     venueName: venues.get(b.venue_id)?.name ?? 'Sala de ensayos', venueCity: venues.get(b.venue_id)?.city ?? '', roomName: rooms.get(b.room_id) ?? '',
   }))
 }
@@ -264,6 +271,58 @@ export async function venueBookings(venueId: string): Promise<Booking[]> {
   return hydrate(data as BookingRow[])
 }
 
+// ───────── Pagos de reservas (el dinero va directo al dueño; Backline solo guarda el comprobante) ─────────
+export type PayInfo = { nequi: string; breb: string; link: string; notes: string }
+export type PaySettings = { required: boolean; nequi: string; breb: string; link: string; notes: string; depositPct: number | null; holdHours: number }
+
+export async function bookingPayInfo(bookingId: string): Promise<PayInfo | null> {
+  const { data, error } = await db().rpc('booking_pay_info', { p_id: bookingId })
+  if (error) throw error
+  const r = (data as { nequi: string | null; breb: string | null; link: string | null; notes: string | null }[])[0]
+  return r ? { nequi: r.nequi ?? '', breb: r.breb ?? '', link: r.link ?? '', notes: r.notes ?? '' } : null
+}
+
+export async function getPaySettings(venueId: string): Promise<PaySettings> {
+  const { data, error } = await db().rpc('my_pay_settings', { p_venue: venueId })
+  if (error) throw error
+  const r = (data as { required: boolean; nequi: string | null; breb: string | null; link: string | null; notes: string | null; deposit_pct: number | null; hold_hours: number }[])[0]
+  return { required: r?.required ?? false, nequi: r?.nequi ?? '', breb: r?.breb ?? '', link: r?.link ?? '', notes: r?.notes ?? '', depositPct: r?.deposit_pct ?? null, holdHours: r?.hold_hours ?? 24 }
+}
+
+export async function savePaySettings(venueId: string, p: PaySettings) {
+  const { error } = await db().from('venues').update({
+    pay_required: p.required, pay_nequi: p.nequi.trim() || null, pay_breb: p.breb.trim() || null, pay_link: p.link.trim() || null,
+    pay_notes: p.notes.trim() || null, pay_deposit_pct: p.depositPct, pay_hold_hours: p.holdHours,
+  }).eq('id', venueId)
+  if (error) throw error
+}
+
+const PROOF_BUCKET = 'payment-proofs'
+/** El cliente sube la foto del comprobante (se reduce en el dispositivo) y la deja adjunta a su reserva. */
+export async function attachProof(userId: string, bookingId: string, file: File) {
+  const img = await processImage(file, { maxSide: 1600, quality: 0.8 })
+  const path = `${userId}/${bookingId}/${crypto.randomUUID()}.${img.ext}`
+  const up = await db().storage.from(PROOF_BUCKET).upload(path, img.blob, { contentType: img.blob.type, cacheControl: '3600', upsert: false })
+  if (up.error) throw up.error
+  const { error } = await db().rpc('attach_payment_proof', { p_id: bookingId, p_path: path })
+  if (error) { await db().storage.from(PROOF_BUCKET).remove([path]).catch(() => {}); throw error }
+  void notifyBooking(bookingId)
+}
+
+export async function proofUrl(path: string): Promise<string | null> {
+  const { data } = await db().storage.from(PROOF_BUCKET).createSignedUrl(path, 600)
+  return data?.signedUrl ?? null
+}
+
+export async function reviewPayment(id: string, action: 'paid' | 'reject', note = '') {
+  const { error } = await db().rpc('review_payment', { p_id: id, p_action: action, p_note: note || null })
+  if (error) throw error
+  void notifyBooking(id)
+}
+
+/** ¿El plazo para pagar ya venció? (la base lo cancela sola; esto solo evita mostrar un contador en cero). */
+export const payExpired = (b: Pick<Booking, 'payStatus' | 'payDueAt'>, now = Date.now()) => b.payStatus === 'awaiting' && !!b.payDueAt && new Date(b.payDueAt).getTime() < now
+
 /** Mensaje claro para los errores que lanza la base. */
 export function bookingError(e: unknown): string {
   const m = String((e as { message?: string })?.message ?? e)
@@ -276,6 +335,7 @@ export function bookingError(e: unknown): string {
   if (/duración/i.test(m)) return 'La duración debe estar entre 30 minutos y 12 horas.'
   if (/propia sala/i.test(m)) return 'No puedes reservar en tu propia sala de ensayos desde aquí.'
   if (/no está pendiente|ya no se puede/i.test(m)) return 'Esa reserva ya cambió. Recarga para ver su estado.'
+  if (/ya no espera un pago|no hay un comprobante|no está confirmada/i.test(m)) return 'Esa reserva ya cambió (puede que venció el plazo de pago). Recarga para ver su estado.'
   if (/no disponible/i.test(m)) return 'Esa sala de ensayos o esa sala ya no está disponible.'
   return 'No pudimos completar la reserva. Intenta de nuevo.'
 }

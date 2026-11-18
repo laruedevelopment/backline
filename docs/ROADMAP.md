@@ -83,3 +83,5 @@ Plan Pro para bandas (más almacenamiento, finanzas, EPK avanzado), comisión po
 - [x] El contacto principal es el mensaje dentro de Backline (sala de ensayos, anuncio, perfil de músico, respuestas a «Se busca»); WhatsApp queda como segunda opción. Se puede escribir a una persona adulta sin ser amigos si hay un motivo (perfil público, anuncio, sala, banda); el primer mensaje es una solicitud (hasta 3 mensajes) que la otra persona acepta, rechaza o bloquea (migración 0039).
 - [x] Equipo con casillas y alquiler de instrumentos a nivel de todo el ensayadero (migración 0038).
 - [ ] Pagos de reservas sin intermediar: datos de pago del dueño (Nequi, Bre-B, link de pasarela) y estado «pagado» marcado a mano.
+
+- Pagos de reservas dentro de la app (0040): el dueño define Nequi/Bre-B/link, anticipo y plazo; el cliente adjunta el comprobante en la app; el dueño aprueba; sin comprobante a tiempo la reserva se cancela sola.

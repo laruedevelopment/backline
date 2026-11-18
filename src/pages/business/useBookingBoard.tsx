@@ -4,7 +4,7 @@ import ManualBookingSheet from '../../components/ManualBookingSheet'
 import RejectSheet from './RejectSheet'
 import { ask } from '../../lib/confirm'
 import { formatDay } from '../../lib/slots'
-import { bookingError, cancelBooking, listRooms, respondBooking, venueBookings, type Booking, type Venue } from '../../lib/venues'
+import { bookingError, cancelBooking, listRooms, respondBooking, reviewPayment, venueBookings, type Booking, type Venue } from '../../lib/venues'
 
 export const statusLabel = { requested: 'Pendiente', confirmed: 'Confirmada', rejected: 'Rechazada', cancelled: 'Cancelada' } as const
 
@@ -22,6 +22,11 @@ export function useBookingBoard(venue: Venue) {
 
   const respond = useMutation({
     mutationFn: (v: { id: string; status: 'confirmed' | 'rejected'; note: string }) => respondBooking(v.id, v.status, v.note),
+    onSuccess: refresh,
+    onError: (e) => { setMsg(bookingError(e)); void refresh() },
+  })
+  const review = useMutation({
+    mutationFn: (v: { id: string; action: 'paid' | 'reject'; note: string }) => reviewPayment(v.id, v.action, v.note),
     onSuccess: refresh,
     onError: (e) => { setMsg(bookingError(e)); void refresh() },
   })
@@ -49,7 +54,9 @@ export function useBookingBoard(venue: Venue) {
   )
 
   return {
-    bookings, rooms, isLoading, pending, confirmed, history, msg, now, sheets, busy: respond.isPending || cancel.isPending,
+    bookings, rooms, isLoading, pending, confirmed, history, msg, now, sheets, busy: respond.isPending || cancel.isPending || review.isPending,
+    markPaid: (b: Booking) => { setMsg(''); review.mutate({ id: b.id, action: 'paid', note: '' }) },
+    rejectProof: (b: Booking) => { setMsg(''); const note = window.prompt('¿Qué pasó con el comprobante? (opcional, se lo mostramos al cliente)', 'No se alcanza a ver el valor o la fecha') ; if (note !== null) review.mutate({ id: b.id, action: 'reject', note }) },
     confirm: (b: Booking) => { setMsg(''); respond.mutate({ id: b.id, status: 'confirmed', note: '' }) },
     reject: (b: Booking) => setRejecting(b),
     cancel: onCancel,

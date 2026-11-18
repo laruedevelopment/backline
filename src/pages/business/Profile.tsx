@@ -8,6 +8,7 @@ import VenueMedia from '../../components/VenueMedia'
 import { ask } from '../../lib/confirm'
 import { deleteVenue, kindLabel, listHours, listRooms, purgeVenueMedia, setAutoConfirm, setPublished, updateVenue } from '../../lib/venues'
 import { useVenue } from './BusinessContext'
+import PaymentSettings from './PaymentSettings'
 
 // Perfil público del negocio, publicación y forma de recibir reservas.
 export default function BusinessProfile() {
@@ -76,6 +77,8 @@ export default function BusinessProfile() {
           {!venue.autoConfirm && ' Ahora cada solicitud espera tu respuesta.'}
         </span>
       </label>
+
+      <PaymentSettings venue={venue} />
 
       <div className="section-title">Datos</div>
       <div className="kv">

@@ -869,6 +869,63 @@ await ok('sin motivo, o siendo menor, no se puede escribir; rechazar impide segu
   await pg.query(`update public.profiles set is_public = false where id = $1`, [U.leader])
 })
 
+// ───────── Pagos de reservas (0040) ─────────
+let pay1, pay2
+await pg.query(`delete from public.venue_hours where venue_id=$1`, [venue])
+for (let d = 0; d < 7; d++) await pg.query(`insert into public.venue_hours (venue_id, weekday, opens, closes) values ($1,$2,'08:00','22:00')`, [venue, d])
+await ok('el dueño configura cómo cobra (Nequi + anticipo 50 % + 24 h)', async () => {
+  await as('owner', `update public.venues set pay_required=true, pay_nequi='300 123 4567', pay_deposit_pct=50, pay_hold_hours=24, auto_confirm=true where id=$1`, [venue])
+})
+await rejects('cobrar exige al menos un método de pago', () => as('owner', `update public.venues set pay_nequi=null, pay_breb=null, pay_link=null where id=$1`, [venue]), /pay_method/)
+await rejects('el link de pago debe ser https', () => as('owner', `update public.venues set pay_link='http://x.co' where id=$1`, [venue]), /pay_link/)
+await ok('al reservar con cobro queda confirmada esperando pago, con total, anticipo y plazo', async () => {
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3) as id`, [room, t(30, '15:00'), t(30, '17:00')]); pay1 = r.id
+  const [b] = (await pg.query(`select total_amount, deposit_amount, pay_status, pay_due_at is not null as due from public.bookings where id=$1`, [pay1])).rows
+  eq(b.total_amount, 70000, 'total'); eq(b.deposit_amount, 35000, 'anticipo'); eq(b.pay_status, 'awaiting', 'estado'); eq(b.due, true, 'plazo')
+})
+await rejects('un tercero no puede adjuntar el comprobante', () => as('member', `select public.attach_payment_proof($1,$2)`, [pay1, `${U.member}/${pay1}/a.webp`]), /no puedes adjuntar/)
+await rejects('la ruta del comprobante debe ser de la reserva', () => as('leader', `select public.attach_payment_proof($1,$2)`, [pay1, `${U.leader}/otra/a.webp`]), /inválida/)
+await ok('el cliente adjunta el comprobante', async () => {
+  await as('leader', `select public.attach_payment_proof($1,$2)`, [pay1, `${U.leader}/${pay1}/a.webp`])
+  eq((await pg.query(`select pay_status from public.bookings where id=$1`, [pay1])).rows[0].pay_status, 'proof_sent', 'estado')
+})
+await rejects('el cliente no puede marcarse como pagado', () => as('leader', `select public.review_payment($1,'paid')`, [pay1]), /solo el dueño/)
+await rejects('el cliente no puede editar el estado de pago por tabla', () => as('leader', `update public.bookings set pay_status='paid' where id=$1`, [pay1]), /./)
+await ok('el dueño rechaza el comprobante: vuelve a esperar con nuevo plazo y motivo', async () => {
+  await as('owner', `select public.review_payment($1,'reject','No se ve el valor')`, [pay1])
+  const [b] = (await pg.query(`select pay_status, proof_path, pay_note from public.bookings where id=$1`, [pay1])).rows
+  eq(b.pay_status, 'awaiting', 'estado'); eq(b.proof_path, null, 'ruta'); eq(b.pay_note, 'No se ve el valor', 'nota')
+})
+await ok('con comprobante enviado no vence aunque pase el plazo (culpa del dueño)', async () => {
+  await as('leader', `select public.attach_payment_proof($1,$2)`, [pay1, `${U.leader}/${pay1}/b.webp`])
+  await pg.query(`update public.bookings set pay_due_at = now() - interval '1 hour' where id=$1`, [pay1])
+  await as('member', `select public.expire_unpaid_bookings()`)
+  eq((await pg.query(`select status from public.bookings where id=$1`, [pay1])).rows[0].status, 'confirmed', 'se canceló')
+})
+await ok('el dueño aprueba: queda pagada', async () => {
+  await as('owner', `select public.review_payment($1,'paid')`, [pay1])
+  eq((await pg.query(`select pay_status from public.bookings where id=$1`, [pay1])).rows[0].pay_status, 'paid', 'estado')
+})
+await ok('sin comprobante, al vencer el plazo se cancela sola y la franja se libera', async () => {
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3) as id`, [room, t(31, '15:00'), t(31, '16:00')]); pay2 = r.id
+  await pg.query(`update public.bookings set pay_due_at = now() - interval '1 minute' where id=$1`, [pay2])
+  eq((await as('member', `select count(*)::int as n from public.room_busy($1,$2,$3)`, [room, t(31, '00:00'), t(31, '23:00')]))[0].n, 0, 'sigue ocupada')
+  await as('leader', `select public.expire_unpaid_bookings()`)
+  eq((await pg.query(`select status from public.bookings where id=$1`, [pay2])).rows[0].status, 'cancelled', 'no se canceló')
+})
+await ok('quien reservó ve cómo pagar; un tercero no', async () => {
+  eq((await as('leader', `select nequi from public.booking_pay_info($1)`, [pay1]))[0]?.nequi, '300 123 4567', 'nequi')
+  eq((await as('member', `select nequi from public.booking_pay_info($1)`, [pay1])).length, 0, 'tercero')
+  eq((await as('owner', `select deposit_pct from public.my_pay_settings($1)`, [venue]))[0]?.deposit_pct, 50, 'dueño')
+  eq((await as('leader', `select * from public.my_pay_settings($1)`, [venue])).length, 0, 'ajeno')
+})
+await rejects('nadie puede leer pay_nequi directo de la tabla', () => as('leader', `select pay_nequi from public.venues where id=$1`, [venue]), /permission denied/)
+await ok('sin cobro configurado la reserva no pide pago', async () => {
+  await as('owner', `update public.venues set pay_required=false where id=$1`, [venue])
+  const [r] = await as('leader', `select public.request_booking($1,$2,$3) as id`, [room, t(32, '15:00'), t(32, '16:00')])
+  eq((await pg.query(`select pay_status from public.bookings where id=$1`, [r.id])).rows[0].pay_status, 'not_required', 'estado')
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

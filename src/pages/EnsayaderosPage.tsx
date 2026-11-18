@@ -12,7 +12,8 @@ import { norm } from '../lib/importSetlist'
 import { supabase } from '../lib/supabase'
 import { googleCalendarUrl } from '../lib/calendar'
 import { formatDay, formatTime, money } from '../lib/slots'
-import { bookingError, cancelBooking, kindLabel, listVenues, minPrices, myBookings, myVenues, type Booking } from '../lib/venues'
+import PayPanel from '../components/PayPanel'
+import { bookingError, cancelBooking, payExpired, kindLabel, listVenues, minPrices, myBookings, myVenues, type Booking } from '../lib/venues'
 import { useAuth } from '../store/useAuth'
 
 const statusText = { requested: 'Pendiente', confirmed: 'Confirmada', rejected: 'Rechazada', cancelled: 'Cancelada' } as const
@@ -75,7 +76,8 @@ export default function EnsayaderosPage() {
                   <div className="li-main">
                     <Link to={`/ensayaderos/${b.venueId}`} className="li-title" style={{ display: 'block' }}>{b.venueName} · {b.roomName}</Link>
                     <div className="li-sub">{formatDay(s)}</div>
-                    <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span><span className={`tag ${b.status === 'confirmed' ? 'ok' : ''}`}>{statusText[b.status]}</span></div>
+                    <div className="sub-row"><span>{formatTime(s)} a {formatTime(e)}</span><span className={`tag ${b.status === 'confirmed' ? 'ok' : ''}`}>{statusText[b.status]}</span>{b.payStatus === 'awaiting' && <span className="tag key">Falta el pago</span>}{b.payStatus === 'proof_sent' && <span className="tag">Comprobante enviado</span>}{b.payStatus === 'paid' && <span className="tag ok">Pagada</span>}</div>
+                    {b.status === 'confirmed' && b.payStatus !== 'not_required' && !payExpired(b) && <PayPanel b={b} />}
                   </div>
                   <div className="row" style={{ flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                     {b.status === 'confirmed' && <a className="btn ghost" target="_blank" rel="noopener noreferrer" href={googleCalendarUrl({ title: `Ensayo en ${b.venueName} · ${b.roomName}`, start: s, end: e, location: b.venueName })}>Google Calendar</a>}

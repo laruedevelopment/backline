@@ -78,3 +78,9 @@ Sin los pasos 1–4 la app funciona igual, solo sin avisos.
 3. Las denuncias llegan a la tabla `content_reports` (Supabase → Table Editor). Revísalas con frecuencia y cambia su `status` a `revisada` o `descartada`.
 4. Revisión legal: los textos son borradores. Llevar a un abogado la política y los términos 0.7 (mensajes entre menores y adultos en una banda, retención, procedimiento de derechos de autor, registro de bases de datos, identificación del responsable con documento y dirección).
 5. Antes de abrir a más bandas: Sentry, vigilancia del sitio (UptimeRobot), respaldos semanales y una prueba de carga (ver `docs/AUDITORIA-2026-11.md`).
+
+## Pagos de reservas (migración 0040)
+- Correr `supabase/pendiente.sql` completo (0037 a 0040) en el proyecto «backline».
+- Desplegar de nuevo `notify-social` (y `notify-booking` si quieres avisos de comprobante).
+- El workflow `vencer-reservas.yml` usa las mismas variables del repo que `salud-supabase.yml`; sin costo.
+- Backline no recibe dinero: el pago va directo a la cuenta del dueño. Aun así, Lucía debe revisar los términos antes de abrir reservas con cobro.

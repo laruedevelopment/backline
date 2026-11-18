@@ -192,7 +192,7 @@ function Nav() {
     <nav className="nav" aria-label={inBusiness ? 'Mi negocio' : 'Principal'}>
       <div className="wordmark">back<span>line</span></div>
       {(inBusiness ? businessTabs : tabs).map(({ to, label, icon: Icon, match }) => (
-        <NavLink key={to} to={to} className={match(pathname) ? 'active' : ''} aria-current={match(pathname) ? 'page' : undefined}>
+        <NavLink key={to} to={to} className={() => (match(pathname) ? 'active' : '')} aria-current={match(pathname) ? 'page' : undefined}>
           <span className="icon-wrap">
             <Icon size={22} strokeWidth={1.7} aria-hidden />
             {!inBusiness && to === '/explorar' && social > 0 && <span className="badge" aria-label={`${social} pendientes en amigos`}>{social > 99 ? '99+' : social}</span>}

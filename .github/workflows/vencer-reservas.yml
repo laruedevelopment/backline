@@ -1,0 +1,23 @@
+name: Vencer reservas sin pago
+
+# Cada hora cancela las reservas que esperaban un pago y no recibieron comprobante a tiempo (la base también lo hace al consultar,
+# esto solo asegura que las franjas se liberen y la agenda de las bandas se limpie aunque nadie abra la app).
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  expirar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar a expire_unpaid_bookings
+        env:
+          URL: ${{ vars.VITE_SUPABASE_URL }}
+          KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "Faltan las variables VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY"; exit 1; fi
+          curl -sf --max-time 30 -X POST -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}' "$URL/rest/v1/rpc/expire_unpaid_bookings"

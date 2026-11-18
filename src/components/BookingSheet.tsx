@@ -3,10 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { waLink } from '../lib/identity'
 import { bogotaDate, buildSlots, formatDay, formatTime, money, todayBogota, weekdayOf, type Slot } from '../lib/slots'
-import { bookingError, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
+import { bookingError, myBookings, requestBooking, roomBusy, syncCalendars, type Hours, type Room, type Venue } from '../lib/venues'
 import { useBands } from '../store/useBandSession'
 import { useAuth } from '../store/useAuth'
 import DayTimeline from './DayTimeline'
+import PayPanel from './PayPanel'
 import Sheet from './Sheet'
 
 const APP_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}`
@@ -36,6 +37,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   const [phone, setPhone] = useState('')
   const [note, setNote] = useState('')
   const [done, setDone] = useState(false)
+  const [bookingId, setBookingId] = useState('')
   const [error, setError] = useState('')
 
   const room = rooms.find((r) => r.id === roomId)
@@ -57,7 +59,8 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
 
   const book = useMutation({
     mutationFn: () => requestBooking({ roomId, start: slot!.start, end: slot!.end, bandId: bandId || null, note: note.trim(), phone: phone.trim() }),
-    onSuccess: async () => {
+    onSuccess: async (id) => {
+      setBookingId(id)
       await Promise.all([qc.invalidateQueries({ queryKey: ['my-bookings'] }), qc.invalidateQueries({ queryKey: ['busy'] })])
       setDone(true)
     },
@@ -65,6 +68,10 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
   })
 
   const total = room && slot ? Math.round((room.pricePerHour * minutes) / 60) : 0
+  const charge = venue.payRequired && total > 0
+  const deposit = charge ? (venue.payDepositPct ? Math.round((total * venue.payDepositPct) / 100) : total) : 0
+  const myBooking = useQuery({ queryKey: ['my-bookings'], queryFn: myBookings, enabled: done && !!bookingId })
+  const created = myBooking.data?.find((x) => x.id === bookingId)
   const wa = venue.whatsapp && slot
     ? waLink(venue.whatsapp, `Hola, acabo de pedir ${room?.name} para el ${formatDay(slot.start)}, de ${formatTime(slot.start)} a ${formatTime(slot.end)}. Puedes confirmarla en Backline: ${APP_URL}mi-negocio`)
     : undefined
@@ -86,6 +93,8 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
             ? `Tu franja ya está confirmada${bandId ? ' y el ensayo quedó en la agenda de tu banda' : ''}. La sala de ensayos fue avisada.`
             : `La sala de ensayos responderá la solicitud. Verás el estado en «Mis reservas»${bandId ? ' y, cuando la confirmen, el ensayo aparecerá solo en la agenda de tu banda' : ''}.`}
         </p>
+        {charge && venue.autoConfirm && created && <PayPanel b={created} />}
+        {charge && !venue.autoConfirm && <p className="li-sub wrap">Cuando la sala confirme, te aparece en «Mis reservas» cómo pagar. Tendrás {venue.payHoldHours} horas para adjuntar el comprobante.</p>}
         <Link className="btn" to={`/explorar/amigos/${venue.ownerId}`} onClick={onClose}>Escribirles dentro de Backline</Link>
         {!venue.autoConfirm && wa && <a className="btn ghost" href={wa} target="_blank" rel="noopener noreferrer">O avisarles por WhatsApp</a>}
         <button className="btn primary" onClick={onClose}>Listo</button>
@@ -135,7 +144,13 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
             </button>
           ))}
         </div>
-        {slot && <p className="notice" style={{ marginTop: 10 }}>{formatTime(slot.start)} a {formatTime(slot.end)}{total > 0 ? ` · ${money(total)} en total (se paga en la sala)` : ''}</p>}
+        {slot && <p className="notice" style={{ marginTop: 10 }}>{formatTime(slot.start)} a {formatTime(slot.end)}{total > 0 ? ` · ${money(total)} en total${charge ? '' : ' (se paga en la sala)'}` : ''}</p>}
+        {slot && charge && (
+          <p className="notice" style={{ marginTop: 8 }}>
+            {deposit < total ? <>Pagas un anticipo de <b>{money(deposit)}</b> y el resto (<b>{money(total - deposit)}</b>) en la sala.</> : <>Se paga por adelantado: <b>{money(total)}</b>.</>}{' '}
+            Después de reservar adjuntas aquí el comprobante en máximo <b>{venue.payHoldHours} horas</b>; si no, la reserva se cancela sola. Si ya lo enviaste y la sala no alcanza a revisarlo, tu reserva se mantiene.
+          </p>
+        )}
       </div>
 
       {editableBands.length > 0 && (
@@ -152,7 +167,7 @@ export default function BookingSheet({ venue, rooms, hours, initialRoomId, onClo
       <label className="field">Nota para la sala de ensayos (opcional)
         <textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} placeholder="Somos 4. Llevamos nuestra batería." />
       </label>
-      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con la sala de ensayos para que pueda confirmarte. No se hace ningún cobro en Backline.{venue.autoConfirm ? ' Esta sala de ensayos confirma al instante.' : ''}</p>
+      <p className="li-sub wrap">Compartimos tu nombre{phone.trim() ? ' y tu teléfono' : ''} con la sala de ensayos para que pueda confirmarte. Backline no cobra ni recibe dinero: el pago va directo a la sala.{venue.autoConfirm ? ' Esta sala de ensayos confirma al instante.' : ''}</p>
 
       <div className="sheet-foot">
         {error && <p className="form-error" role="alert">{error}</p>}
