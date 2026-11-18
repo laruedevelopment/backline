@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
+import InfoTip, { HelpRow } from './InfoTip'
 import { safeLink, statusLabel, type LineupSlot, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
@@ -112,7 +113,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       <details className="fold">
         <summary>Quién toca{(s.lineup ?? []).length ? <small>{(s.lineup ?? []).length}</small> : null}</summary>
         <div className="fold-body">
-      <p className="li-sub wrap">Qué instrumentos lleva la canción y quién lo toca: alguien de la banda o un invitado.</p>
+      <HelpRow text="Qué instrumentos lleva la canción y quién lo toca: alguien de la banda o un invitado." />
       {(s.lineup ?? []).map((l, i) => (
         <div className="subform" key={i}>
           <div className="grid-row">
@@ -161,7 +162,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         <summary>Afinación y cambios{s.tunings.length || s.keyChanges.length ? <small>{s.tunings.length} afin.{s.keyChanges.length ? ` · ${s.keyChanges.length} de tono` : ''}</small> : null}</summary>
         <div className="fold-body">
       <h4 className="fold-sub">Afinación por instrumento</h4>
-      <p className="li-sub wrap">«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento.</p>
+      <HelpRow text="«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento." />
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
           <InstrumentPicker label="Instrumento" includeAll first={(s.lineup ?? []).map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
@@ -218,7 +219,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         <summary>Notas y comentarios{noteRows.length ? <small>{noteRows.length} por instrumento</small> : null}</summary>
         <div className="fold-body">
       <h4 className="fold-sub">Notas por instrumento</h4>
-      <p className="li-sub wrap">Lo que cada integrante necesita saber de esta canción. En el modo escenario cada quien ve la nota de su instrumento.</p>
+      <HelpRow text="Lo que cada integrante necesita saber de esta canción. En el modo escenario cada quien ve la nota de su instrumento." />
       {noteRows.map((r, i) => (
         <div className="subform" key={i}>
           <div className="grid-row">
@@ -265,7 +266,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       <label className="field">Letra y acordes (opcional)
         <textarea rows={8} className="chart-input" value={s.lyrics ?? loadedLyrics ?? ''} disabled={needsLyrics && s.lyrics === undefined && (lyricsLoading || lyricsError)} onChange={(e) => patch({ lyrics: e.target.value })} maxLength={12000} spellCheck={false}
           placeholder={'[Verso]\nAm        F\nHoy vuelvo a casa\n\nO así: Hoy [Am]vuelvo a [F]casa'} />
-        <span className="li-sub wrap">Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella.</span>
+        <InfoTip text="Pon los acordes encima de la letra o entre corchetes. Se ve en el modo escenario, y ahí puedes subir o bajar el tono. Solo la ve tu banda: usa letras que puedas compartir con ella." label="Cómo escribir la letra y los acordes" />
       </label>
 
         </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import InfoTip, { HelpRow } from '../components/InfoTip'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createInvite, deleteBand, listMembers, purgeBandMedia, setBandPublic, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
@@ -86,7 +87,6 @@ export default function BandPage() {
 
   return (
     <>
-      <BandNav />
       <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
         <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
@@ -94,7 +94,8 @@ export default function BandPage() {
           <h1 className="page-title" style={{ fontSize: 'clamp(1.8rem, 8vw, 2.6rem)' }}>{band.name}</h1>
         </div>
       </div>
-      <p className="page-sub">{band.city || 'Sin ciudad'}</p>
+      <BandNav />
+      <p className="page-sub" style={{ marginTop: 12 }}>{band.city || 'Sin ciudad'}</p>
       {band.genres.length > 0 && <div className="chips">{band.genres.map((g) => <span key={g} className="tag">{g}</span>)}</div>}
       {band.bio && <p style={{ marginTop: 14, maxWidth: '60ch' }}>{band.bio}</p>}
       {socials.length > 0 && (
@@ -150,7 +151,7 @@ export default function BandPage() {
       {isAdmin && (
         <>
           <div className="section-title">Invitar</div>
-          <p className="li-sub wrap" style={{ marginBottom: 10 }}>El código sirve 7 días. Quien lo use entra a la banda según lo que elijas aquí.</p>
+          <HelpRow text="El código sirve 7 días. Quien lo use entra a la banda según lo que elijas aquí." />
           <div className="seg" role="group" aria-label="Cómo entra quien use el código" style={{ marginBottom: 10 }}>
             <button type="button" className={inviteKind === 'member' ? 'active' : ''} aria-pressed={inviteKind === 'member'} onClick={() => { setInviteKind('member'); setCode('') }}>Integrante</button>
             <button type="button" className={inviteKind !== 'member' ? 'active' : ''} aria-pressed={inviteKind !== 'member'} onClick={() => { setInviteKind(7); setCode('') }}>Invitado de un toque</button>
@@ -160,7 +161,7 @@ export default function BandPage() {
               <select value={inviteKind} onChange={(e) => { setInviteKind(Number(e.target.value)); setCode('') }}>
                 {[3, 7, 14, 30, 60].map((d) => <option key={d} value={d}>{d} días</option>)}
               </select>
-              <span className="li-sub wrap">Ve el repertorio, los setlists, la agenda y su parte (afinación, notas y letras) en el modo escenario; confirma asistencia y escribe sus propias anotaciones. No edita nada más. Al vencer, sale solo de la banda.</span>
+              <InfoTip text="Ve el repertorio, los setlists, la agenda y su parte (afinación, notas y letras) en el modo escenario; confirma asistencia y escribe sus propias anotaciones. No edita nada más. Al vencer, sale solo de la banda." label="Qué puede hacer un invitado" />
             </label>
           )}
           <button className="btn" onClick={() => void invite()}>Generar código</button>

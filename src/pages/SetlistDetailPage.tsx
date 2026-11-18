@@ -21,6 +21,7 @@ import Sheet from '../components/Sheet'
 import SongForm from '../components/SongForm'
 import StageMode from '../components/StageMode'
 import ShareSetlistSheet from '../components/ShareSetlistSheet'
+import InfoTip from '../components/InfoTip'
 import ListSkeleton from '../components/Skeleton'
 
 type Row = { e: SetlistItem; song: Song | null; n: number; retune: boolean }
@@ -231,8 +232,7 @@ export default function SetlistDetailPage() {
           </label>
           {spotifyError && <p className="form-error" role="alert">{spotifyError}</p>}
           <div className="field">
-            <span>Invitados de este setlist</span>
-            <span className="li-sub wrap">Personas que tocan en este toque sin ser de la banda. Después los eliges en «Quién toca» de cada canción. Para que alguien con cuenta vea el toque y su parte, invítalo en Banda como «Invitado de un toque».</span>
+            <span className="title-row">Invitados de este setlist <InfoTip label="Qué son los invitados del setlist" text="Personas que tocan en este toque sin ser de la banda. Después los eliges en «Quién toca» de cada canción. Para que alguien con cuenta vea el toque y su parte, invítalo en Banda como «Invitado de un toque»." /></span>
             <div className="chips">
               {(list.guests ?? []).map((g) => (
                 <span key={g.id} className="tag key">{g.name} <button type="button" className="msg-del" aria-label={`Quitar a ${g.name}`} onClick={() => void save({ ...list, guests: (list.guests ?? []).filter((x) => x.id !== g.id) })}>×</button></span>
@@ -245,7 +245,7 @@ export default function SetlistDetailPage() {
           </div>
           </div>
         )}
-        {canEdit && items.length > 0 && <p className="li-sub wrap">Arrastra el asa ⋮⋮ para cambiar el orden (también las etiquetas). Toca una canción para editar sus detalles. Para cambiar el nombre, el link de Spotify, poner etiquetas a una canción o quitar elementos, pulsa «Editar setlist».</p>}
+        {canEdit && items.length > 0 && <div className="title-row"><span className="li-sub">Cómo se edita</span><InfoTip label="Cómo se edita un setlist" text="Arrastra los puntitos ⋮⋮ para cambiar el orden (también de las etiquetas). Toca una canción para editar sus detalles. Para cambiar el nombre, el link de Spotify, poner etiquetas a una canción o quitar elementos, pulsa «Editar setlist»." /></div>}
         {canEdit && <button className="btn block" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
         {canEdit && <button className="btn block" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Agregar etiqueta</button>}
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>

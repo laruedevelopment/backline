@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Trash2, X } from 'lucide-react'
+import InfoTip, { HelpRow } from './InfoTip'
 import { cleanLabel, cleanTag, LABEL_MAX_LEN, LABEL_PRESETS, MAX_TAGS, TAG_MAX_LEN, TAG_PRESETS } from '../lib/setlistItems'
 import Sheet from './Sheet'
 
@@ -32,7 +33,7 @@ export function LabelSheet({ positions, people = [], initial, initialWho = [], d
 
   return (
     <Sheet title={editing ? 'Editar etiqueta' : 'Agregar etiqueta'} onClose={onClose} onSubmit={submit}>
-      <p className="li-sub wrap">Un aviso entre canciones que se ve en el setlist y en el modo escenario. Por ejemplo, para cambiar de afinación o de guitarra.</p>
+      <HelpRow text="Un aviso entre canciones que se ve en el setlist y en el modo escenario. Por ejemplo, para cambiar de afinación o de guitarra." />
       <label className="field">Texto
         <input value={text} onChange={(e) => setText(e.target.value)} maxLength={LABEL_MAX_LEN} placeholder="Afinar a Drop C" autoFocus required />
       </label>
@@ -49,7 +50,7 @@ export function LabelSheet({ positions, people = [], initial, initialWho = [], d
               </label>
             ))}
           </div>
-          <span className="li-sub wrap">Si marcas a alguien, el aviso solo le sale a esa persona en el modo escenario (por ejemplo, el cambio de guitarra del guitarrista).</span>
+          <InfoTip text="Si marcas a alguien, el aviso solo le sale a esa persona en el modo escenario (por ejemplo, el cambio de guitarra del guitarrista)." label="Para quién es el aviso" />
         </fieldset>
       )}
       {!editing && (

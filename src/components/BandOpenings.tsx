@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { HelpRow } from './InfoTip'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { ask } from '../lib/confirm'
@@ -35,7 +36,7 @@ export default function BandOpenings({ bandId, bandName, city, isPublic }: { ban
   return (
     <>
       <h2 className="section-title">Busco músico</h2>
-      <p className="li-sub wrap">¿Se fue el bajista o uno está enfermo para un toque? Publica qué necesitas y los músicos de Comunidad te responden.</p>
+      <HelpRow text="¿Se fue el bajista o uno está enfermo para un toque? Publica qué necesitas y los músicos de Comunidad te responden." />
       {!isPublic && <p className="li-sub wrap" style={{ color: 'var(--amber)' }}>Para que otros músicos vean tus búsquedas, la banda debe ser pública (actívalo arriba, en «Banda pública»).</p>}
       {items.length > 0 && (
         <div className="list">

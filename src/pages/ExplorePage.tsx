@@ -49,12 +49,7 @@ export default function ExplorePage() {
 
   return (
     <>
-      <div className="page-head">
-        <span className="eyebrow">Bandas y músicos</span>
-        <h1 className="page-title">Comunidad</h1>
-        <p className="page-sub">Bandas y músicos que decidieron hacerse visibles. Encuentra con quién tocar, a quién invitar o qué se mueve en tu ciudad.</p>
-      </div>
-      <CommunityNav onChange={() => setTag('')} />
+      <CommunityNav title={musicians ? 'Músicos' : 'Bandas'} sub={musicians ? 'Músicos que decidieron hacerse visibles. Encuentra con quién tocar o a quién invitar.' : 'Bandas que decidieron hacerse visibles. Mira qué se mueve en tu ciudad.'} onChange={() => setTag('')} />
 
       <div className="explore-filters">
         <label className="search">

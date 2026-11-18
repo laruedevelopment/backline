@@ -29,11 +29,10 @@ export default function OpeningsPage() {
   const shown = useMemo(() => (data ?? []).filter((o) => !instrument || o.instrument === instrument), [data, instrument])
   const present = useMemo(() => [...new Set((data ?? []).map((o) => o.instrument))].sort(), [data])
 
-  if (!supabase) return <><CommunityNav /><p className="empty">Las búsquedas necesitan una cuenta. Inicia sesión para verlas.</p></>
+  if (!supabase) return <><CommunityNav title="Se busca" /><p className="empty">Las búsquedas necesitan una cuenta. Inicia sesión para verlas.</p></>
   return (
     <>
-      <CommunityNav />
-      <p className="page-sub">Bandas que necesitan un músico: para un toque o para quedarse. Responde y la banda te escribe.</p>
+      <CommunityNav title="Se busca" sub="Bandas que necesitan un músico, para un toque o para quedarse. Responde y la banda te escribe." />
       {present.length > 1 && (
         <div className="filter-chips" role="group" aria-label="Filtrar por instrumento">
           <button className={!instrument ? 'active' : ''} aria-pressed={!instrument} onClick={() => setInstrument('')}>Todos</button>

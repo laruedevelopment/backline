@@ -22,14 +22,14 @@ export default function FriendsPage() {
   const accept = useMutation({ mutationFn: (f: Friend) => acceptFriend(f.friendshipId), onSuccess: refresh })
   const drop = useMutation({ mutationFn: (f: Friend) => removeFriendship(f.friendshipId), onSuccess: refresh })
 
-  if (!supabase) return <><CommunityNav /><p className="empty">Los amigos necesitan una cuenta. Inicia sesión para usarlos.</p></>
+  if (!supabase) return <><CommunityNav title="Amigos" sub="Tus amigos, las solicitudes y tus conversaciones." /><p className="empty">Los amigos necesitan una cuenta. Inicia sesión para usarlos.</p></>
   const incoming = (all ?? []).filter((f) => f.direction === 'in')
   const friends = (all ?? []).filter((f) => f.direction === 'friend').sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''))
   const sent = (all ?? []).filter((f) => f.direction === 'out')
 
   return (
     <>
-      <CommunityNav />
+      <CommunityNav title="Amigos" sub="Tus amigos, las solicitudes y tus conversaciones." />
       {isLoading && <ListSkeleton rows={3} />}
       {isError && <p className="empty">No pudimos cargar tus amigos. Revisa tu conexión.</p>}
       {all && all.length === 0 && (

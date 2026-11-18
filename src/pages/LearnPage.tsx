@@ -11,12 +11,12 @@ export default function LearnPage() {
   const finished = list.filter((l) => done.includes(l.id)).length
   return (
     <>
-      <MusicNav />
       <div className="page-head">
-        <span className="eyebrow">Práctica</span>
+        <span className="eyebrow">Música</span>
         <h1 className="page-title">Aprender</h1>
-        <p className="page-sub">Lecciones cortas con diagrama y metrónomo. Sube el tempo solo cuando salga limpio.</p>
       </div>
+      <MusicNav />
+      <p className="page-sub" style={{ marginTop: 12 }}>Lecciones cortas con diagrama y metrónomo. Sube el tempo solo cuando salga limpio.</p>
       <div className="tabs" role="group" aria-label="Instrumento">
         {instruments.map((i) => (
           <button key={i.id} aria-pressed={inst === i.id} className={inst === i.id ? 'active' : ''} onClick={() => setInst(i.id)}>{i.name}</button>

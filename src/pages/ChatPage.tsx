@@ -15,6 +15,10 @@ export default function ChatPage() {
   if (wide && supabase) return <Navigate to="/banda" replace />
   return (
     <>
+      <div className="page-head">
+        <span className="eyebrow">Banda</span>
+        <h1 className="page-title">Chat</h1>
+      </div>
       <BandNav />
       {supabase ? <BandChat /> : <p className="empty">El chat necesita una cuenta. Inicia sesión para usarlo.</p>}
     </>

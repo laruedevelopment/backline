@@ -898,3 +898,16 @@ input, select, textarea { border-radius: var(--r-m); }
 .terms-card { width: min(520px, 100%); display: grid; gap: 14px; padding: 24px; border-radius: var(--r-l); background: var(--raise); border: 1px solid var(--line-2); box-shadow: var(--shadow); }
 .terms-card h2 { font-size: 1.5rem; text-transform: uppercase; line-height: 1.1; }
 .terms-card a { color: var(--amber); font-weight: 600; text-decoration: underline; }
+
+/* Botón de ayuda «i» con explicación que se despliega */
+.infotip { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: middle; max-width: 100%; }
+.infotip-btn { position: relative; display: inline-grid; place-items: center; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: none; color: var(--muted); }
+.infotip-btn::after { content: ''; position: absolute; inset: -9px; }
+.infotip-btn:hover, .infotip-btn[aria-expanded=true] { color: var(--amber); border-color: var(--amber); }
+.info-pop { display: block; width: min(340px, calc(100vw - 56px)); margin-top: 8px; padding: 10px 12px; border-radius: var(--r-m); background: var(--sunk); border: 1px solid var(--line-2); color: var(--muted); font-size: 0.875rem; line-height: 1.45; font-weight: 400; text-transform: none; letter-spacing: 0; text-align: left; white-space: normal; }
+.title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Pie del menú lateral (Mi negocio, Mi perfil…): la píldora de selección con margen suficiente alrededor del texto */
+.nav .nav-foot a { padding: 8px 12px; min-height: 38px; border-radius: 999px; }
+.nav .nav-foot a.active { background: color-mix(in srgb, var(--amber) 14%, var(--raise)); color: var(--text); }
+.nav .nav-foot { gap: 2px; padding-bottom: 6px; }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { HelpRow } from './InfoTip'
 import { addSongComment, deleteSongComment, listMembers, listSongComments } from '../lib/api'
 import { ask } from '../lib/confirm'
 import { supabase } from '../lib/supabase'
@@ -21,7 +22,7 @@ export default function SongComments({ songId, bandId, canWrite, canModerate }: 
   return (
     <>
       <h3 className="section-title">Comentarios{posts.length ? ` (${posts.length})` : ''}</h3>
-      <p className="li-sub wrap">Para hablar de esta canción con la banda: tono, estructura, quién entra cuándo.</p>
+      <HelpRow text="Para hablar de esta canción con la banda: tono, estructura, quién entra cuándo." />
       <Thread
         onReport={(p) => setReport({ kind: 'comment', id: p.id, label: 'este comentario', excerpt: p.body })}
         variant="inline" posts={posts} members={members} userId={userId} max={1000}

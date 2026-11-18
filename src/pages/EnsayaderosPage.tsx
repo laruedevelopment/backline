@@ -60,7 +60,7 @@ export default function EnsayaderosPage() {
   return (
     <>
       <div className="page-head">
-        <span className="eyebrow">Ensayos</span>
+        <span className="eyebrow">Agenda</span>
         <h1 className="page-title">Salas de ensayos</h1>
         <p className="page-sub">Encuentra una sala de ensayos, mira sus salas y horarios y pide tu franja. Si reservas a nombre de tu banda, el ensayo aparece solo en la agenda.</p>
       </div>

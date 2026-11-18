@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { HelpRow } from './InfoTip'
 import { ask } from '../lib/confirm'
 import { processImage } from '../lib/image'
 import Sheet from './Sheet'
@@ -109,7 +110,7 @@ export default function MediaManager<P extends Photo>({ name, logoUrl, canEdit, 
             {busy === 'photo' ? 'Subiendo…' : photos.length >= MAX_PHOTOS ? `Máximo ${MAX_PHOTOS} fotos` : 'Agregar fotos'}
           </button>
           <input ref={photoInput} type="file" accept="image/*" multiple hidden onChange={onPhoto} />
-          <p className="li-sub wrap" style={{ marginTop: 8 }}>Sube solo fotos tuyas o con permiso de quienes salen. Las imágenes son visibles para quien tenga el enlace. Se reducen y se les quita la ubicación antes de subirse.</p>
+          <HelpRow text="Sube solo fotos tuyas o con permiso de quienes salen. Las imágenes son visibles para quien tenga el enlace. Se reducen y se les quita la ubicación antes de subirse." />
         </>
       )}
       {error && <p className="form-error" role="alert" style={{ marginTop: 8 }}>{error}</p>}
