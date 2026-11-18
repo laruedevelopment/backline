@@ -825,3 +825,13 @@ input, select, textarea { border-radius: var(--r-m); }
   .filter-chips::-webkit-scrollbar { display: none; }
   .filter-chips button { flex: none; }
 }
+
+.share-fields { border: 0; padding: 0; margin: 0; }
+.share-checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 12px; }
+.share-preview { margin: 0; padding: 12px 14px; max-height: 220px; overflow: auto; white-space: pre-wrap; font-family: var(--mono); font-size: 0.85rem; line-height: 1.5; background: var(--sunk); border: 1px solid var(--line); border-radius: var(--r-m); }
+.share-actions { display: grid; gap: 8px; margin-top: 12px; }
+@media (min-width: 560px) { .share-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.tonight { margin: 4px 0 14px; padding: 18px 18px 16px; border-radius: var(--r-l); display: grid; gap: 6px; background: linear-gradient(135deg, color-mix(in srgb, var(--amber) 26%, var(--raise)), var(--raise) 70%); border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--line)); box-shadow: var(--shadow); }
+.tonight h2 { font-size: clamp(1.6rem, 6vw, 2.2rem); text-transform: uppercase; line-height: 1.05; }
+.tonight .row { margin-top: 8px; flex-wrap: wrap; }

@@ -69,6 +69,17 @@ export default function HomePage() {
           {band && <p className="page-sub">{[band.city, band.genres.join(' · ')].filter(Boolean).join(' · ')}</p>}
         </div>
       </header>
+      {next && setlist && inDays(next.startsAt) === 'Hoy' && next.kind === 'gig' && parts && (
+        <section className="tonight" aria-label="Esta noche">
+          <span className="eyebrow">Esta noche · {parts.time}</span>
+          <h2>{next.title}</h2>
+          <p className="li-sub">{[next.place, setlist.name].filter(Boolean).join(' · ')}</p>
+          <div className="row">
+            <Link className="btn primary grow" to={`/setlists/${setlist.id}?escenario`}>Abrir modo escenario</Link>
+            <Link className="btn" to={`/setlists/${setlist.id}`}>Ver setlist</Link>
+          </div>
+        </section>
+      )}
       <nav className="quick" aria-label="Accesos rápidos">
         <Link to="/setlists"><span><ListMusic size={22} aria-hidden /></span>Setlists</Link>
         <Link to="/agenda"><span><CalendarPlus size={22} aria-hidden /></span>Agendar</Link>
