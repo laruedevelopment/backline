@@ -23,15 +23,13 @@ export default function ChatDock() {
 
   const unreadTotal = unreadBand + friends.reduce((n, f) => n + f.unread, 0) + requests
 
+  // Contraído: una burbuja flotante (como en Messenger) y la pantalla recupera todo el ancho.
   if (collapsed) {
     return (
-      <aside className="dock collapsed" aria-label="Chat (contraído)">
-        <button className="dock-tab" onClick={() => setCollapsed(false)} aria-label={`Abrir el chat${unreadTotal ? `, ${unreadTotal} sin leer` : ''}`}>
-          <MessageCircle size={22} aria-hidden />
-          {unreadTotal > 0 && <span className="seg-badge">{unreadTotal > 99 ? '99+' : unreadTotal}</span>}
-          <span className="dock-tab-label">Chat</span>
-        </button>
-      </aside>
+      <button className="dock-bubble" onClick={() => setCollapsed(false)} aria-label={`Abrir el chat${unreadTotal ? `, ${unreadTotal} sin leer` : ''}`}>
+        <MessageCircle size={26} aria-hidden />
+        {unreadTotal > 0 && <span className="seg-badge">{unreadTotal > 99 ? '99+' : unreadTotal}</span>}
+      </button>
     )
   }
   return (

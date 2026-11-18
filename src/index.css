@@ -878,3 +878,14 @@ input, select, textarea { border-radius: var(--r-m); }
 .fold-body { display: grid; gap: 10px; padding: 0 16px 16px; }
 .fold-sub { margin: 10px 0 0; font-size: 0.95rem; color: var(--text); }
 .fold .section-title { font-size: 1rem; margin: 14px 0 4px; }
+
+/* Chat contraído: burbuja flotante, sin columna reservada */
+.dock-bubble { position: fixed; right: 24px; bottom: 24px; z-index: 20; width: 60px; height: 60px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--amber); color: var(--amber-ink); box-shadow: 0 12px 30px -6px rgba(0, 0, 0, 0.8), 0 0 0 4px color-mix(in srgb, var(--amber) 22%, transparent); transition: transform .15s; }
+.dock-bubble:hover { transform: scale(1.06); }
+.dock-bubble:active { transform: scale(0.96); }
+.dock-bubble .seg-badge { position: absolute; top: -4px; right: -4px; margin: 0; border: 2px solid var(--bg); }
+/* El botón flotante de Agenda no debe quedar debajo del chat */
+@media (min-width: 1240px) {
+  body:has(.dock) .fab { right: 368px; }
+  body:has(.dock-bubble) .fab { right: 104px; }
+}
