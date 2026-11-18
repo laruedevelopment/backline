@@ -1035,3 +1035,9 @@ input, select, textarea { border-radius: var(--r-m); }
 .pay-methods { display: grid; gap: 8px; }
 .pay-method { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
 .pay-method b { overflow-wrap: anywhere; }
+
+/* Tono y bpm siempre en la misma columna, a la derecha de la tarjeta */
+.song .readout.key { min-width: 58px; }
+.song > .li { align-items: flex-start; }
+.song > .li > .dot { margin-top: 8px; }
+.song > .li > .btn.listen { align-self: flex-start; margin-top: 2px; }

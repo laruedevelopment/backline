@@ -138,6 +138,12 @@ export default function HomePage() {
         </>
       )}
 
+      {!myVenue && (
+        <>
+          <div className="section-title">¿Tienes una sala de ensayos?</div>
+          <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
+        </>
+      )}
       </div>
       <div className="home-col">
       <div className="section-title" style={{ marginTop: 8 }}>Repertorio</div>
@@ -182,12 +188,6 @@ export default function HomePage() {
         <Link to="/banda" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver y administrar la banda</Link>
       </p>
       </div>
-      {!myVenue && (
-        <>
-          <div className="section-title">¿Tienes una sala de ensayos?</div>
-          <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
-        </>
-      )}
       </div>
     </>
   )

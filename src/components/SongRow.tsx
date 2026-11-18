@@ -40,10 +40,6 @@ export default function SongRow({ song, onEdit }: Props) {
             {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}
           </div>
         </Main>
-        <div className="readout key" role="group" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
-          <b>{song.key || '—'}</b>
-          {song.bpm} bpm
-        </div>
         {embeds.map((e, i) => (
           <button key={e.provider} className={`btn listen ${e.provider} ${open === i ? 'primary' : 'ghost'}`} aria-pressed={open === i}
             aria-label={`${open === i ? 'Cerrar' : 'Escuchar'} ${song.title} en ${e.label}`} title={`Escuchar en ${e.label}`} onClick={() => setOpen(open === i ? null : i)}>
@@ -51,6 +47,10 @@ export default function SongRow({ song, onEdit }: Props) {
             <span className="listen-label">{e.label}</span>
           </button>
         ))}
+        <div className="readout key" role="group" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
+          <b>{song.key || '—'}</b>
+          {song.bpm} bpm
+        </div>
       </div>
       {song.notes && !current && <div className="li-sub wrap" style={{ padding: '0 0 12px 20px', borderBottom: '1px solid var(--line)', marginTop: -4 }}>{song.notes}</div>}
       {current && (
