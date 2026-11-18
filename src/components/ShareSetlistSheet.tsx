@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Copy, FileText, Image as ImageIcon, Share2 } from 'lucide-react'
+import { Copy, FileText, Image as ImageIcon, Link2, Share2 } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { getShareToken, setShare, shareUrl } from '../lib/shareLink'
+import { supabase } from '../lib/supabase'
 import { printSetlist, setlistHtml } from '../lib/exportSetlist'
 import type { SetlistItem } from '../lib/setlistItems'
 import { buildShare, fieldLabels, loadFields, saveFields, shareImage, shareText, type ShareFields } from '../lib/shareSetlist'
 import type { Song } from '../lib/song'
 import Sheet from './Sheet'
 
-type Props = { name: string; entries: SetlistItem[]; songs: Map<string, Song>; lyrics: Map<string, string>; onClose: () => void }
+type Props = { name: string; setlistId: string; canShareLink: boolean; entries: SetlistItem[]; songs: Map<string, Song>; lyrics: Map<string, string>; onClose: () => void }
 
 /** Compartir el setlist: se eligen los datos con casillas y sale como texto, imagen o PDF. */
-export default function ShareSetlistSheet({ name, entries, songs, lyrics, onClose }: Props) {
+export default function ShareSetlistSheet({ name, setlistId, canShareLink, entries, songs, lyrics, onClose }: Props) {
   const [fields, setFields] = useState<ShareFields>(loadFields)
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
@@ -17,6 +20,13 @@ export default function ShareSetlistSheet({ name, entries, songs, lyrics, onClos
   const doc = useMemo(() => buildShare(name, entries, songs, fields), [name, entries, songs, fields])
   const text = useMemo(() => shareText(doc, fields), [doc, fields])
   const canShareFiles = typeof navigator !== 'undefined' && typeof navigator.canShare === 'function'
+  const qc = useQueryClient()
+  const { data: token } = useQuery({ queryKey: ['share-token', setlistId], queryFn: () => getShareToken(setlistId), enabled: canShareLink && !!supabase })
+  async function toggleLink(on: boolean) {
+    setBusy(true)
+    try { const t = await setShare(setlistId, on); await qc.invalidateQueries({ queryKey: ['share-token', setlistId] }); if (on && t) { await navigator.clipboard.writeText(shareUrl(t)).catch(() => {}); flash('Link copiado: quien lo abra ve el setlist sin cuenta') } else flash('Link desactivado') }
+    catch { flash('No se pudo cambiar el link.') } finally { setBusy(false) }
+  }
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 2500) }
 
   async function copy() {
@@ -60,6 +70,21 @@ export default function ShareSetlistSheet({ name, entries, songs, lyrics, onClos
         <button className="btn" onClick={() => pdf(false)}><FileText size={18} aria-hidden /> PDF de la lista</button>
         <button className="btn" onClick={() => pdf(true)}><FileText size={18} aria-hidden /> PDF con letras y acordes</button>
       </div>
+      {canShareLink && supabase && (
+        <div className="card stack" style={{ marginTop: 12 }}>
+          <b>Link de solo lectura</b>
+          <span className="li-sub wrap">Quien tenga el link ve el orden y los datos básicos (título, artista, tono, BPM y duración), sin cuenta. Nunca letras ni notas. Lo puedes apagar cuando quieras.</span>
+          {token ? (
+            <>
+              <input readOnly value={shareUrl(token)} aria-label="Link del setlist" onFocus={(e) => e.currentTarget.select()} />
+              <div className="row">
+                <button className="btn primary grow" onClick={() => void navigator.clipboard.writeText(shareUrl(token)).then(() => flash('Link copiado'))}><Link2 size={16} aria-hidden /> Copiar link</button>
+                <button className="btn" disabled={busy} onClick={() => void toggleLink(false)}>Dejar de compartir</button>
+              </div>
+            </>
+          ) : <button className="btn" disabled={busy} onClick={() => void toggleLink(true)}><Link2 size={16} aria-hidden /> Crear link</button>}
+        </div>
+      )}
       {msg && <p className="li-sub" role="status" style={{ marginTop: 8 }}>{msg}</p>}
     </Sheet>
   )

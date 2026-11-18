@@ -331,7 +331,7 @@ export default function SetlistDetailPage() {
           onClose={() => setTagSheet(null)}
         />
       )}
-      {sharing && <ShareSetlistSheet name={list.name} entries={entries} songs={songById} lyrics={lyricsById ?? new Map(Object.entries(offlineLyrics))} onClose={() => setSharing(false)} />}
+      {sharing && <ShareSetlistSheet name={list.name} setlistId={list.id} canShareLink={band?.role === 'owner' || band?.role === 'admin'} entries={entries} songs={songById} lyrics={lyricsById ?? new Map(Object.entries(offlineLyrics))} onClose={() => setSharing(false)} />}
       {stage && <StageMode songs={stageSongs} instrument={myInstrument} onClose={() => setStage(false)} />}
     </>
   )

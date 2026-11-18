@@ -169,21 +169,28 @@ export type RsvpStatus = 'yes' | 'maybe' | 'no'
 export type BandEvent = {
   id: string; kind: 'rehearsal' | 'gig' | 'other'; title: string; place: string; startsAt: string
   setlistId: string | null; notes: string | null; rsvps: { profileId: string; status: RsvpStatus }[]
+  /** Resumen escrito después del toque o ensayo. */
+  recap?: string
 }
 
 export async function listEvents(bandId: string): Promise<BandEvent[]> {
   const { data, error } = await db().from('events')
-    .select('id, kind, title, place, starts_at, setlist_id, notes, event_rsvps(profile_id, status)')
+    .select('id, kind, title, place, starts_at, setlist_id, notes, recap, event_rsvps(profile_id, status)')
     .eq('band_id', bandId).gte('starts_at', new Date(Date.now() - 120 * 86_400_000).toISOString()).order('starts_at')
   if (error) throw error
-  type Row = { id: string; kind: BandEvent['kind']; title: string; place: string; starts_at: string; setlist_id: string | null; notes: string | null; event_rsvps: { profile_id: string; status: RsvpStatus }[] }
+  type Row = { id: string; kind: BandEvent['kind']; title: string; place: string; starts_at: string; setlist_id: string | null; notes: string | null; recap: string | null; event_rsvps: { profile_id: string; status: RsvpStatus }[] }
   return (data as unknown as Row[]).map((r) => ({
-    id: r.id, kind: r.kind, title: r.title, place: r.place, startsAt: r.starts_at, setlistId: r.setlist_id, notes: r.notes,
+    id: r.id, kind: r.kind, title: r.title, place: r.place, startsAt: r.starts_at, setlistId: r.setlist_id, notes: r.notes, recap: r.recap ?? undefined,
     rsvps: r.event_rsvps.map((x) => ({ profileId: x.profile_id, status: x.status })),
   }))
 }
 
-export async function upsertEvent(bandId: string, e: Omit<BandEvent, 'rsvps'>) {
+export async function saveRecap(eventId: string, text: string) {
+  const { error } = await db().from('events').update({ recap: text.trim().slice(0, 2000) || null }).eq('id', eventId)
+  if (error) throw error
+}
+
+export async function upsertEvent(bandId: string, e: Omit<BandEvent, 'rsvps' | 'recap'>) {
   const { error } = await db().from('events').upsert({
     id: e.id, band_id: bandId, kind: e.kind, title: e.title, place: e.place, starts_at: e.startsAt, setlist_id: e.setlistId, notes: e.notes,
   })

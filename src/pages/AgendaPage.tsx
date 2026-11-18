@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { listGear } from '../lib/gear'
 import { supabase } from '../lib/supabase'
 import EventGear from '../components/EventGear'
+import Sheet from '../components/Sheet'
+import { saveRecap } from '../lib/api'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
 import { listMembers, type BandEvent, type RsvpStatus } from '../lib/api'
 import { useAuth } from '../store/useAuth'
@@ -42,6 +44,10 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
   const [editing, setEditing] = useState<BandEvent | 'new' | null>(null)
   const [showPast, setShowPast] = useState(false)
   const [gearFor, setGearFor] = useState<BandEvent | null>(null)
+  const [recapFor, setRecapFor] = useState<BandEvent | null>(null)
+  const [recapText, setRecapText] = useState('')
+  const [recapError, setRecapError] = useState('')
+  const qcAgenda = useQueryClient()
   const { data: gear = [] } = useQuery({ queryKey: ['gear', bandId], queryFn: () => listGear(bandId!), enabled: !!supabase && !!bandId })
 
   const upcoming = events.filter(isUpcoming)
@@ -101,6 +107,10 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
                   ))}
                 </div>
               )}
+              {showPast && e.recap && <p className="recap"><b>Resumen:</b> {e.recap}</p>}
+              {supabase && showPast && canEdit && (
+                <button className="btn sm" style={{ marginTop: 8 }} onClick={() => { setRecapFor(e); setRecapText(e.recap ?? ''); setRecapError('') }}>{e.recap ? 'Editar resumen' : 'Escribir resumen'}</button>
+              )}
               {supabase && !showPast && (
                 <button className="btn sm" style={{ marginTop: 8 }} onClick={() => setGearFor(e)}>
                   Equipo{(() => { const g = gear.filter((x) => x.eventId === e.id); return g.length ? ` · ${g.filter((x) => x.done).length}/${g.length}` : '' })()}
@@ -114,6 +124,19 @@ function CloudAgenda({ bandId, canEdit }: { bandId: string; canEdit: boolean }) 
 
       {canEdit && shown.length > 0 && !showPast && (
         <button className="btn primary fab" onClick={() => setEditing('new')}><Plus size={20} aria-hidden /> Nuevo evento</button>
+      )}
+      {recapFor && (
+        <Sheet title={`Resumen · ${recapFor.title}`} onClose={() => setRecapFor(null)} onSubmit={async (ev) => {
+          ev.preventDefault()
+          try { await saveRecap(recapFor.id, recapText); await qcAgenda.invalidateQueries({ queryKey: ['events', bandId] }); setRecapFor(null) } catch { setRecapError('No se pudo guardar. Intenta de nuevo.') }
+        }}>
+          <p className="li-sub wrap">Qué salió bien, qué hay que mejorar y qué dejar listo para la próxima. Lo lee toda la banda.</p>
+          <label className="field">Resumen
+            <textarea rows={7} value={recapText} maxLength={2000} placeholder={'Salió bien: el cierre.\nMejorar: entrada del coro en la 4.\nPara la próxima: llevar extensión.'} onChange={(e) => setRecapText(e.target.value)} />
+          </label>
+          {recapError && <p className="form-error" role="alert">{recapError}</p>}
+          <div className="sheet-foot"><div className="row"><button type="button" className="btn" onClick={() => setRecapFor(null)}>Cancelar</button><button className="btn primary grow">Guardar</button></div></div>
+        </Sheet>
       )}
       {gearFor && bandId && <EventGear bandId={bandId} eventId={gearFor.id} title={gearFor.title} canEdit={canEdit} onClose={() => setGearFor(null)} />}
       {editing && (

@@ -865,3 +865,5 @@ input, select, textarea { border-radius: var(--r-m); }
 .gear-row.done .gear-check span { text-decoration: line-through; color: var(--muted); }
 .gear-row select { min-height: 40px; }
 @media (max-width: 520px) { .gear-row { grid-template-columns: minmax(0, 1fr) auto; } .gear-row select { grid-column: 1 / -1; order: 3; } }
+
+.recap { margin-top: 8px; padding: 10px 12px; border-left: 3px solid var(--sage); background: var(--sunk); border-radius: 0 var(--r-m) var(--r-m) 0; white-space: pre-line; font-size: 0.95rem; }

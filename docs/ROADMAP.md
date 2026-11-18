@@ -56,9 +56,9 @@ Orden acordado (2026-11): 1) comentarios por canción y chat de banda; 2) amigos
 - [x] Compartir setlist con casillas (número, artista, duración, tono, BPM, afinación, etiquetas, total) como texto para WhatsApp, imagen PNG, o PDF.
 - [x] «Esta noche» en Inicio el día de un toque: abre directo el modo escenario del setlist.
 - [ ] Respuesta rápida en el chat de ensayos («Voy», «Llego tarde», «No puedo»).
-- [ ] Lista de equipo por toque (quién lleva qué: amplis, cables, batería) con casillas.
-- [ ] Link de solo lectura del setlist para quien no tiene cuenta.
-- [ ] Resumen después del toque (qué salió bien, qué mejorar) guardado en el evento.
+- [x] Lista de equipo por toque (quién lleva qué) con casillas y avance en la agenda (migración 0030).
+- [x] Link de solo lectura del setlist para quien no tiene cuenta, que el líder activa y apaga (migración 0032).
+- [x] Resumen después del toque guardado en el evento (migración 0031).
 - [ ] Pendientes de la revisión de código (2026-11): guardado de setlists con actualización optimista y manejo de errores; limpiar canciones borradas de los setlists en la misma operación; `saveHours` en una transacción; tope de almacenamiento por usuario; aviso de reservas marcado tras enviarse; paginar listas largas; confirmar restricciones de la clave de YouTube.
 - [ ] Pendientes de la revisión de interfaz: unificar filtros (.seg/.tabs/.filter-chips), formulario de canción en secciones plegables, 5 pestañas en móvil, componente de estado vacío común, títulos iguales a las pestañas.
 - [x] Directorio de bandas y músicos con perfil público opcional (migración 0015): explorar, filtrar por ciudad/género/instrumento, WhatsApp opcional, solo para personas con cuenta.

@@ -42,6 +42,7 @@ const pageLoaders = {
   LessonPage: () => import('./pages/LessonPage'),
   BandPage: () => import('./pages/BandPage'),
   ChatPage: () => import('./pages/ChatPage'),
+  SharedSetlistPage: () => import('./pages/SharedSetlistPage'),
   FriendsPage: () => import('./pages/FriendsPage'),
   OpeningsPage: () => import('./pages/OpeningsPage'),
   DirectPage: () => import('./pages/DirectPage'),
@@ -63,6 +64,7 @@ const LearnPage = lazy(pageLoaders.LearnPage)
 const LessonPage = lazy(pageLoaders.LessonPage)
 const BandPage = lazy(pageLoaders.BandPage)
 const ChatPage = lazy(pageLoaders.ChatPage)
+const SharedSetlistPage = lazy(pageLoaders.SharedSetlistPage)
 const FriendsPage = lazy(pageLoaders.FriendsPage)
 const OpeningsPage = lazy(pageLoaders.OpeningsPage)
 const DirectPage = lazy(pageLoaders.DirectPage)
@@ -281,6 +283,7 @@ export default function App() {
         <Route path="/privacidad" element={<LegalPage doc="privacy" />} />
         <Route path="/terminos" element={<LegalPage doc="terms" />} />
         <Route path="/unirse/:code" element={<JoinPage />} />
+        <Route path="/s/:token" element={<SharedSetlistPage />} />
         <Route path="*" element={<AuthGate />} />
       </Routes>
       </Suspense>

@@ -654,6 +654,32 @@ await ok('al borrar el evento se borra su lista de equipo', async () => {
   await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
 })
 
+console.log('Link del setlist y resumen del toque')
+await ok('el admin comparte un setlist; quien tiene el link ve solo lo básico, y al apagarlo deja de verse', async () => {
+  await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+  const [sg] = await as('leader', `insert into public.songs (band_id, title, artist, key, lyrics, notes) values ($1,'Compartida','Artista','Am','LETRA SECRETA','nota interna') returning id`, [band])
+  const [sl] = await as('leader', `insert into public.setlists (band_id, name, song_ids) values ($1,'Para compartir', $2::uuid[]) returning id`, [band, `{${sg.id}}`])
+  eq((await as('member', `select public.setlist_share_token($1) as t`, [sl.id]))[0].t, null, 'un integrante normal ve el token')
+  await rejects_inline(() => as('member', `select public.set_setlist_share($1, true)`, [sl.id]), 'un integrante normal compartió')
+  const [{ set_setlist_share: tok }] = await as('leader', `select public.set_setlist_share($1, true)`, [sl.id])
+  eq(typeof tok, 'string', 'sin token'); eq(tok.length >= 24, true, 'token corto')
+  const seen = (await pg.query(`select public.shared_setlist($1) as d`, [tok])).rows[0].d
+  eq(seen.name, 'Para compartir', 'nombre'); eq(seen.rows.length, 1, 'filas'); eq(seen.rows[0].title, 'Compartida', 'título')
+  eq(JSON.stringify(seen).includes('LETRA SECRETA') || JSON.stringify(seen).includes('nota interna'), false, 'se filtró letra o notas')
+  eq((await pg.query(`select public.shared_setlist('token-incorrecto-que-no-existe-1234') as d`)).rows[0].d, null, 'token falso')
+  await as('leader', `select public.set_setlist_share($1, false)`, [sl.id])
+  eq((await pg.query(`select public.shared_setlist($1) as d`, [tok])).rows[0].d, null, 'sigue visible apagado')
+  await pg.query(`delete from public.setlists where id=$1`, [sl.id]); await pg.query(`delete from public.songs where id=$1`, [sg.id])
+})
+await ok('el resumen del toque lo escribe quien edita y lo lee la banda; no pasa de 2000 caracteres', async () => {
+  const [ev] = await as('leader', `insert into public.events (band_id, kind, title, starts_at, created_by) values ($1,'gig','Con resumen', now() - interval '1 day', $2) returning id`, [band, U.leader])
+  await as('member', `update public.events set recap = 'Salió bien el cierre' where id=$1`, [ev.id])
+  eq((await as('leader', `select recap from public.events where id=$1`, [ev.id]))[0].recap, 'Salió bien el cierre', 'no se guardó')
+  await rejects_inline(() => as('leader', `update public.events set recap = $2 where id=$1`, [ev.id, 'a'.repeat(2001)]), 'pasó de 2000')
+  await as('leader', `delete from public.events where id=$1`, [ev.id])
+  await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+})
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)
