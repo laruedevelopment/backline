@@ -1192,3 +1192,6 @@ input, select, textarea { border-radius: var(--r-m); }
 /* Bandas y Músicos en el celular: buscador y ciudad en una sola fila */
 @media (max-width: 639px) { .explore-filters { grid-template-columns: 3fr 2fr; gap: 8px; margin-top: 10px; } }
 @media (max-width: 640px) { .links-row > :last-child:nth-child(odd) { grid-column: 1 / -1; } }
+
+.field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.field-pair .field { min-width: 0; }

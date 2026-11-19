@@ -71,7 +71,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         bpm: Math.min(300, Math.max(30, Number(bpm) || 100)),
         minutes: Math.min(30, Math.max(1, Number(minutes) || 4)),
         tunings: s.tunings.filter((t) => t.tuning.trim()).map((t) => (t.profileId ? t : { instrument: t.instrument, tuning: t.tuning, ...(t.capo ? { capo: t.capo } : {}) })),
-        lineup: (s.lineup ?? []).filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, guest: l.profileId ? undefined : l.guest?.trim() })),
+        lineup: (s.lineup ?? []).filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, instrument: l.instrument.trim(), guest: l.profileId ? undefined : l.guest?.trim() })),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
         instrumentNotes: noteRows.reduce<Record<string, string>>((acc, r) => { if (r.instrument.trim() && r.text.trim()) acc[r.instrument.trim()] = r.text.trim(); return acc }, {}),
@@ -154,7 +154,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         </div>
       ))}
       <div className="row">
-        <button type="button" className="btn" onClick={() => patch({ lineup: [...(s.lineup ?? []), { instrument: instrumentOptions.find((o) => !(s.lineup ?? []).some((x) => x.instrument === o)) ?? 'Otro' }] })}>
+        <button type="button" className="btn" onClick={() => patch({ lineup: [...(s.lineup ?? []), { instrument: instrumentOptions.find((o) => !(s.lineup ?? []).some((x) => x.instrument === o)) ?? 'Guitarra' }] })}>
           <Plus size={16} aria-hidden /> Agregar instrumento
         </button>
         {members.length > 0 && !(s.lineup ?? []).length && (
