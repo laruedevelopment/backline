@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
-import { listMembers } from '../lib/api'
+import { useRoster } from '../lib/useRoster'
 import { addGear, deleteGear, GEAR_PRESETS, listGear, updateGear } from '../lib/gear'
 import Sheet from './Sheet'
 
@@ -11,7 +11,7 @@ export default function EventGear({ bandId, eventId, title, canEdit, onClose }: 
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
   const { data: all = [] } = useQuery({ queryKey: ['gear', bandId], queryFn: () => listGear(bandId) })
-  const { data: members = [] } = useQuery({ queryKey: ['members', bandId], queryFn: () => listMembers(bandId) })
+  const { people: members } = useRoster(bandId)
   const items = all.filter((g) => g.eventId === eventId)
   const refresh = () => qc.invalidateQueries({ queryKey: ['gear', bandId] })
   const fail = () => setError('No se pudo guardar. Revisa tu conexión e intenta de nuevo.')
@@ -36,7 +36,7 @@ export default function EventGear({ bandId, eventId, title, canEdit, onClose }: 
               {canEdit ? (
                 <select aria-label={`Quién lleva ${g.item}`} value={g.assignedTo ?? ''} onChange={(e) => change.mutate({ id: g.id, patch: { assigned_to: e.target.value || null } })}>
                   <option value="">Sin asignar</option>
-                  {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}
+                  {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}{m.noAccount ? ' (sin cuenta)' : ''}</option>)}
                 </select>
               ) : <span className="li-sub">{who?.name ?? 'Sin asignar'}</span>}
               {canEdit && <button type="button" className="btn ghost icon" aria-label={`Quitar ${g.item}`} onClick={() => remove.mutate(g.id)}><Trash2 size={16} aria-hidden /></button>}

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import InfoTip, { HelpRow } from '../components/InfoTip'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  createInvite, deleteBand, listMembers, purgeBandMedia, setBandPublic, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
-  type Member,
+  createInvite, deleteBand, purgeBandMedia, setBandPublic, removeMember, setMemberInstrument, setMyInstrument, setMemberRole, transferOwnership, updateBand,
+  type Member, type Placeholder,
 } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
 import { safeSocials, socialLabels } from '../lib/links'
@@ -21,6 +21,8 @@ import BandMedia from '../components/BandMedia'
 import { ask } from '../lib/confirm'
 import Sheet from '../components/Sheet'
 import ListSkeleton from '../components/Skeleton'
+import { AddPlaceholderSheet, PlaceholderSheet, ReassignSection } from '../components/PlaceholderSheets'
+import { useRoster } from '../lib/useRoster'
 
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
 const APP_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}`
@@ -38,7 +40,9 @@ export default function BandPage() {
   const [publicBusy, setPublicBusy] = useState(false)
 
   const bandId = band?.id
-  const { data: members = [], isLoading } = useQuery({ queryKey: ['members', bandId], queryFn: () => listMembers(bandId!), enabled: !!bandId })
+  const { members, placeholders, people, isLoading } = useRoster(bandId)
+  const [addingPh, setAddingPh] = useState(false)
+  const [ph, setPh] = useState<Placeholder | null>(null)
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['members', bandId] }), qc.invalidateQueries({ queryKey: ['bands'] })])
 
   const save = useMutation({
@@ -128,7 +132,7 @@ export default function BandPage() {
       <BandMedia band={band} canEdit={isAdmin} />
       {isAdmin && <BandOpenings bandId={band.id} bandName={band.name} city={band.city ?? ''} isPublic={band.isPublic} />}
 
-      <div className="section-title">Integrantes · {members.length}</div>
+      <div className="section-title">Integrantes · {members.length + placeholders.length}</div>
       {isLoading ? <ListSkeleton rows={3} /> : (
         <div className="list cols">
           {members.map((m) => {
@@ -144,6 +148,22 @@ export default function BandPage() {
               </button>
             )
           })}
+          {placeholders.map((p) => (
+            <button key={p.id} className="li" onClick={() => setPh(p)} aria-label={`${p.name}, sin cuenta. Ver opciones`}>
+              <Avatar name={p.name} url={null} />
+              <div className="li-main">
+                <div className="li-title">{p.name}</div>
+                <div className="li-sub">{p.instrument ?? 'Sin instrumento'}</div>
+              </div>
+              <span className="tag">Sin cuenta</span>
+            </button>
+          ))}
+        </div>
+      )}
+      {isAdmin && (
+        <div className="row" style={{ marginTop: 10, flexWrap: 'wrap' }}>
+          <button className="btn" onClick={() => setAddingPh(true)}>Agregar integrante sin cuenta</button>
+          <InfoTip text="¿Alguien de la banda todavía no usa Backline? Agrégalo con su nombre: ya puedes asignarle canciones, anotaciones y equipo. Cuando cree su cuenta lo enlazas y todo pasa a él. También sirve para cambiar de bajista sin volver a asignar todo." />
         </div>
       )}
 
@@ -185,8 +205,11 @@ export default function BandPage() {
       </div>
 
       {editing && <BandForm band={band} onSave={(d) => save.mutateAsync(d)} onClose={() => setEditing(false)} />}
+      {addingPh && <AddPlaceholderSheet bandId={band.id} onClose={() => setAddingPh(false)} />}
+      {ph && <PlaceholderSheet bandId={band.id} placeholder={ph} accounts={members} canManage={isAdmin} onClose={() => setPh(null)} />}
       {member && (
         <MemberSheet
+          people={people}
           member={member} me={member.profileId === userId} bandId={band.id} isOwner={isOwner} isAdmin={isAdmin}
           onClose={() => setMember(null)} onChanged={refresh}
         />
@@ -195,8 +218,8 @@ export default function BandPage() {
   )
 }
 
-function MemberSheet({ member, me, bandId, isOwner, isAdmin, onClose, onChanged }: {
-  member: Member; me: boolean; bandId: string; isOwner: boolean; isAdmin: boolean; onClose: () => void; onChanged: () => Promise<unknown>
+function MemberSheet({ member, people, me, bandId, isOwner, isAdmin, onClose, onChanged }: {
+  member: Member; people: Member[]; me: boolean; bandId: string; isOwner: boolean; isAdmin: boolean; onClose: () => void; onChanged: () => Promise<unknown>
 }) {
   const [instrument, setInstrument] = useState(member.instrument ?? member.instruments[0] ?? '')
   const [err, setErr] = useState('')
@@ -227,6 +250,8 @@ function MemberSheet({ member, me, bandId, isOwner, isAdmin, onClose, onChanged 
       {canInstrument && (
         <button className="btn" disabled={busy} onClick={() => void run(() => (me ? setMyInstrument(bandId, instrument) : setMemberInstrument(bandId, member.profileId, instrument)), false)}>Guardar instrumento</button>
       )}
+
+      {isAdmin && <ReassignSection bandId={bandId} from={member} people={people} onDone={onClose} />}
 
       {canManage && (
         <>

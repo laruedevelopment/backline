@@ -112,3 +112,8 @@ Qué cambió: la sala que cobra debe poner nombre legal, documento y política d
 - Si un menor de 14 a 17 años puede contratar; hoy se bloquea para pagos, y el consentimiento del representante solo se declara (no se verifica).
 - Constitución de la entidad (NIT, dirección), registro de bases de datos en la SIC, plazo legal de conservación de comprobantes, y Ley 2300 para mensajes sin amistad.
 - Revisar la política de privacidad completa (mencionar DM sin amistad, mercado, finalidades) antes de abrir al público.
+
+## Integrantes sin cuenta y reasignar (migración 0045)
+- Correr `supabase/pendiente.sql` (solo la 0045) en el proyecto «backline»; después avisarme para publicar.
+- Qué hace: Banda → Integrantes → «Agregar integrante sin cuenta» (nombre e instrumento). Se asignan en «Quién toca», anotaciones y equipo. Cuando crea su cuenta: tocar su nombre → «Enlazar con su cuenta» pasa todo. Para cambiar de bajista: tocar al integrante → «¿Cambió la persona de este puesto?» → «Pasar todo a otra persona».
+- Límite: 12 integrantes sin cuenta por banda. Quienes no tienen cuenta no responden asistencia (eso solo lo hace quien tiene cuenta).

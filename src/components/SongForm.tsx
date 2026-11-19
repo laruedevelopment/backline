@@ -5,7 +5,8 @@ import { safeLink, statusLabel, type LineupSlot, type Song, type SongStatus } fr
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
 import { useQuery } from '@tanstack/react-query'
-import { getLyrics, listMembers } from '../lib/api'
+import { getLyrics } from '../lib/api'
+import { useRoster } from '../lib/useRoster'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
 import MemberNotes from './MemberNotes'
@@ -35,7 +36,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
   // Con cuenta, la lista de canciones no trae las letras: se piden al abrir el editor (y solo se envían si se tocan).
   const needsLyrics = !!song && !!supabase && song.lyrics === undefined
   const { data: loadedLyrics, isLoading: lyricsLoading, isError: lyricsError } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
-  const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!supabase && !!band })
+  const { members, people } = useRoster(band?.id)
   const setSlot = (i: number, p: Partial<LineupSlot>) => patch({ lineup: (s.lineup ?? []).map((x, j) => (j === i ? { ...x, ...p } : x)) })
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
@@ -128,7 +129,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
                   else setSlot(i, { profileId: undefined, guest: undefined })
                 }}>
                 <option value="">Sin asignar</option>
-                {members.length > 0 && <optgroup label="La banda">{members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}</optgroup>}
+                {people.length > 0 && <optgroup label="La banda">{people.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}{m.noAccount ? ' (sin cuenta)' : ''}</option>)}</optgroup>}
                 {guestNames.length > 0 && <optgroup label="Invitados de este setlist">{guestNames.map((g) => <option key={g} value={`g:${g}`}>{g}</option>)}</optgroup>}
                 <option value="__guest">Otro invitado (escribir)…</option>
               </select>
@@ -166,11 +167,11 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
           <InstrumentPicker label="Instrumento" includeAll first={(s.lineup ?? []).map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
-          {members.length > 0 && (
+          {people.length > 0 && (
             <label className="field">Para
               <select value={t.profileId ?? ''} onChange={(e) => setTuning(i, { profileId: e.target.value || undefined })}>
                 <option value="">Todos los que toquen ese instrumento</option>
-                {members.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}</option>)}
+                {people.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}{m.noAccount ? ' (sin cuenta)' : ''}</option>)}
               </select>
             </label>
           )}

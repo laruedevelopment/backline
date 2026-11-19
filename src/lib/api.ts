@@ -126,7 +126,7 @@ export async function deleteSetlist(id: string) {
   if (error) throw error
 }
 
-export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[]; avatarUrl: string | null; guestUntil?: string }
+export type Member = { profileId: string; name: string; role: string; instrument: string | null; instruments: string[]; avatarUrl: string | null; guestUntil?: string; noAccount?: boolean }
 
 export async function listMembers(bandId: string): Promise<Member[]> {
   const { data, error } = await db().from('band_members').select('profile_id, role, instrument, guest_until, profiles(display_name, instruments, avatar_path)').eq('band_id', bandId).order('created_at')
@@ -436,4 +436,35 @@ export async function unreadMessages(bandId: string, userId: string): Promise<nu
   const { count, error } = await db().from('band_messages').select('id', { count: 'exact', head: true }).eq('band_id', bandId).neq('profile_id', userId).gt('created_at', since)
   if (error) throw error
   return count ?? 0
+}
+
+// ───────── Integrantes sin cuenta ─────────
+export type Placeholder = { id: string; name: string; instrument: string | null }
+
+export async function listPlaceholders(bandId: string): Promise<Placeholder[]> {
+  const { data, error } = await db().from('band_placeholders').select('id, name, instrument').eq('band_id', bandId).order('created_at')
+  if (error) throw error
+  return data as Placeholder[]
+}
+
+export async function addPlaceholder(bandId: string, name: string, instrument: string) {
+  const { error } = await db().from('band_placeholders').insert({ band_id: bandId, name: name.trim(), instrument: instrument.trim() || null })
+  if (error) throw error
+}
+
+export async function updatePlaceholder(id: string, name: string, instrument: string) {
+  const { error } = await db().from('band_placeholders').update({ name: name.trim(), instrument: instrument.trim() || null }).eq('id', id)
+  if (error) throw error
+}
+
+export async function deletePlaceholder(id: string) {
+  const { error } = await db().from('band_placeholders').delete().eq('id', id)
+  if (error) throw error
+}
+
+/** Pasa todo lo asignado a una persona (quién toca, afinaciones propias, anotaciones y equipo) a otra de la misma banda. */
+export async function reassignMember(bandId: string, from: string, to: string): Promise<{ canciones: number; anotaciones: number; equipo: number }> {
+  const { data, error } = await db().rpc('reassign_member', { p_band: bandId, p_from: from, p_to: to })
+  if (error) throw error
+  return data as { canciones: number; anotaciones: number; equipo: number }
 }

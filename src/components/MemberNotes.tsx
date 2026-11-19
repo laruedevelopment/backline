@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { HelpRow } from './InfoTip'
-import { listMembers, listMemberNotes, saveMemberNote } from '../lib/api'
+import { listMemberNotes, saveMemberNote } from '../lib/api'
+import { useRoster } from '../lib/useRoster'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../store/useAuth'
 
@@ -36,7 +37,7 @@ function NoteField({ songId, bandId, profileId, actorId, label, current, by, pla
 export default function MemberNotes({ songId, bandId, canWrite, canManage }: Props) {
   const userId = useAuth((s) => s.session?.user.id)
   const { data: notes = [] } = useQuery({ queryKey: ['song-notes', bandId], queryFn: () => listMemberNotes(bandId), enabled: !!supabase })
-  const { data: members = [] } = useQuery({ queryKey: ['members', bandId], queryFn: () => listMembers(bandId), enabled: !!supabase })
+  const { people: members } = useRoster(bandId)
   if (!supabase || !userId) return null
 
   const noteOf = (id: string) => notes.find((n) => n.songId === songId && n.profileId === id)

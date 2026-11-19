@@ -1006,6 +1006,54 @@ await ok('el registro de errores guarda, recorta y limita a 20 por hora', async 
 })
 await rejects('nadie lee el registro de errores directo', () => as('leader', `select * from public.client_errors`), /permission denied/)
 await ok('sin sesión no se registra nada', async () => { await pg.query(`select public.log_client_error('anon')`); eq((await pg.query(`select count(*)::int as n from public.client_errors where message='anon'`)).rows[0].n, 0, 'anon') })
+// ───────── Integrantes sin cuenta (0045) ─────────
+let ph, ph2, sg
+await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
+await ok('el líder crea un integrante sin cuenta y la banda lo ve', async () => {
+  const [r] = await as('leader', `insert into public.band_placeholders (band_id, name, instrument) values ($1,'Camilo','Bajo') returning id`, [band]); ph = r.id
+  eq((await as('member', `select name from public.band_placeholders where band_id=$1`, [band])).length >= 1, true, 'la banda no lo ve')
+  eq((await as('other', `select * from public.band_placeholders where band_id=$1`, [band])).length, 0, 'un ajeno lo ve')
+})
+await rejects('un integrante común no puede crear integrantes sin cuenta', () => as('member', `insert into public.band_placeholders (band_id, name) values ($1,'Intruso')`, [band]), /row-level|policy/)
+await ok('se asigna al integrante sin cuenta en una canción, su afinación, una anotación y el equipo', async () => {
+  const [song] = (await pg.query(`insert into public.songs (band_id, title, artist, key, bpm, minutes, status, tunings, key_changes, links, lineup)
+    values ($1,'Prueba enlace','X','Am',100,4,'learning',$2::jsonb,'[]','{}',$3::jsonb) returning id`,
+    [band, JSON.stringify([{ instrument: 'Bajo', tuning: 'Drop D', profileId: ph }]), JSON.stringify([{ instrument: 'Bajo', profile_id: ph }, { instrument: 'Guitarra', profile_id: U.leader }])])).rows; sg = song.id
+  await as('leader', `insert into public.song_member_notes (song_id, band_id, profile_id, note) values ($1,$2,$3,'Entra en el segundo compás')`, [sg, band, ph])
+  const [ev] = (await pg.query(`select id from public.events where band_id=$1 limit 1`, [band])).rows
+  if (ev) await as('leader', `insert into public.event_gear (event_id, band_id, item, assigned_to) values ($1,$2,'Cables',$3)`, [ev.id, band, ph])
+})
+await rejects('un integrante común no puede escribir la anotación de alguien sin cuenta', () => as('member', `update public.song_member_notes set note='x' where song_id=$1 and profile_id=$2`, [sg, ph]).then((r) => { if (!r.length) throw new Error('no cambió nada (RLS)') }), /RLS|row-level|policy/)
+await rejects('un integrante común no puede reasignar', () => as('member', `select public.reassign_member($1,$2,$3)`, [band, ph, U.member]), /lidera/)
+await rejects('no se reasigna a alguien de otra banda', () => as('leader', `select public.reassign_member($1,$2,$3)`, [band, ph, U.other]), /de la banda/)
+await ok('al enlazar con la cuenta nueva pasa todo y el integrante sin cuenta desaparece', async () => {
+  const [r] = await as('leader', `select public.reassign_member($1,$2,$3) as r`, [band, ph, U.member])
+  eq(r.r.canciones >= 1 && r.r.anotaciones === 1, true, JSON.stringify(r.r))
+  const [row] = (await pg.query(`select lineup, tunings from public.songs where id=$1`, [sg])).rows
+  eq(row.lineup.find((x) => x.instrument === 'Bajo').profile_id, U.member, 'quién toca')
+  eq(row.lineup.find((x) => x.instrument === 'Guitarra').profile_id, U.leader, 'no tocó lo de otros')
+  eq(row.tunings[0].profileId, U.member, 'afinación propia')
+  eq((await pg.query(`select profile_id from public.song_member_notes where song_id=$1`, [sg])).rows[0].profile_id, U.member, 'anotación')
+  eq((await pg.query(`select count(*)::int as n from public.band_placeholders where id=$1`, [ph])).rows[0].n, 0, 'sigue existiendo')
+  eq((await pg.query(`select count(*)::int as n from public.event_gear where assigned_to=$1`, [ph])).rows[0].n, 0, 'equipo sin pasar')
+})
+await ok('cambiar de bajista: pasa lo de una cuenta a otra persona nueva sin cuenta', async () => {
+  const [r2] = await as('leader', `insert into public.band_placeholders (band_id, name, instrument) values ($1,'Nuevo bajista','Bajo') returning id`, [band]); ph2 = r2.id
+  await as('leader', `select public.reassign_member($1,$2,$3)`, [band, U.member, ph2])
+  const [row] = (await pg.query(`select lineup from public.songs where id=$1`, [sg])).rows
+  eq(row.lineup.find((x) => x.instrument === 'Bajo').profile_id, ph2, 'quién toca')
+  eq((await pg.query(`select count(*)::int as n from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])).rows[0].n, 1, 'el integrante anterior sigue en la banda hasta que el líder lo quite')
+})
+await ok('al borrar un integrante sin cuenta se limpian sus anotaciones', async () => {
+  eq((await pg.query(`select count(*)::int as n from public.song_member_notes where profile_id=$1`, [ph2])).rows[0].n >= 1, true, 'la anotación no pasó al nuevo')
+  await as('leader', `delete from public.band_placeholders where id=$1`, [ph2])
+  eq((await pg.query(`select count(*)::int as n from public.song_member_notes where profile_id=$1`, [ph2])).rows[0].n, 0, 'quedó la anotación')
+})
+await rejects('máximo 12 integrantes sin cuenta por banda', async () => { for (let i = 0; i < 13; i++) await as('leader', `insert into public.band_placeholders (band_id, name) values ($1, $2)`, [band, 'Persona ' + i]) }, /demasiados/)
+await pg.query(`delete from public.band_placeholders where band_id=$1`, [band])
+await pg.query(`delete from public.songs where id=$1`, [sg])
+await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
+
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

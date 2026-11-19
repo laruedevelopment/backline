@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initials } from './identity'
-import { isStandard, safeLink, tuningSignature, tuningSummary, type Song } from './song'
+import { isStandard, safeLink, tuningSignature, tuningSummary, usefulNote, type Song } from './song'
 
 const song = (tunings: Song['tunings']) => ({ tunings }) as Song
 
@@ -40,5 +40,24 @@ describe('initials', () => {
     expect(initials('Kabaret')).toBe('K')
     expect(initials('Javier Rueda')).toBe('JR')
     expect(initials('  ')).toBe('?')
+  })
+})
+
+describe('usefulNote', () => {
+  const base = { id: 'x', title: 'T', artist: 'A', key: 'Am', bpm: 94, minutes: 4, status: 'learning' as const, tunings: [], keyChanges: [], links: {} }
+  it('quita afinación, tono y BPM repetidos y deja la duración', () => {
+    expect(usefulNote({ ...base, notes: 'Original: E estándar, Am, 94 BPM, 3:47.' })).toBe('Duración 3:47.')
+  })
+  it('conserva las dudas y observaciones', () => {
+    expect(usefulNote({ ...base, key: 'Bb', bpm: 157, notes: 'Original: E estándar, Bb (mayor o menor según la fuente), 157 BPM, 4:15.' })).toBe('Original: mayor o menor según la fuente, 4:15.')
+    expect(usefulNote({ ...base, key: 'Dm', bpm: 134, notes: 'Versión Seether: Drop D según tab (otros dicen Drop C), tono Dm o Gm (las fuentes no coinciden), 134 BPM (67 en half-time), 4:56. Confirmar de oído.' })).toBe('Versión Seether: Drop D según tab (otros dicen Drop C), tono Dm o Gm (las fuentes no coinciden), 67 en half-time, 4:56. Confirmar de oído.')
+  })
+  it('no toca lo que no coincide con los datos de la tarjeta', () => {
+    const n = 'Versión Moderatto: tono, BPM y duración sin confirmar. Referencia del original: ~95 BPM, 4:48, tono discutido.'
+    expect(usefulNote({ ...base, key: '', bpm: 100, notes: n })).toBe(n)
+  })
+  it('deja las líneas sueltas y quita las que quedan vacías', () => {
+    expect(usefulNote({ ...base, key: 'E', bpm: 110, notes: 'Original: E, 110 BPM.' })).toBe('')
+    expect(usefulNote({ ...base, notes: 'Adaptacion hard rock\nOriginal: Am, 94 BPM.' })).toBe('Adaptacion hard rock')
   })
 })

@@ -1,11 +1,9 @@
 import { useState } from 'react'
 import { ExternalLink, Pause, Play } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
 import { embedsFor } from '../lib/embed'
-import { listMembers } from '../lib/api'
-import { supabase } from '../lib/supabase'
+import { useRoster } from '../lib/useRoster'
 import { useActiveBand } from '../store/useBandSession'
-import { isStandard, keyChangeLabel, statusLabel, tuningSummary, type Song } from '../lib/song'
+import { isStandard, keyChangeLabel, statusLabel, tuningSummary, usefulNote, type Song } from '../lib/song'
 
 type Props = { song: Song; onEdit?: () => void }
 
@@ -20,11 +18,12 @@ function Main({ onEdit, label, children }: { onEdit?: () => void; label: string;
 export default function SongRow({ song, onEdit }: Props) {
   const embeds = embedsFor(song.links)
   const band = useActiveBand()
-  const { data: members = [] } = useQuery({ queryKey: ['members', band?.id], queryFn: () => listMembers(band!.id), enabled: !!supabase && !!band && !!song.lineup?.length })
-  const who = (song.lineup ?? []).map((l) => `${l.instrument}: ${l.profileId ? (members.find((m) => m.profileId === l.profileId)?.name.split(' ')[0] ?? '…') : l.guest}`)
+  const { people } = useRoster(song.lineup?.length ? band?.id : undefined)
+  const who = (song.lineup ?? []).map((l) => `${l.instrument}: ${l.profileId ? (people.find((m) => m.profileId === l.profileId)?.name.split(' ')[0] ?? '…') : l.guest}`)
   const [open, setOpen] = useState<number | null>(null)
   const current = open === null ? undefined : embeds[open]
   const standard = isStandard(song)
+  const note = usefulNote(song) // sin repetir lo que ya se ve arriba: afinación, tono y BPM
   return (
     <div className="song">
       <div className="li" style={{ borderBottom: current ? 0 : undefined }}>
@@ -54,7 +53,7 @@ export default function SongRow({ song, onEdit }: Props) {
           {song.bpm} bpm
         </div>
       </div>
-      {song.notes && !current && <div className="li-sub wrap" style={{ padding: '0 0 12px 20px', borderBottom: '1px solid var(--line)', marginTop: -4 }}>{song.notes}</div>}
+      {note && !current && <div className="li-sub wrap" style={{ padding: '0 0 12px 20px', borderBottom: '1px solid var(--line)', marginTop: -4, whiteSpace: 'pre-line' }}>{note}</div>}
       {current && (
         <div className="player" style={{ paddingBottom: 12, borderBottom: '1px solid var(--line)' }}>
           {/* Se carga solo al pulsar play: no se descarga nada de YouTube/Spotify hasta entonces. */}
