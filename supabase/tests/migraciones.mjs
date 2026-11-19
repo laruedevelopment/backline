@@ -1062,6 +1062,17 @@ await ok('la canción trae compás 4/4 por defecto y acepta 6/8', async () => {
   await pg.query(`delete from public.songs where id=$1`, [a.id])
 })
 await rejects('no se acepta un compás desconocido', () => as('leader', `insert into public.songs (band_id, title, artist, key, bpm, minutes, status, tunings, key_changes, links, meter) values ($1,'Raro','X','Am',100,4,'learning','[]','[]','{}','13/16')`, [band]), /songs_meter_check|check/)
+await ok('el líder guarda la formación de la banda y puede cambiarla', async () => {
+  await as('leader', `insert into public.band_defaults (band_id, lineup) values ($1, $2::jsonb)`, [band, JSON.stringify([{ instrument: 'Guitarra líder', profile_id: U.leader }])])
+  await as('leader', `update public.band_defaults set lineup=$2::jsonb where band_id=$1`, [band, JSON.stringify([{ instrument: 'Bajo', profile_id: U.leader }])])
+  eq((await as('leader', `select lineup from public.band_defaults where band_id=$1`, [band]))[0].lineup[0].instrument, 'Bajo', 'guardada')
+})
+await ok('alguien ajeno a la banda no ve ni cambia la formación', async () => {
+  eq((await as('other', `select 1 from public.band_defaults where band_id=$1`, [band])).length, 0, 'la ve')
+  eq((await as('other', `update public.band_defaults set lineup='[]' where band_id=$1 returning 1`, [band])).length, 0, 'la cambió')
+})
+await rejects('la formación no puede ser otra cosa que una lista', () => as('leader', `update public.band_defaults set lineup='{}' where band_id=$1`, [band]), /band_defaults_lineup_check|check/)
+await pg.query(`delete from public.band_defaults where band_id=$1`, [band])
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)

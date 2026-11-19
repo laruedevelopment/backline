@@ -5,7 +5,7 @@ import { closestCenter, DndContext, KeyboardSensor, PointerSensor, TouchSensor, 
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useActiveBand } from '../store/useBandSession'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { listLyrics, listMemberNotes, listMembers } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import { loadOfflineLyrics, saveOfflineLyrics } from '../lib/offlineLyrics'
@@ -14,6 +14,7 @@ import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
 import { isStandard, safeLink, tuningSignature, tuningSummary, type Song } from '../lib/song'
 import { ask } from '../lib/confirm'
+import { applyBandLineup } from '../lib/bandLineup'
 import { editLabel, insertLabel, itemsOf, setTags, stageMarks, withItems, type SetlistItem } from '../lib/setlistItems'
 import { LabelSheet, TagsSheet } from '../components/SetlistLabelSheets'
 import { norm } from '../lib/importSetlist'
@@ -101,6 +102,9 @@ export default function SetlistDetailPage() {
   // Letras guardadas en el dispositivo: sirven cuando no hay señal (se actualizan solas cada vez que se abre el setlist con señal).
   const [offlineLyrics, setOfflineLyrics] = useState<Record<string, string>>(loadOfflineLyrics)
   const [prepared, setPrepared] = useState<'' | 'ok' | 'fail'>('')
+  const qc = useQueryClient()
+  const [lineupBusy, setLineupBusy] = useState(false)
+  const [lineupMsg, setLineupMsg] = useState('')
   const songIdsHere = list ? itemsOf(list).flatMap((e) => (e.t === 's' ? [e.id] : [])) : []
   const hereKey = songIdsHere.join(',')
   const saveForOffline = (map: Map<string, string> | undefined) => {
@@ -126,6 +130,12 @@ export default function SetlistDetailPage() {
   const songById = new Map(songs.map((x) => [x.id, x]))
   const items = entries.flatMap((e) => (e.t === 's' ? songById.get(e.id) ?? [] : [])) // solo canciones, en orden
   const ids = items.map((x) => x.id)
+  async function applyLineup() {
+    if (!band) return
+    setLineupBusy(true); setLineupMsg('')
+    try { setLineupMsg(await applyBandLineup({ bandId: band.id, songs: items, qc, scope: 'de este setlist' })) } catch { setLineupMsg('No pudimos aplicar la formación. Intenta de nuevo.') }
+    setLineupBusy(false)
+  }
   const entryIds = entries.map((e) => e.id)
   const minutes = items.reduce((t, x) => t + x.minutes, 0)
   const changes = items.filter((x, i) => i > 0 && tuningSignature(x) !== tuningSignature(items[i - 1])).length
@@ -250,10 +260,12 @@ export default function SetlistDetailPage() {
         <button className="btn block" disabled={!items.length} onClick={() => setSharing(true)}>Compartir…</button>
         <div className="act-grid">
         {canEdit && <button className="btn" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Canciones</button>}
+        {canEdit && supabase && band && <button className="btn" disabled={lineupBusy} onClick={() => void applyLineup()} title="Pone en las canciones de este setlist la formación que definiste en Ajustes de la banda">Formación de la banda</button>}
         {canEdit && <button className="btn" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Etiqueta</button>}
         {spotify && <a className="btn" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
         {supabase && <button className="btn" disabled={!items.length} onClick={() => void prepare()} title="Guarda las letras en este dispositivo para tocar sin señal">{prepared === 'ok' ? 'Listo sin conexión' : prepared === 'fail' ? 'Sin señal: reintenta' : 'Sin conexión'}</button>}
         </div>
+        {lineupMsg && <p className="notice" role="status">{lineupMsg}</p>}
         {canEdit && (
           <button className="btn block ghost" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>
         )}

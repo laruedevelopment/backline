@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import InfoTip, { HelpRow } from './InfoTip'
 import { METERS, meterSpec, type MeterId } from '../lib/meter'
-import { safeLink, statusLabel, type LineupSlot, type Song, type SongStatus } from '../lib/song'
+import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
 import { useQuery } from '@tanstack/react-query'
-import { getLyrics } from '../lib/api'
+import { getDefaultLineup, getLyrics } from '../lib/api'
 import { useRoster } from '../lib/useRoster'
 import { supabase } from '../lib/supabase'
 import { useActiveBand } from '../store/useBandSession'
@@ -14,6 +14,7 @@ import MemberNotes from './MemberNotes'
 import SongComments from './SongComments'
 import Sheet from './Sheet'
 import InstrumentPicker from './InstrumentPicker'
+import LineupEditor from './LineupEditor'
 
 const empty = (): Song => ({
   id: crypto.randomUUID(),
@@ -39,7 +40,10 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
   const needsLyrics = !!song && !!supabase && song.lyrics === undefined
   const { data: loadedLyrics, isLoading: lyricsLoading, isError: lyricsError } = useQuery({ queryKey: ['song-lyrics-one', song?.id], queryFn: () => getLyrics(song!.id), enabled: needsLyrics })
   const { members, people } = useRoster(band?.id)
-  const setSlot = (i: number, p: Partial<LineupSlot>) => patch({ lineup: (s.lineup ?? []).map((x, j) => (j === i ? { ...x, ...p } : x)) })
+  // Una canción nueva nace con la formación que la banda dejó en Ajustes (si no la han tocado todavía).
+  const { data: defaultLineup } = useQuery({ queryKey: ['default-lineup', band?.id], queryFn: () => getDefaultLineup(band!.id), enabled: !song && !!band && !!supabase })
+  const seeded = !song && defaultLineup?.length ? defaultLineup.filter((l) => !l.profileId || people.some((p) => p.profileId === l.profileId)) : undefined
+  const lineup = s.lineup ?? seeded ?? []
   // Los números se editan como texto para poder borrarlos y escribir de nuevo.
   const [bpm, setBpm] = useState(String(song?.bpm ?? 100))
   const [minutes, setMinutes] = useState(String(song?.minutes ?? 4))
@@ -71,7 +75,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         bpm: Math.min(300, Math.max(30, Number(bpm) || 100)),
         minutes: Math.min(30, Math.max(1, Number(minutes) || 4)),
         tunings: s.tunings.filter((t) => t.tuning.trim()).map((t) => (t.profileId ? t : { instrument: t.instrument, tuning: t.tuning, ...(t.capo ? { capo: t.capo } : {}) })),
-        lineup: (s.lineup ?? []).filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, instrument: l.instrument.trim(), guest: l.profileId ? undefined : l.guest?.trim() })),
+        lineup: lineup.filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, instrument: l.instrument.trim(), guest: l.profileId ? undefined : l.guest?.trim() })),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
         instrumentNotes: noteRows.reduce<Record<string, string>>((acc, r) => { if (r.instrument.trim() && r.text.trim()) acc[r.instrument.trim()] = r.text.trim(); return acc }, {}),
@@ -120,50 +124,10 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       </label>
 
       <details className="fold">
-        <summary>Quién toca{(s.lineup ?? []).length ? <small>{(s.lineup ?? []).length}</small> : null}</summary>
+        <summary>Quién toca{lineup.length ? <small>{lineup.length}</small> : null}</summary>
         <div className="fold-body">
       <HelpRow text="Qué instrumentos lleva la canción y quién lo toca: alguien de la banda o un invitado." />
-      {(s.lineup ?? []).map((l, i) => (
-        <div className="subform" key={i}>
-          <div className="grid-row">
-            <div className="grow"><InstrumentPicker label="Instrumento" value={l.instrument} onChange={(v) => setSlot(i, { instrument: v })} /></div>
-            <label className="field grow">Quién
-              <select value={l.profileId ?? (l.guest !== undefined ? (guestNames.includes(l.guest) ? `g:${l.guest}` : '__guest') : '')}
-                onChange={(e) => {
-                  const v = e.target.value
-                  if (v === '__guest') setSlot(i, { profileId: undefined, guest: l.guest && !guestNames.includes(l.guest) ? l.guest : '' })
-                  else if (v.startsWith('g:')) setSlot(i, { profileId: undefined, guest: v.slice(2) })
-                  else if (v) setSlot(i, { profileId: v, guest: undefined })
-                  else setSlot(i, { profileId: undefined, guest: undefined })
-                }}>
-                <option value="">Sin asignar</option>
-                {people.length > 0 && <optgroup label="La banda">{people.map((m) => <option key={m.profileId} value={m.profileId}>{m.name}{m.noAccount ? ' (sin cuenta)' : ''}</option>)}</optgroup>}
-                {guestNames.length > 0 && <optgroup label="Invitados de este setlist">{guestNames.map((g) => <option key={g} value={`g:${g}`}>{g}</option>)}</optgroup>}
-                <option value="__guest">Otro invitado (escribir)…</option>
-              </select>
-            </label>
-            <button type="button" className="btn ghost icon" style={{ alignSelf: 'end' }} aria-label={`Quitar ${l.instrument || 'instrumento'} de quién toca`} onClick={() => patch({ lineup: (s.lineup ?? []).filter((_, j) => j !== i) })}>
-              <Trash2 size={18} aria-hidden />
-            </button>
-          </div>
-          {l.guest !== undefined && !l.profileId && !guestNames.includes(l.guest) && (
-            <label className="field">Nombre del invitado
-              <input value={l.guest} maxLength={60} placeholder="Camilo (trompeta)" onChange={(e) => setSlot(i, { guest: e.target.value })} />
-            </label>
-          )}
-        </div>
-      ))}
-      <div className="row">
-        <button type="button" className="btn" onClick={() => patch({ lineup: [...(s.lineup ?? []), { instrument: instrumentOptions.find((o) => !(s.lineup ?? []).some((x) => x.instrument === o)) ?? 'Guitarra' }] })}>
-          <Plus size={16} aria-hidden /> Agregar instrumento
-        </button>
-        {members.length > 0 && !(s.lineup ?? []).length && (
-          <button type="button" className="btn ghost" onClick={() => patch({ lineup: members.filter((m) => m.instrument || m.instruments[0]).map((m) => ({ instrument: m.instrument || m.instruments[0], profileId: m.profileId })) })}>
-            Llenar con la banda
-          </button>
-        )}
-      </div>
-
+      <LineupEditor value={lineup} onChange={(lineup) => patch({ lineup })} people={people} guestNames={guestNames} fillFrom={members} />
         </div>
       </details>
 
@@ -174,7 +138,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
       <HelpRow text="«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento." />
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
-          <InstrumentPicker label="Instrumento" includeAll first={(s.lineup ?? []).map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
+          <InstrumentPicker label="Instrumento" includeAll first={lineup.map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
           {people.length > 0 && (
             <label className="field">Para
               <select value={t.profileId ?? ''} onChange={(e) => setTuning(i, { profileId: e.target.value || undefined })}>

@@ -121,3 +121,7 @@ Qué cambió: la sala que cobra debe poner nombre legal, documento y política d
 ## Compás de cada canción (migración 0046)
 - Correr `supabase/pendiente.sql` (solo la 0046) **antes** de publicar: el cliente nuevo pide la columna `meter` de las canciones.
 - Cada canción tiene «Compás» (4/4, 3/4, 2/4, 5/4, 6/8, 7/8, 9/8, 12/8). El pre-conteo del escenario cuenta según ese compás (en 6/8: seis clics con acento en el 1 y el 4; el BPM de las canciones en 6/8, 9/8 y 12/8 se toma como negra con puntillo, y en 7/8 como negra). Las canciones ya existentes quedan en 4/4: hay que cambiar el compás de las que no sean 4/4.
+
+## Formación de la banda («Quién toca» por defecto) — migración 0047
+1. Supabase › SQL Editor › pega `supabase/pendiente.sql` (tabla `band_defaults`) › Run.
+2. Banda › Ajustes › «Quién toca»: arma la formación y guarda. Luego «Aplicar a las canciones sin formación» o «Aplicar a todo el repertorio», o desde cada setlist el botón «Formación de la banda».

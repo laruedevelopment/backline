@@ -18,6 +18,7 @@ import BandMark from '../components/BandMark'
 import BandNav from '../components/BandNav'
 import BandOpenings from '../components/BandOpenings'
 import BandMedia from '../components/BandMedia'
+import BandLineupSettings from '../components/BandLineupSettings'
 import { ask } from '../lib/confirm'
 import Sheet from '../components/Sheet'
 import ListSkeleton from '../components/Skeleton'
@@ -132,6 +133,7 @@ export default function BandPage({ view = 'members' }: { view?: 'members' | 'set
       )}
 
       {settings && <BandMedia band={band} canEdit={isAdmin} />}
+      {settings && isAdmin && supabase && <BandLineupSettings key={band.id} bandId={band.id} />}
       {!settings && isAdmin && <BandOpenings bandId={band.id} bandName={band.name} city={band.city ?? ''} isPublic={band.isPublic} />}
 
       {!settings && <div className="section-title">Integrantes · {members.length + placeholders.length}</div>}

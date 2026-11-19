@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import { notifySocial } from './push'
 import type { SetlistItem } from './setlistItems'
-import type { Song } from './song'
+import type { LineupSlot, Song } from './song'
 import { isMeter } from './meter'
 
 export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
@@ -468,4 +468,30 @@ export async function reassignMember(bandId: string, from: string, to: string): 
   const { data, error } = await db().rpc('reassign_member', { p_band: bandId, p_from: from, p_to: to })
   if (error) throw error
   return data as { canciones: number; anotaciones: number; equipo: number }
+}
+
+/** Formación por defecto de la banda («Quién toca»): sin invitados, solo instrumento y persona de la banda. */
+export async function getDefaultLineup(bandId: string): Promise<LineupSlot[]> {
+  const { data, error } = await db().from('band_defaults').select('lineup').eq('band_id', bandId).maybeSingle()
+  if (error) throw error
+  const rows = ((data as { lineup: { instrument: string; profile_id?: string }[] } | null)?.lineup ?? [])
+  return rows.map((l) => ({ instrument: l.instrument, profileId: l.profile_id }))
+}
+
+export async function saveDefaultLineup(bandId: string, lineup: LineupSlot[]) {
+  const rows = lineup.filter((l) => l.instrument.trim()).map((l) => ({ instrument: l.instrument.trim(), ...(l.profileId ? { profile_id: l.profileId } : {}) }))
+  const { error } = await db().from('band_defaults').upsert({ band_id: bandId, lineup: rows, updated_at: new Date().toISOString() })
+  if (error) throw error
+}
+
+/** Pone la formación en esas canciones. Conserva a los invitados que ya tenga cada una (los que no son de la banda). */
+export async function applyLineupToSongs(songs: Song[], lineup: LineupSlot[]) {
+  const base = lineup.filter((l) => l.instrument.trim()).map((l) => ({ instrument: l.instrument.trim(), ...(l.profileId ? { profile_id: l.profileId } : {}) }))
+  for (let i = 0; i < songs.length; i += 10) {
+    await Promise.all(songs.slice(i, i + 10).map(async (s) => {
+      const guests = (s.lineup ?? []).filter((l) => !l.profileId && l.guest).map((l) => ({ instrument: l.instrument, guest: l.guest }))
+      const { error } = await db().from('songs').update({ lineup: [...base, ...guests] }).eq('id', s.id)
+      if (error) throw error
+    }))
+  }
 }
