@@ -12,6 +12,7 @@ import TopBar from './components/TopBar'
 import OfflineBanner from './components/OfflineBanner'
 import ListSkeleton from './components/Skeleton'
 import ErrorBoundary from './components/ErrorBoundary'
+import UpdateNotice from './components/UpdateNotice'
 import { reloadForNewVersion } from './lib/reload'
 import ChatDock from './components/ChatDock'
 import TermsGate from './components/TermsGate'
@@ -248,6 +249,7 @@ function Shell() {
         <div className="main">
           <TopBar />
           <OfflineBanner />
+          <UpdateNotice />
           <main className="content">
             {/* Al cambiar de banda se reinicia la pantalla: nada de lo escrito o generado (códigos, búsquedas, formularios) se arrastra de la anterior. */}
             <ErrorBoundary key={`${band?.id ?? 'local'}${pathname}`} compact>
