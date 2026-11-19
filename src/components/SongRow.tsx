@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ExternalLink, Pause, Play } from 'lucide-react'
+import { startClick, stopClick, useClickFor } from '../lib/clickEngine'
 import { embedsFor } from '../lib/embed'
 import { useRoster } from '../lib/useRoster'
 import { useActiveBand } from '../store/useBandSession'
@@ -23,6 +24,8 @@ export default function SongRow({ song, onEdit }: Props) {
   const [open, setOpen] = useState<number | null>(null)
   const current = open === null ? undefined : embeds[open]
   const standard = isStandard(song)
+  const metro = useClickFor(song.id)
+  const clicking = metro.phase !== 'idle'
   const note = usefulNote(song) // sin repetir lo que ya se ve arriba: afinación, tono y BPM
   return (
     <div className="song">
@@ -48,10 +51,17 @@ export default function SongRow({ song, onEdit }: Props) {
           </button>
         ))}
         </div>}
-        <div className="readout key" role="group" aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm`}>
-          <b>{song.key || '—'}</b>
-          {song.bpm} bpm
-        </div>
+        {song.bpm > 0 ? (
+          <button type="button" className={`readout key tempo ${clicking ? 'on' : ''}`} aria-pressed={clicking}
+            aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm. ${clicking ? 'Parar' : 'Activar'} el metrónomo`} title="Toca para escuchar el metrónomo a este tempo"
+            onClick={() => (clicking ? stopClick() : startClick(song.id, song.bpm, { keep: true }))}>
+            <b>{song.key || '—'}</b>
+            {song.bpm} bpm
+            {clicking && <span className={`tempo-dot b${metro.beat}`} aria-hidden />}
+          </button>
+        ) : (
+          <div className="readout key" role="group" aria-label={`Tono ${song.key || 'sin definir'}`}><b>{song.key || '—'}</b></div>
+        )}
       </div>
       {note && !current && <div className="li-sub wrap" style={{ padding: '0 0 12px 20px', borderBottom: '1px solid var(--line)', marginTop: -4, whiteSpace: 'pre-line' }}>{note}</div>}
       {current && (

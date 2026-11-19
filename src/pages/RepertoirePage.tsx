@@ -38,7 +38,7 @@ export default function RepertoirePage() {
 
   return (
     <>
-      <PageHead eyebrow="Música" title="Repertorio" info="Todas las canciones de la banda con su tono y tempo. Toca una para editarla; el botón de play la abre en Spotify o YouTube." />
+      <PageHead eyebrow="Música" title="Repertorio" info="Todas las canciones de la banda con su tono y tempo. Toca una para editarla; el botón de play la abre en Spotify o YouTube. Toca el tempo (bpm) para escuchar el metrónomo a esa velocidad." />
       <MusicNav>
         {canEdit && songs.length > 0 && (
           <>

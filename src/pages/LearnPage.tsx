@@ -8,6 +8,7 @@ import MusicNav from '../components/MusicNav'
 export default function LearnPage() {
   const [inst, setInst] = useState<InstrumentId>('guitarra')
   const done = useProgress((s) => s.done)
+  const best = useProgress((s) => s.best)
   const list = lessons.filter((l) => l.instrument === inst)
   const finished = list.filter((l) => done.includes(l.id)).length
   return (
@@ -38,7 +39,7 @@ export default function LearnPage() {
                     <div className="li-title">{l.title}</div>
                     <div className="li-sub">{l.goal}</div>
                   </div>
-                  <div className="readout"><b>{l.minutes}′</b>{l.bpm.start}→{l.bpm.goal}</div>
+                  <div className="readout" title={best[l.id] ? `Tu mejor tempo: ${best[l.id]} bpm; meta ${l.bpm.goal}` : undefined}><b>{l.minutes}′</b>{best[l.id] ? `${best[l.id]}` : l.bpm.start}→{l.bpm.goal}</div>
                 </Link>
               ))}
             </div>

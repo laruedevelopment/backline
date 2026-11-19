@@ -1,8 +1,10 @@
+import { useEffect } from 'react'
 import { Minus, Pause, Play, Plus } from 'lucide-react'
 import { useMetronome } from '../lib/useMetronome'
 
-export default function Metronome({ start = 80, goal }: { start?: number; goal?: number }) {
+export default function Metronome({ start = 80, goal, onBpm }: { start?: number; goal?: number; onBpm?: (bpm: number) => void }) {
   const m = useMetronome(start)
+  useEffect(() => { onBpm?.(m.bpm) }, [m.bpm, onBpm])
   const set = (v: number) => m.setBpm(Math.min(240, Math.max(30, v)))
   return (
     <div className="card metro">

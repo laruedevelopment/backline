@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, Timer, X } from 'lucide-react'
+import { startClick, stopClick, useClickFor } from '../lib/clickEngine'
+import { readStageClick, saveStageClick, type StageClickSettings } from '../lib/stageClick'
 import { useKeepAwake } from '../lib/keepAwake'
 import { useAuth } from '../store/useAuth'
 import { parseChart, transposeChordLine, wrapAligned, transposeLabel, type ChartLine } from '../lib/chart'
 import { instrumentOptions } from '../lib/identity'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
 import type { StageSong } from '../lib/setlistItems'
-import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, type Song } from '../lib/song'
+import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, usefulNote, type Song } from '../lib/song'
 
 const SIZE_KEY = 'backline-stage-size-v2'
 const INSTR_KEY = 'backline-stage-instrument'
@@ -227,6 +229,22 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
 
   // Cada canción empieza en su tono original.
   const go = (n: number) => { setI(n); setShift(0) }
+
+  // Metrónomo: pre-conteo antes de la canción (y, si se quiere, clic durante toda la canción). Al cambiar de canción puede dar el pre-conteo solo.
+  const [click, setClick] = useState<StageClickSettings>(readStageClick)
+  const [clickOpen, setClickOpen] = useState(false)
+  const metro = useClickFor('stage')
+  const setClickOpt = (p: Partial<StageClickSettings>) => setClick((c) => { const n = { ...c, ...p }; saveStageClick(n); return n })
+  const countNow = () => { const bpm = songs[i]?.bpm; if (bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep }) }
+  const lastSong = useRef(0)
+  useEffect(() => {
+    if (lastSong.current === i) return
+    lastSong.current = i
+    stopClick()
+    const bpm = songs[i]?.bpm
+    if (click.auto && bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep })
+  }, [i, songs, click])
+  useEffect(() => () => stopClick(), [])
   const resize = (d: number) => {
     // Con «Ajustar» activo, Aa lo suelta y sigue desde el tamaño que se estaba viendo: se puede agrandar y leer por páginas.
     const shown = fit ? Math.round(parseFloat(getComputedStyle(chartRef.current ?? document.body).fontSize)) || size : size
@@ -350,7 +368,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       {kind === 'rhythm' && sections.length > 0 && <p className="stage-structure"><b>Estructura</b>{sections.join(' · ')}</p>}
       {cur.personal && <p className="stage-mynote personal"><b>Mi anotación</b>{cur.personal}</p>}
       {myNote && <p className="stage-mynote"><b>Para ti · {view}</b>{myNote}</p>}
-      {cur.notes && <p className="stage-notes">{cur.notes}</p>}
+      {usefulNote(cur) && <p className="stage-notes" style={{ whiteSpace: 'pre-line' }}>{usefulNote(cur)}</p>}
       {cur.after?.map((t) => <div key={t} className="stage-label" role="note"><b>Al terminar</b>{t}</div>)}
       {others.length > 0 && (
         <ul className="stage-others" aria-label="Notas de los demás instrumentos">
@@ -399,10 +417,32 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           <button className="btn" onClick={() => setPicking((v) => !v)} aria-expanded={picking} aria-label={view ? `Vista de ${view}. Cambiar de instrumento` : 'Elegir mi instrumento'}>
             {view ?? 'Mi vista'}
           </button>
+          <button className={`btn ${metro.phase !== 'idle' ? 'primary' : ''}`} style={{ position: 'relative' }} onClick={() => setClickOpen((v) => !v)} aria-expanded={clickOpen} aria-label={metro.phase === 'click' ? `Metrónomo sonando a ${metro.bpm} bpm` : 'Metrónomo y pre-conteo'}><Timer size={20} aria-hidden />{metro.phase === 'click' && <span className={`tempo-dot b${metro.beat}`} style={{ background: 'var(--amber-ink)' }} aria-hidden />}</button>
           {canRotate && <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>}
           <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
         </div>
       </div>
+      {clickOpen && (
+        <div className="stage-click" role="group" aria-label="Metrónomo">
+          <button type="button" className={`btn ${metro.phase !== 'idle' ? '' : 'primary'}`} disabled={metro.phase === 'idle' && !cur.bpm} onClick={() => (metro.phase !== 'idle' ? stopClick() : countNow())}>
+            {metro.phase !== 'idle' ? 'Parar' : cur.bpm ? `Contar y empezar · ${cur.bpm} bpm` : 'Esta canción no tiene BPM'}
+          </button>
+          <label className="check-row"><input type="checkbox" checked={click.auto} onChange={(e) => setClickOpt({ auto: e.target.checked })} /><span>Pre-conteo automático al cambiar de canción</span></label>
+          <label className="check-row"><input type="checkbox" checked={click.keep} onChange={(e) => setClickOpt({ keep: e.target.checked })} /><span>Seguir con el metrónomo durante la canción</span></label>
+          <label className="field">Pre-conteo
+            <select value={click.bars} onChange={(e) => setClickOpt({ bars: e.target.value === '2' ? 2 : 1 })}>
+              <option value="1">1 compás (4 clics)</option>
+              <option value="2">2 compases (8 clics)</option>
+            </select>
+          </label>
+        </div>
+      )}
+      {metro.phase === 'count' && (
+        <button type="button" className="stage-count" onClick={() => stopClick()} aria-label="Cancelar el pre-conteo">
+          <b aria-live="polite">{metro.beat || '·'}</b>
+          <small>{metro.bpm} bpm · toca para cancelar</small>
+        </button>
+      )}
       {awake === 'off' && awakeNote && (
         <div className="stage-note" role="status">
           <span>Este navegador no dejó mantener la pantalla encendida. Sube el tiempo de apagado de pantalla en los ajustes del teléfono.</span>
