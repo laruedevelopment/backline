@@ -1195,3 +1195,8 @@ input, select, textarea { border-radius: var(--r-m); }
 
 .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
 .field-pair .field { min-width: 0; }
+@media (min-width: 960px) { .sheet { max-width: 720px; } }
+.subform .grid-row > .grow:first-child { flex: 1.4 1 0; min-width: 0; }
+.subform .field-pair { grid-template-columns: 1.3fr 1fr; }
+@media (max-width: 480px) { .subform .grid-row { flex-wrap: wrap; } .subform .grid-row > .grow { flex: 1 1 100%; } .subform .grid-row > .btn.icon { margin-left: auto; } }
+.subform .field-pair:has(> .field:only-child) { grid-template-columns: 1fr; }
