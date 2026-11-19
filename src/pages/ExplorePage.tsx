@@ -54,7 +54,7 @@ export default function ExplorePage() {
       <div className="explore-filters">
         <label className="search">
           <Search size={18} aria-hidden />
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={musicians ? 'Buscar músico por nombre' : 'Buscar banda por nombre'} aria-label="Buscar" />
+          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={musicians ? 'Buscar músico' : 'Buscar banda'} aria-label="Buscar" />
         </label>
         <CityInput live value={city} onChange={setCity} ariaLabel="Filtrar por ciudad" />
       </div>

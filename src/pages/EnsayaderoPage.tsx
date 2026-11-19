@@ -46,11 +46,19 @@ export default function EnsayaderoPage() {
   const socials = safeSocials(venue.links)
   const canBook = venue.isPublished && !isOwner && rooms.length > 0 && hours.length > 0
   const byDay = new Map(hours.map((h) => [h.weekday, h]))
+  // Horario agrupado: «Lunes a Sábado 8:00 – 22:00» en vez de siete líneas casi iguales.
+  const hourRows = weekOrder.reduce<{ days: number[]; text: string; open: boolean }[]>((rows, d) => {
+    const h = byDay.get(d)
+    const text = h ? `${hm(h.opens)} – ${hm(h.closes)}` : 'Cerrado'
+    const last = rows[rows.length - 1]
+    if (last && last.text === text) last.days.push(d); else rows.push({ days: [d], text, open: !!h })
+    return rows
+  }, [])
 
   return (
     <>
       <Link to="/ensayaderos" className="back" style={{ marginTop: 8 }}><ArrowLeft size={18} aria-hidden /> Salas de ensayos</Link>
-      <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
+      <div className="page-head band-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16, paddingTop: 6 }}>
         <BandMark name={venue.name} logoUrl={venue.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
           <span className="eyebrow">{kindLabel[venue.kind]}</span>
@@ -113,7 +121,7 @@ export default function EnsayaderoPage() {
                 {includedChips(items).length > 0 && (
                   <>
                     <div className="eyebrow" style={{ marginTop: 10 }}>Incluye</div>
-                    <div className="chips" style={{ marginTop: 4 }}>{includedChips(items).map((c) => <span key={c} className="tag">{c}</span>)}</div>
+                    <div className="chips" style={{ marginTop: 4 }}>{includedChips(items).slice(0, 3).map((c) => <span key={c} className="tag">{c}</span>)}{includedChips(items).length > 3 && <span className="tag">+{includedChips(items).length - 3}</span>}</div>
                   </>
                 )}
                 {items.length > 0 && (
@@ -133,7 +141,7 @@ export default function EnsayaderoPage() {
                 )}
               </div>
               <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
-              {canBook && <button className="btn primary" onClick={() => setBooking(r.id)}>Reservar</button>}
+              {canBook && <button className="btn primary room-reserve" onClick={() => setBooking(r.id)}>Reservar</button>}
             </div>
           )
         })}
@@ -160,15 +168,12 @@ export default function EnsayaderoPage() {
 
       <div className="section-title">Horario</div>
       <div className="kv" style={{ maxWidth: 360 }}>
-        {weekOrder.map((d) => {
-          const h = byDay.get(d)
-          return (
-            <div key={d} style={{ display: 'contents' }}>
-              <span>{weekdayNames[d]}</span>
-              <span className="readout" style={{ textAlign: 'right', color: h ? undefined : 'var(--muted)' }}>{h ? `${hm(h.opens)} – ${hm(h.closes)}` : 'Cerrado'}</span>
-            </div>
-          )
-        })}
+        {hourRows.map((g) => (
+          <div key={g.days[0]} style={{ display: 'contents' }}>
+            <span>{g.days.length === 1 ? weekdayNames[g.days[0]] : `${weekdayNames[g.days[0]]} a ${weekdayNames[g.days[g.days.length - 1]]}`}</span>
+            <span className="readout" style={{ textAlign: 'right', color: g.open ? undefined : 'var(--muted)' }}>{g.text}</span>
+          </div>
+        ))}
       </div>
 
       <VenueMedia venue={venue} canEdit={false} />
