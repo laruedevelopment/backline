@@ -42,7 +42,8 @@ export default function EnsayaderosPage() {
     return (venues ?? []).filter((v) => !needle || norm(`${v.name} ${v.city} ${v.address}`).includes(needle))
   }, [venues, q])
 
-  const refunds = bookings.filter((b) => b.status === 'cancelled' && (b.payStatus === 'refund_due' || b.payStatus === 'refunded' || b.payStatus === 'no_refund'))
+  // Devoluciones: las pendientes siempre; las ya resueltas solo durante 30 días.
+  const refunds = bookings.filter((b) => b.status === 'cancelled' && (b.payStatus === 'refund_due' || ((b.payStatus === 'refunded' || b.payStatus === 'no_refund') && new Date(b.startsAt).getTime() > now.getTime() - 30 * 86_400_000)))
   const upcoming = bookings.filter((b) => (b.status === 'requested' || b.status === 'confirmed') && new Date(b.endsAt) > now).reverse()
 
   async function onCancel(b: Booking) {
@@ -91,7 +92,7 @@ export default function EnsayaderosPage() {
         </>
       )}
       {refunds.length > 0 && (
-        <>
+        <div style={{ marginBottom: 14 }}>
           <div className="section-title">Devoluciones</div>
           <div className="list">
             {refunds.slice(0, 5).map((b) => (
@@ -110,7 +111,7 @@ export default function EnsayaderosPage() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
       {msg && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{msg}</p>}
 

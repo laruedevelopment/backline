@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import ListSkeleton from '../../components/Skeleton'
 import { dayKey, formatDay } from '../../lib/slots'
 import PageHead from '../../components/PageHead'
@@ -10,6 +11,7 @@ import { useBookingBoard } from './useBookingBoard'
 export default function BusinessBookings() {
   const venue = useVenue()
   const board = useBookingBoard(venue)
+  const [allHistory, setAllHistory] = useState(false)
 
   const active = [...board.pending, ...board.confirmed].sort((a, b) => a.startsAt.localeCompare(b.startsAt))
   const days = new Map<string, Booking[]>()
@@ -44,8 +46,9 @@ export default function BusinessBookings() {
         <>
           <div className="section-title">Historial</div>
           <div className="list">
-            {board.history.map((b) => <BookingRow key={b.id} b={b} venue={venue} board={board} />)}
+            {board.history.slice(0, allHistory ? 15 : 5).map((b) => <BookingRow key={b.id} b={b} venue={venue} board={board} compact />)}
           </div>
+          {!allHistory && board.history.length > 5 && <button className="btn block" style={{ marginTop: 10 }} onClick={() => setAllHistory(true)}>Ver más ({board.history.length - 5})</button>}
         </>
       )}
       {board.sheets}

@@ -31,7 +31,7 @@ export function PushSettings() {
       {state === 'off' && (
         <div className="stack">
           <p className="li-sub wrap">Entérate al instante cuando llegue una solicitud de reserva, te la confirmen o la cancelen. Sin depender del chat.</p>
-          <button className="btn primary" disabled={busy} onClick={() => void enable()}>{busy ? 'Activando…' : 'Activar avisos'}</button>
+          <button className="btn" disabled={busy} onClick={() => void enable()}>{busy ? 'Activando…' : 'Activar avisos'}</button>
         </div>
       )}
       {state === 'on' && (

@@ -14,8 +14,20 @@ function Proof({ path }: { path: string }) {
 }
 
 /** Una reserva con sus datos de contacto y las acciones que correspondan a su estado. */
-export default function BookingRow({ b, venue, board, showDay = true }: { b: Booking; venue: Venue; board: BookingBoard; showDay?: boolean }) {
+export default function BookingRow({ b, venue, board, showDay = true, compact = false }: { b: Booking; venue: Venue; board: BookingBoard; showDay?: boolean; compact?: boolean }) {
   const s = new Date(b.startsAt), e = new Date(b.endsAt)
+  // Historial: una reserva cancelada o rechazada (sin devolución pendiente) ocupa dos líneas.
+  if (compact && (b.status === 'cancelled' || b.status === 'rejected') && b.payStatus !== 'refund_due') {
+    return (
+      <div className="li">
+        <div className="li-main">
+          <div className="li-title">{b.contactName || 'Banda sin nombre'} · {b.roomName}</div>
+          <div className="li-sub">{formatDay(s)} · {formatTime(s)} a {formatTime(e)}</div>
+        </div>
+        <span className="tag">{statusLabel[b.status]}</span>
+      </div>
+    )
+  }
   const wa = b.contactPhone ? waLink(b.contactPhone, `Hola ${b.contactName}, te escribo de ${venue.name} sobre tu reserva del ${formatDay(s)}.`) : undefined
   return (
     <div className="li" style={{ alignItems: 'flex-start', flexWrap: 'wrap' }}>

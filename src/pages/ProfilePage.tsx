@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../content/legal'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { purgeFolder } from '../lib/feed'
+import { ChevronRight } from 'lucide-react'
 import InfoTip from '../components/InfoTip'
 import { checkDeleteAccount, clearAvatar, confirmAdult, deleteAccount, exportMyData, purgeAvatars, setAvatar, getProfile, listMembers, purgeBandMedia, setProfilePublic, updateProfile, type Profile } from '../lib/api'
 import { instrumentOptions } from '../lib/identity'
@@ -238,8 +239,10 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
       {isPublic && <p className="li-sub" style={{ marginTop: 6 }}><Link to={`/explorar/musicos/${userId}`} style={{ color: 'var(--amber)', fontWeight: 600 }}>Ver cómo me ven los demás</Link></p>}
 
       <div className="section-title">Mi negocio</div>
-      <p className="li-sub wrap">¿Tienes una sala de ensayos, estudio u otro negocio musical? Publica tus salas, horarios y precios, y recibe reservas de las bandas.</p>
-      <Link className="btn" to="/mi-negocio" style={{ marginTop: 8 }}>Ir a mi negocio</Link>
+      <Link className="li" to="/mi-negocio">
+        <div className="li-main"><div className="li-title">Mi negocio</div><div className="li-sub">Sala de ensayos, estudio u otro negocio musical</div></div>
+        <ChevronRight size={20} color="var(--muted)" aria-hidden />
+      </Link>
 
       <div className="section-title">Tu práctica</div>
       <div className="stats">
@@ -267,7 +270,7 @@ function ProfileView({ initial, userId, email }: { initial: Profile; userId: str
         <button className="btn" disabled={exporting} onClick={() => void downloadData()}>{exporting ? 'Preparando…' : 'Descargar mis datos'}</button>
         <button className="btn danger" onClick={() => void removeAccount()}>Borrar mi cuenta</button>
         {danger && <p className="form-error" role="alert">{danger}</p>}
-        <p className="li-sub wrap">«Descargar mis datos» te entrega un archivo con todo lo tuyo en Backline. Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia, y también los datos guardados en este dispositivo. Si eres el único integrante de una banda, se borra esa banda.</p>
+        <div className="row" style={{ justifyContent: 'center' }}><InfoTip label="Qué pasa con mis datos" text="«Descargar mis datos» te entrega un archivo con todo lo tuyo en Backline. Al borrar tu cuenta se eliminan tu perfil y tus respuestas de asistencia, y también los datos guardados en este dispositivo. Si eres el único integrante de una banda, se borra esa banda." /></div>
       </div>
     </>
   )
