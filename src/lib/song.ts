@@ -3,12 +3,16 @@ export type SongStatus = 'ready' | 'learning' | 'paused'
 export type Tuning = { instrument: string; tuning: string; capo?: number; profileId?: string }
 export type KeyChange = { section: string; from: string; to: string }
 
+import type { MeterId } from './meter'
+
 export type Song = {
   id: string
   title: string
   artist: string
   key: string
   bpm: number
+  /** Compás (4/4 si no se indica). */
+  meter?: MeterId
   minutes: number
   status: SongStatus
   tunings: Tuning[]

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, Timer, X } from 'lucide-react'
 import { startClick, stopClick, useClickFor } from '../lib/clickEngine'
+import { countLabel, meterSpec } from '../lib/meter'
 import { readStageClick, saveStageClick, type StageClickSettings } from '../lib/stageClick'
 import { useKeepAwake } from '../lib/keepAwake'
 import { useAuth } from '../store/useAuth'
@@ -235,14 +236,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const [clickOpen, setClickOpen] = useState(false)
   const metro = useClickFor('stage')
   const setClickOpt = (p: Partial<StageClickSettings>) => setClick((c) => { const n = { ...c, ...p }; saveStageClick(n); return n })
-  const countNow = () => { const bpm = songs[i]?.bpm; if (bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep }) }
+  const countNow = () => { const bpm = songs[i]?.bpm; if (bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep, meter: songs[i]?.meter }) }
   const lastSong = useRef(0)
   useEffect(() => {
     if (lastSong.current === i) return
     lastSong.current = i
     stopClick()
     const bpm = songs[i]?.bpm
-    if (click.auto && bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep })
+    if (click.auto && bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep, meter: songs[i]?.meter })
   }, [i, songs, click])
   useEffect(() => () => stopClick(), [])
   const resize = (d: number) => {
@@ -360,7 +361,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       {cur.tags && cur.tags.length > 0 && <div className="stage-tags">{cur.tags.map((t) => <span key={t}>{t}</span>)}</div>}
       <div className="stage-chips">
         {cur.key && <span className="stage-chip key">{cur.key}</span>}
-        <span className="stage-chip">{cur.bpm} bpm</span>
+        <span className="stage-chip">{cur.bpm} bpm{cur.meter && cur.meter !== '4/4' ? ` · ${cur.meter}` : ''}</span>
         <span className="stage-chip">{tuningSummary(forView(cur))}</span>
       </div>
       {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
@@ -425,14 +426,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       {clickOpen && (
         <div className="stage-click" role="group" aria-label="Metrónomo">
           <button type="button" className={`btn ${metro.phase !== 'idle' ? '' : 'primary'}`} disabled={metro.phase === 'idle' && !cur.bpm} onClick={() => (metro.phase !== 'idle' ? stopClick() : countNow())}>
-            {metro.phase !== 'idle' ? 'Parar' : cur.bpm ? `Contar y empezar · ${cur.bpm} bpm` : 'Esta canción no tiene BPM'}
+            {metro.phase !== 'idle' ? 'Parar' : cur.bpm ? `Contar y empezar · ${cur.bpm} bpm · ${meterSpec(cur.meter).id}` : 'Esta canción no tiene BPM'}
           </button>
           <label className="check-row"><input type="checkbox" checked={click.auto} onChange={(e) => setClickOpt({ auto: e.target.checked })} /><span>Pre-conteo automático al cambiar de canción</span></label>
           <label className="check-row"><input type="checkbox" checked={click.keep} onChange={(e) => setClickOpt({ keep: e.target.checked })} /><span>Seguir con el metrónomo durante la canción</span></label>
           <label className="field">Pre-conteo
             <select value={click.bars} onChange={(e) => setClickOpt({ bars: e.target.value === '2' ? 2 : 1 })}>
-              <option value="1">1 compás (4 clics)</option>
-              <option value="2">2 compases (8 clics)</option>
+              <option value="1">{countLabel(1, cur.meter)}</option>
+              <option value="2">{countLabel(2, cur.meter)}</option>
             </select>
           </label>
         </div>
@@ -440,7 +441,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       {metro.phase === 'count' && (
         <button type="button" className="stage-count" onClick={() => stopClick()} aria-label="Cancelar el pre-conteo">
           <b aria-live="polite">{metro.beat || '·'}</b>
-          <small>{metro.bpm} bpm · toca para cancelar</small>
+          <small>{metro.bpm} bpm · {meterSpec(cur.meter).id} · toca para cancelar</small>
         </button>
       )}
       {awake === 'off' && awakeNote && (

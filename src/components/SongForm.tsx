@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import InfoTip, { HelpRow } from './InfoTip'
+import { METERS, meterSpec, type MeterId } from '../lib/meter'
 import { safeLink, statusLabel, type LineupSlot, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
@@ -20,6 +21,7 @@ const empty = (): Song => ({
   artist: '',
   key: '',
   bpm: 100,
+  meter: '4/4',
   minutes: 4,
   status: 'learning',
   tunings: [{ instrument: 'Todos', tuning: 'E estándar' }],
@@ -105,6 +107,12 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
           <input type="number" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)} />
         </label>
       </div>
+      <label className="field">Compás (para el pre-conteo)
+        <select value={s.meter ?? '4/4'} onChange={(e) => patch({ meter: e.target.value as MeterId })}>
+          {METERS.map((m) => <option key={m.id} value={m.id}>{m.id}</option>)}
+        </select>
+        <small className="li-sub wrap">{meterSpec(s.meter).hint}.</small>
+      </label>
       <label className="field">Estado
         <select value={s.status} onChange={(e) => patch({ status: e.target.value as SongStatus })}>
           {Object.entries(statusLabel).map(([v, l]) => <option key={v} value={v}>{l}</option>)}

@@ -117,3 +117,7 @@ Qué cambió: la sala que cobra debe poner nombre legal, documento y política d
 - Correr `supabase/pendiente.sql` (solo la 0045) en el proyecto «backline»; después avisarme para publicar.
 - Qué hace: Banda → Integrantes → «Agregar integrante sin cuenta» (nombre e instrumento). Se asignan en «Quién toca», anotaciones y equipo. Cuando crea su cuenta: tocar su nombre → «Enlazar con su cuenta» pasa todo. Para cambiar de bajista: tocar al integrante → «¿Cambió la persona de este puesto?» → «Pasar todo a otra persona».
 - Límite: 12 integrantes sin cuenta por banda. Quienes no tienen cuenta no responden asistencia (eso solo lo hace quien tiene cuenta).
+
+## Compás de cada canción (migración 0046)
+- Correr `supabase/pendiente.sql` (solo la 0046) **antes** de publicar: el cliente nuevo pide la columna `meter` de las canciones.
+- Cada canción tiene «Compás» (4/4, 3/4, 2/4, 5/4, 6/8, 7/8, 9/8, 12/8). El pre-conteo del escenario cuenta según ese compás (en 6/8: seis clics con acento en el 1 y el 4; el BPM de las canciones en 6/8, 9/8 y 12/8 se toma como negra con puntillo, y en 7/8 como negra). Las canciones ya existentes quedan en 4/4: hay que cambiar el compás de las que no sean 4/4.

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ExternalLink, Pause, Play } from 'lucide-react'
 import { startClick, stopClick, useClickFor } from '../lib/clickEngine'
 import { embedsFor } from '../lib/embed'
+import { meterSpec } from '../lib/meter'
 import { useRoster } from '../lib/useRoster'
 import { useActiveBand } from '../store/useBandSession'
 import { isStandard, keyChangeLabel, statusLabel, tuningSummary, usefulNote, type Song } from '../lib/song'
@@ -36,6 +37,7 @@ export default function SongRow({ song, onEdit }: Props) {
           <div className="li-sub">{song.artist || 'Sin artista'}</div>
           <div className="sub-row">
             <span className={standard ? '' : 'flag'}>{tuningSummary(song)}</span>
+            {song.meter && song.meter !== '4/4' && <span title={meterSpec(song.meter).hint}>Compás {song.meter}</span>}
             {song.keyChanges.map((k, i) => <span key={i} className="flag">{keyChangeLabel(k)}</span>)}
             {who.length > 0 && <span>{who.join(' · ')}</span>}
             {song.guest && <span>{song.guest}</span>}
@@ -54,7 +56,7 @@ export default function SongRow({ song, onEdit }: Props) {
         {song.bpm > 0 ? (
           <button type="button" className={`readout key tempo ${clicking ? 'on' : ''}`} aria-pressed={clicking}
             aria-label={`Tono ${song.key || 'sin definir'}, ${song.bpm} bpm. ${clicking ? 'Parar' : 'Activar'} el metrónomo`} title="Toca para escuchar el metrónomo a este tempo"
-            onClick={() => (clicking ? stopClick() : startClick(song.id, song.bpm, { keep: true }))}>
+            onClick={() => (clicking ? stopClick() : startClick(song.id, song.bpm, { keep: true, meter: song.meter }))}>
             <b>{song.key || '—'}</b>
             {song.bpm} bpm
             {clicking && <span className={`tempo-dot b${metro.beat}`} aria-hidden />}

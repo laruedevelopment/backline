@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import { clickInterval, meterSpec, type MeterId } from './meter'
 
 /**
  * Metrónomo compartido de toda la app (el modo escenario, las canciones del repertorio…): suena uno solo a la vez.
@@ -6,7 +7,7 @@ import { useSyncExternalStore } from 'react'
  */
 export type ClickPhase = 'idle' | 'count' | 'click'
 export type ClickState = { owner: string | null; phase: ClickPhase; beat: number; bpm: number; total: number }
-export type ClickOptions = { bars?: number; beatsPerBar?: number; keep?: boolean }
+export type ClickOptions = { bars?: number; meter?: MeterId | string; keep?: boolean }
 
 const IDLE: ClickState = { owner: null, phase: 'idle', beat: 0, bpm: 0, total: 0 }
 let state: ClickState = IDLE
@@ -30,7 +31,8 @@ export function stopClick() {
 /** Empieza el pre-conteo (si `bars` > 0) y, con `keep`, sigue con el clic hasta que se pare. Debe llamarse tras un toque del usuario. */
 export function startClick(owner: string, bpm: number, opts: ClickOptions = {}) {
   const tempo = Math.min(300, Math.max(20, Math.round(bpm)))
-  const perBar = opts.beatsPerBar ?? 4
+  const spec = meterSpec(opts.meter)
+  const perBar = spec.clicks
   const countBeats = Math.max(0, Math.round((opts.bars ?? 0) * perBar))
   const keep = opts.keep ?? false
   if (!countBeats && !keep) return
@@ -40,18 +42,20 @@ export function startClick(owner: string, bpm: number, opts: ClickOptions = {}) 
   void ac.resume()
   let next = ac.currentTime + 0.08
   let n = 0
-  const interval = 60 / tempo
+  const interval = clickInterval(tempo, spec.id)
   emit({ owner, phase: countBeats ? 'count' : 'click', beat: 0, bpm: tempo, total: countBeats })
 
   const schedule = () => {
     if (my !== session) return
     while (next < ac.currentTime + 0.15) {
       const inCount = n < countBeats
-      const accent = n % perBar === 0
+      const pos = n % perBar
+      const main = pos === 0
+      const strong = spec.strong.includes(pos)
       if (inCount || keep) {
         const osc = ac.createOscillator()
         const gain = ac.createGain()
-        osc.frequency.value = accent ? 1500 : 1000
+        osc.frequency.value = main ? 1500 : strong ? 1250 : 1000
         gain.gain.setValueAtTime(0.0001, next)
         gain.gain.exponentialRampToValueAtTime(0.7, next + 0.002)
         gain.gain.exponentialRampToValueAtTime(0.0001, next + 0.06)

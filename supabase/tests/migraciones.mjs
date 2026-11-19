@@ -1054,6 +1054,14 @@ await pg.query(`delete from public.band_placeholders where band_id=$1`, [band])
 await pg.query(`delete from public.songs where id=$1`, [sg])
 await pg.query(`delete from public.band_members where band_id=$1 and profile_id=$2`, [band, U.member])
 
+await ok('la canción trae compás 4/4 por defecto y acepta 6/8', async () => {
+  const [a] = (await pg.query(`insert into public.songs (band_id, title, artist, key, bpm, minutes, status, tunings, key_changes, links) values ($1,'Compás','X','Am',100,4,'learning','[]','[]','{}') returning id, meter`, [band])).rows
+  eq(a.meter, '4/4', 'por defecto')
+  await as('leader', `update public.songs set meter='6/8' where id=$1`, [a.id])
+  eq((await pg.query(`select meter from public.songs where id=$1`, [a.id])).rows[0].meter, '6/8', '6/8')
+  await pg.query(`delete from public.songs where id=$1`, [a.id])
+})
+await rejects('no se acepta un compás desconocido', () => as('leader', `insert into public.songs (band_id, title, artist, key, bpm, minutes, status, tunings, key_changes, links, meter) values ($1,'Raro','X','Am',100,4,'learning','[]','[]','{}','13/16')`, [band]), /songs_meter_check|check/)
 await rejects('el líder de una banda con más gente no puede borrar su cuenta', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member')`, [band, U.member])
   await as('leader', `select public.delete_account()`)
