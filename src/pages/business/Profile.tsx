@@ -17,6 +17,7 @@ export default function BusinessProfile() {
   const { data: rooms = [] } = useQuery({ queryKey: ['venue-rooms', venue.id], queryFn: () => listRooms(venue.id) })
   const { data: hours = [] } = useQuery({ queryKey: ['venue-hours', venue.id], queryFn: () => listHours(venue.id) })
   const [editing, setEditing] = useState(false)
+  const [tab, setTab] = useState<'publicar' | 'cobro' | 'datos' | 'fotos'>('publicar')
   const [err, setErr] = useState('')
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ['my-venues'] }), qc.invalidateQueries({ queryKey: ['venue', venue.id] }), qc.invalidateQueries({ queryKey: ['venues'] })])
 
@@ -51,6 +52,13 @@ export default function BusinessProfile() {
   return (
     <>
       <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Perfil" info="Lo que ven las bandas de tu sala de ensayos: nombre, descripción, fotos, contacto y cómo se confirman las reservas." />
+      <div className="seg profile-tabs" role="tablist" aria-label="Secciones del perfil">
+        {([['publicar', 'Publicar'], ['cobro', 'Reservas y pagos'], ['datos', 'Datos'], ['fotos', 'Fotos']] as const).map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{label}</button>
+        ))}
+      </div>
+      {tab === 'publicar' && (
+      <>
       <div className="section-title">Publicación</div>
       {!ready && (
         <div className="checklist">
@@ -69,7 +77,11 @@ export default function BusinessProfile() {
         <p className="li-sub wrap">{venue.isPublished ? 'Tu sala de ensayos es visible para todas las personas con cuenta en Backline.' : 'Mientras no esté publicada, solo tú la ves.'}</p>
         <Link to={`/ensayaderos/${venue.id}`} className="link-btn" style={{ justifySelf: 'start' }}>Ver cómo la ven las bandas</Link>
       </div>
+      </>
+      )}
 
+      {tab === 'cobro' && (
+      <>
       <div className="section-title">Cómo reciben reservas</div>
       <label className="check-row" style={{ alignItems: 'start' }}>
         <input type="checkbox" checked={venue.autoConfirm} disabled={auto.isPending} onChange={(e) => auto.mutate(e.target.checked)} />
@@ -81,7 +93,11 @@ export default function BusinessProfile() {
       </label>
 
       <PaymentSettings venue={venue} />
+      </>
+      )}
 
+      {tab === 'datos' && (
+      <>
       <div className="section-title">Datos</div>
       <div className="kv">
         <span>Tipo</span><span className="readout">{kindLabel[venue.kind]}</span>
@@ -93,10 +109,12 @@ export default function BusinessProfile() {
 
       <LocationEditor venue={venue} />
 
-      <VenueMedia venue={venue} canEdit />
-
       <div className="section-title">Zona delicada</div>
       <button className="btn danger" onClick={() => void destroy()}>Borrar mi sala de ensayos</button>
+      </>
+      )}
+
+      {tab === 'fotos' && <VenueMedia venue={venue} canEdit />}
       {err && <p className="form-error" role="alert" style={{ marginTop: 10 }}>{err}</p>}
 
       {editing && <VenueForm venue={venue} onClose={() => setEditing(false)} onSave={async (d) => { await updateVenue(venue.id, d); await refresh() }} />}

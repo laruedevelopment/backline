@@ -249,10 +249,10 @@ export default function SetlistDetailPage() {
         <button className="btn primary block" disabled={!items.length} onClick={() => setStage(true)}>Modo escenario</button>
         <button className="btn block" disabled={!items.length} onClick={() => setSharing(true)}>Compartir…</button>
         <div className="act-grid">
-        {canEdit && <button className="btn" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Agregar canciones</button>}
-        {canEdit && <button className="btn" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Agregar etiqueta</button>}
+        {canEdit && <button className="btn" onClick={() => setAdding(true)}><Plus size={18} aria-hidden /> Canciones</button>}
+        {canEdit && <button className="btn" onClick={() => setLabelSheet({})}><Tag size={16} aria-hidden /> Etiqueta</button>}
         {spotify && <a className="btn" href={spotify} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} aria-hidden /> Escuchar en Spotify</a>}
-        {supabase && <button className="btn" disabled={!items.length} onClick={() => void prepare()}>{prepared === 'ok' ? 'Listo: las letras quedan en este dispositivo' : prepared === 'fail' ? 'No se pudo: revisa la conexión' : 'Preparar para tocar sin conexión'}</button>}
+        {supabase && <button className="btn" disabled={!items.length} onClick={() => void prepare()} title="Guarda las letras en este dispositivo para tocar sin señal">{prepared === 'ok' ? 'Listo sin conexión' : prepared === 'fail' ? 'Sin señal: reintenta' : 'Sin conexión'}</button>}
         </div>
         {canEdit && (
           <button className="btn block ghost" onClick={() => setEditing(!editing)}>{editing ? 'Listo' : 'Editar setlist'}</button>

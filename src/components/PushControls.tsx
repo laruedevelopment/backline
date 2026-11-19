@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { X } from 'lucide-react'
 import { disablePush, enablePush, pushConfigured, pushState } from '../lib/push'
 
 function usePush() {
@@ -45,11 +46,16 @@ export function PushSettings() {
 }
 
 /** Invitación breve para quien está esperando reservas o respuestas. Desaparece al activar. */
+const PUSH_DISMISS = 'backline-push-prompt-dismissed'
+const dismissedRecently = () => { try { return Date.now() - Number(localStorage.getItem(PUSH_DISMISS) ?? 0) < 14 * 86_400_000 } catch { return false } }
+
 export function PushPrompt({ text }: { text: string }) {
   const { state, busy, error, enable } = usePush()
-  if (!pushConfigured || (state !== 'off' && state !== 'needs-install')) return null
+  const [hidden, setHidden] = useState(dismissedRecently)
+  if (hidden || !pushConfigured || (state !== 'off' && state !== 'needs-install')) return null
+  const dismiss = () => { try { localStorage.setItem(PUSH_DISMISS, String(Date.now())) } catch { /* solo esta visita */ } setHidden(true) }
   return (
-    <div className="notice" style={{ marginTop: 14 }}>
+    <div className="notice push-prompt" style={{ marginTop: 10 }}>
       {state === 'needs-install'
         ? <>Para recibir avisos en iPhone, instala Backline: Compartir → «Agregar a pantalla de inicio».</>
         : (
@@ -59,6 +65,7 @@ export function PushPrompt({ text }: { text: string }) {
           </>
         )}
       {error && <span className="form-error" role="alert"> {error}</span>}
+      <button type="button" className="icon-quiet push-x" onClick={dismiss} aria-label="Ocultar este aviso"><X size={16} aria-hidden /></button>
     </div>
   )
 }

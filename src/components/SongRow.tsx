@@ -35,14 +35,16 @@ export default function SongRow({ song, onEdit }: Props) {
         <Main onEdit={onEdit} label={`Editar ${song.title}`}>
           <div className="li-title">{song.title}</div>
           <div className="li-sub">{song.artist || 'Sin artista'}</div>
-          <div className="sub-row">
-            <span className={standard ? '' : 'flag'}>{tuningSummary(song)}</span>
-            {song.meter && song.meter !== '4/4' && <span title={meterSpec(song.meter).hint}>Compás {song.meter}</span>}
-            {song.keyChanges.map((k, i) => <span key={i} className="flag">{keyChangeLabel(k)}</span>)}
-            {who.length > 0 && <span>{who.join(' · ')}</span>}
-            {song.guest && <span>{song.guest}</span>}
-            {song.status !== 'ready' && <span>{statusLabel[song.status]}</span>}
-          </div>
+          {(!standard || (song.meter && song.meter !== '4/4') || song.keyChanges.length > 0 || song.guest || song.status === 'paused') && (
+            <div className="sub-row">
+              {!standard && <span className="flag">{tuningSummary(song)}</span>}
+              {song.meter && song.meter !== '4/4' && <span title={meterSpec(song.meter).hint}>Compás {song.meter}</span>}
+              {song.keyChanges.map((k, i) => <span key={i} className="flag">{keyChangeLabel(k)}</span>)}
+              {song.guest && <span>{song.guest}</span>}
+              {song.status === 'paused' && <span>{statusLabel.paused}</span>}
+            </div>
+          )}
+          {who.length > 0 && <div className="li-sub who-line">{who.join(' · ')}</div>}
         </Main>
         {embeds.length > 0 && <div className="song-listen">
         {embeds.map((e, i) => (

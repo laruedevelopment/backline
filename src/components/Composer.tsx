@@ -37,7 +37,7 @@ export default function Composer({ onPosted }: { onPosted: () => void }) {
 
   return (
     <form className="composer" onSubmit={(e) => { e.preventDefault(); if (ready && !post.isPending) post.mutate() }}>
-      <textarea rows={3} value={body} maxLength={1500} placeholder="¿Qué está pasando? Un ensayo, un toque, una canción nueva…" aria-label="Escribe tu publicación" onChange={(e) => setBody(e.target.value)} />
+      <textarea rows={3} value={body} maxLength={1500} placeholder="¿Qué está pasando?" aria-label="Escribe tu publicación" onChange={(e) => setBody(e.target.value)} />
       {previews.length > 0 && (
         <div className="composer-previews">
           {previews.map((u, i) => (

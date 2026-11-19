@@ -1017,7 +1017,7 @@ input, select, textarea { border-radius: var(--r-m); }
 .title-row h1 { margin: 0; }
 
 .act-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.act-grid .btn { padding: 0 10px; font-size: 0.9rem; }
+.act-grid .btn { padding: 0 10px; font-size: 0.9rem; min-height: 48px; }
 
 .filter-chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
 .dot.paused { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
@@ -1082,3 +1082,102 @@ input, select, textarea { border-radius: var(--r-m); }
 .readout.tempo.on { background: color-mix(in srgb, var(--amber) 16%, transparent); box-shadow: inset 0 0 0 1px var(--amber); }
 .tempo-dot { position: absolute; top: 6px; left: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--amber); opacity: 0.4; }
 .tempo-dot.b1 { opacity: 1; transform: scale(1.4); }
+
+/* Escenario en celular: la letra manda. Arriba solo cronómetro, ajustes y cerrar; todo lo demás va en el panel de Ajustes. */
+.stage-panel { position: absolute; z-index: 30; top: calc(max(16px, env(safe-area-inset-top)) + 58px); left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); display: grid; gap: 4px; padding: 6px 12px 12px; border: 1px solid var(--line-2); border-radius: var(--r-m); background: #0b0b0b; box-shadow: 0 12px 40px #000; }
+.stage-panel-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 52px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.stage-panel-row .ctl { display: inline-flex; align-items: center; gap: 6px; color: var(--text); flex-wrap: wrap; justify-content: flex-end; }
+.stage-panel-row .ctl b { min-width: 34px; text-align: center; font-size: 1rem; }
+.stage-panel .btn.sm { min-height: 44px; min-width: 44px; color: var(--text); }
+.stage-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; }
+@media (max-width: 699px) {
+  .stage { padding: 10px 14px 12px; gap: 8px; }
+  .stage-top { gap: 8px; }
+  .stage-top .btn { min-height: 46px; min-width: 46px; padding: 0 10px; }
+  .stage-nav { gap: 10px; }
+  .stage-nav .btn { min-height: 60px; font-size: 1.1rem; }
+  .stage-next { font-size: 0.9rem; }
+  .stage-mini { gap: 8px; }
+}
+
+/* Encabezado compacto en el celular: la pestaña de abajo ya dice la sección, así que no se repite arriba */
+@media (max-width: 640px) {
+  .page-head { padding: 10px 0 6px; }
+  .page-head .eyebrow { display: none; }
+  .page-title { font-size: clamp(1.7rem, 7.5vw, 2.1rem); }
+}
+/* Escenario en celular: título siempre a la vista y pre-conteo con botones grandes */
+.stage-mini.phone-mini { flex-wrap: nowrap; }
+.stage-mini.phone-mini .mini-title { display: block; flex: 1 1 auto; font-size: 0.9rem; }
+.stage-mini.phone-mini .btn.sm { min-height: 44px; flex: none; }
+.stage-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stage-bars .btn { min-height: 52px; font-size: 0.95rem; padding: 0 8px; }
+.stage-click .check-row { min-height: 48px; align-items: center; }
+
+/* Aviso de «Activar avisos»: una línea, con X para ocultarlo */
+.push-prompt { position: relative; padding-right: 48px; font-size: 0.9rem; line-height: 1.35; }
+.push-prompt .push-x { position: absolute; top: 4px; right: 4px; width: 44px; height: 44px; }
+
+/* Tarjeta de setlist en el celular: título + una línea; sin vista previa de canciones (está en el detalle) */
+.setlist-meta .tag.change { margin-left: 8px; color: var(--amber); border-color: color-mix(in srgb, var(--amber) 55%, var(--line)); }
+@media (max-width: 640px) { .setlist-peek { display: none; } }
+
+/* Inicio en el celular: portada sin logo repetido (ya está arriba) y accesos rápidos en 2×2, bajos y con el icono al lado */
+@media (max-width: 640px) {
+  .hero > :first-child { display: none; }
+  .hero { padding-top: 8px; }
+  .shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .shortcuts a { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 8px 14px; min-height: 60px; font-size: 0.95rem; text-align: left; }
+  .shortcuts a span { flex: none; width: 40px; height: 40px; }
+}
+
+/* Acciones de una reserva: ancho completo, en columnas iguales y de 48 px */
+.booking-actions { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.booking-actions .btn { min-height: 48px; }
+
+/* Música en el celular: pestañas y «Importar» (solo icono) en la misma fila */
+@media (max-width: 640px) {
+  .music-bar { flex-wrap: nowrap; }
+  .music-bar .seg { min-width: 0; flex: 1 1 auto; }
+  .music-bar .seg a { padding: 0 11px; font-size: 0.88rem; }
+  .music-actions { flex: none; margin-left: 0; }
+  .music-actions .btn.sm span { display: none; }
+  .music-actions .btn.sm { min-width: 46px; padding: 0 12px; }
+}
+
+/* En el celular la promoción de «sala de ensayos» sobra en Inicio (está en Perfil y en Mis bandas) */
+@media (max-width: 640px) { .home-promo { display: none; } }
+
+/* «Busco músico»: el título ocupa todo el ancho y las acciones van en su propia fila */
+.opening-row { flex-wrap: wrap; }
+.opening-row .li-main { flex: 1 1 100%; }
+.opening-actions { flex: 1 1 100%; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; }
+.opening-actions .btn { min-height: 44px; padding: 0 8px; }
+
+/* Perfil del negocio: pestañas en vez de una pantalla de 6000 px */
+.profile-tabs { margin: 4px 0 6px; }
+.profile-tabs button { padding: 0 12px; font-size: 0.88rem; }
+
+/* Línea de datos del setlist sin saltos raros; encabezado de Banda más bajo en el celular */
+.setlist-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; white-space: nowrap; }
+.setlist-meta .tag.change { margin-left: 0; }
+@media (max-width: 640px) {
+  .band-head { column-gap: 12px !important; }
+  .band-head .mono-mark.lg { width: 56px; height: 56px; font-size: 1.3rem; }
+  .band-head .page-title { font-size: clamp(1.4rem, 6.5vw, 1.8rem) !important; }
+}
+
+/* Detalle del setlist: «Editar setlist» como botón normal de 48 px y no como texto suelto; barra de negocio sin la etiqueta que parte el nombre */
+.btn.block.ghost { min-height: 48px; }
+@media (max-width: 640px) { .topbar a.bandbtn .ctx { display: none; } }
+
+/* Compositor del muro en el celular: una sola línea hasta que se toca; abierto, icono para fotos/link y selectores lado a lado */
+@media (max-width: 640px) {
+  .composer:not(:focus-within):has(textarea:placeholder-shown) .composer-bar { display: none; }
+  .composer:not(:focus-within):has(textarea:placeholder-shown) textarea { min-height: 48px; height: 48px; resize: none; }
+  .composer { margin-top: 10px; padding: 10px; }
+  .composer-bar .btn.sm { min-width: 46px; padding: 0 12px; font-size: 0; gap: 0; }
+  .composer-bar .btn.sm svg { font-size: 1rem; }
+  .composer-bar .composer-vis { flex: 1 1 36%; min-width: 0; }
+  .composer-bar .btn.primary { flex: 1 1 100%; margin-left: 0; min-height: 48px; font-size: 1rem; }
+}

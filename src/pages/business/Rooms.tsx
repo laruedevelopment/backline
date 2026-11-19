@@ -25,6 +25,7 @@ export default function BusinessRooms() {
   const [equipRoom, setEquipRoom] = useState<Room | 'venue' | null>(null)
   const [calRoom, setCalRoom] = useState<Room | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [tab, setTab] = useState<'salas' | 'horario' | 'calendario'>('salas')
   const [editing, setEditing] = useState<Room | 'new' | null>(null)
   const refreshCalendars = () => Promise.all([qc.invalidateQueries({ queryKey: ['calendar-sources', venue.id] }), qc.invalidateQueries({ queryKey: ['busy'] })])
   const refreshRooms = () => qc.invalidateQueries({ queryKey: ['venue-rooms', venue.id] })
@@ -39,6 +40,13 @@ export default function BusinessRooms() {
   return (
     <>
       <PageHead eyebrow={`Mi negocio · ${venue.name}`} title="Salas" info="Cada sala se reserva por separado: define su capacidad, medidas, precio y el equipo que incluye. El alquiler de instrumentos vale para todo el ensayadero." />
+      <div className="seg profile-tabs" role="tablist" aria-label="Secciones de las salas">
+        {([['salas', 'Salas'], ['horario', 'Horario y cierres'], ['calendario', 'Calendario']] as const).map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'active' : ''} onClick={() => setTab(k)}>{label}</button>
+        ))}
+      </div>
+      {tab === 'salas' && (
+      <>
       {isLoading && <ListSkeleton rows={2} />}
       {!isLoading && rooms.length === 0 && <p className="li-sub wrap">Agrega al menos una sala para poder publicar tu sala de ensayos: cada una se reserva por separado.</p>}
       <div className="list cols" style={{ borderTop: rooms.length ? undefined : 0 }}>
@@ -52,7 +60,7 @@ export default function BusinessRooms() {
                 <div className="li-title">{r.name}</div>
                 <div className="li-sub">Hasta {r.capacity} personas{dims ? ` · ${dims}` : ''}</div>
                 {r.description && <div className="li-sub wrap">{r.description}</div>}
-                {included.length > 0 && <div className="chips">{included.map((c) => <span key={c} className="tag">{c}</span>)}</div>}
+                {included.length > 0 && <div className="chips">{included.slice(0, 3).map((c) => <span key={c} className="tag">{c}</span>)}{included.length > 3 && <span className="tag">+{included.length - 3}</span>}</div>}
               </button>
               <div className="readout"><b>{money(r.pricePerHour)}</b>{r.pricePerHour ? 'por hora' : ''}</div>
               <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -73,6 +81,11 @@ export default function BusinessRooms() {
         <button className="btn" onClick={() => setEquipRoom('venue')}>Editar alquiler del ensayadero</button>
       </div>
 
+      </>
+      )}
+
+      {tab === 'calendario' && (
+      <>
       <div className="section-title">Calendario de Google</div>
       <p className="li-sub wrap">Conecta un Google Calendar solo para cada sala (no tu calendario personal): lo que anotas allí bloquea esas horas solo. Es opcional.</p>
       <div className="list" style={{ marginTop: 10 }}>
@@ -101,10 +114,17 @@ export default function BusinessRooms() {
         </button>
       )}
 
+      </>
+      )}
+
+      {tab === 'horario' && (
+      <>
       <BlocksSection venueId={venue.id} rooms={rooms} />
 
       <div className="section-title">Horario de atención</div>
       <HoursEditor venueId={venue.id} initial={hours} />
+      </>
+      )}
 
       {equipRoom && <EquipmentSheet venueId={venue.id} room={equipRoom === 'venue' ? undefined : equipRoom} rooms={rooms} onClose={() => setEquipRoom(null)} />}
       {calRoom && <CalendarSheet venueId={venue.id} room={calRoom} otherRooms={rooms.filter((r) => r.id !== calRoom.id)} source={sources.find((x) => x.roomId === calRoom.id)} onChanged={refreshCalendars} onClose={() => setCalRoom(null)} />}

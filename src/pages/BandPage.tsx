@@ -27,7 +27,9 @@ import { useRoster } from '../lib/useRoster'
 const roleLabel: Record<string, string> = { owner: 'Líder', admin: 'Admin', member: 'Integrante', guest: 'Invitado' }
 const APP_URL = typeof window === 'undefined' ? '' : `${window.location.origin}${import.meta.env.BASE_URL}`
 
-export default function BandPage() {
+/** `view`: «members» (integrantes y búsquedas) o «settings» (datos, comunidad, logo y fotos, invitar y zona delicada). */
+export default function BandPage({ view = 'members' }: { view?: 'members' | 'settings' }) {
+  const settings = view === 'settings'
   const band = useActiveBand()
   const { bands, setActive } = useBands()
   const userId = useAuth((s) => s.session?.user.id)
@@ -91,7 +93,7 @@ export default function BandPage() {
 
   return (
     <>
-      <div className="page-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
+      <div className="page-head band-head" style={{ gridTemplateColumns: 'auto 1fr', alignItems: 'center', columnGap: 16 }}>
         <BandMark name={band.name} logoUrl={band.logoUrl} size="lg" />
         <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
           <span className="eyebrow">Banda · {roleLabel[band.role]}</span>
@@ -101,18 +103,18 @@ export default function BandPage() {
       <BandNav />
       <p className="page-sub" style={{ marginTop: 12 }}>{band.city || 'Sin ciudad'}</p>
       {band.genres.length > 0 && <div className="chips">{band.genres.map((g) => <span key={g} className="tag">{g}</span>)}</div>}
-      {band.bio && <p style={{ marginTop: 14, maxWidth: '60ch' }}>{band.bio}</p>}
-      {socials.length > 0 && (
+      {settings && band.bio && <p style={{ marginTop: 14, maxWidth: '60ch' }}>{band.bio}</p>}
+      {settings && socials.length > 0 && (
         <div className="links-row" style={{ marginTop: 14 }}>
           {socials.map(([k, url]) => <a key={k} href={url} target="_blank" rel="noopener noreferrer">{socialLabels[k]}</a>)}
         </div>
       )}
-      {isAdmin && <button className="btn" style={{ marginTop: 16 }} onClick={() => setEditing(true)}>Editar datos de la banda</button>}
-      {isAdmin && !band.bio && socials.length === 0 && (
+      {settings && isAdmin && <button className="btn" style={{ marginTop: 16 }} onClick={() => setEditing(true)}>Editar datos de la banda</button>}
+      {settings && isAdmin && !band.bio && socials.length === 0 && (
         <p className="notice" style={{ marginTop: 14 }}>Completa la banda con una descripción y sus redes: es lo que verá la gente cuando haya perfil público.</p>
       )}
 
-      {isAdmin && (
+      {settings && isAdmin && (
         <>
           <div className="section-title">Comunidad</div>
           <label className="check-row" style={{ alignItems: 'start' }}>
@@ -129,11 +131,11 @@ export default function BandPage() {
         </>
       )}
 
-      <BandMedia band={band} canEdit={isAdmin} />
-      {isAdmin && <BandOpenings bandId={band.id} bandName={band.name} city={band.city ?? ''} isPublic={band.isPublic} />}
+      {settings && <BandMedia band={band} canEdit={isAdmin} />}
+      {!settings && isAdmin && <BandOpenings bandId={band.id} bandName={band.name} city={band.city ?? ''} isPublic={band.isPublic} />}
 
-      <div className="section-title">Integrantes · {members.length + placeholders.length}</div>
-      {isLoading ? <ListSkeleton rows={3} /> : (
+      {!settings && <div className="section-title">Integrantes · {members.length + placeholders.length}</div>}
+      {!settings && (isLoading ? <ListSkeleton rows={3} /> : (
         <div className="list cols">
           {members.map((m) => {
             const me = m.profileId === userId
@@ -159,15 +161,15 @@ export default function BandPage() {
             </button>
           ))}
         </div>
-      )}
-      {isAdmin && (
+      ))}
+      {!settings && isAdmin && (
         <div className="row" style={{ marginTop: 10, flexWrap: 'wrap' }}>
           <button className="btn" onClick={() => setAddingPh(true)}>Agregar integrante sin cuenta</button>
           <InfoTip text="¿Alguien de la banda todavía no usa Backline? Agrégalo con su nombre: ya puedes asignarle canciones, anotaciones y equipo. Cuando cree su cuenta lo enlazas y todo pasa a él. También sirve para cambiar de bajista sin volver a asignar todo." />
         </div>
       )}
 
-      {isAdmin && (
+      {settings && isAdmin && (
         <>
           <div className="section-title">Invitar</div>
           <HelpRow text="El código sirve 7 días. Quien lo use entra a la banda según lo que elijas aquí." />
@@ -197,12 +199,12 @@ export default function BandPage() {
       )}
       {msg && <p className="form-error" role="alert" style={{ marginTop: 12 }}>{msg}</p>}
 
-      <div className="section-title">Zona delicada</div>
-      <div className="stack">
+      {settings && <div className="section-title">Zona delicada</div>}
+      {settings && <div className="stack">
         {!isOwner && <button className="btn danger" onClick={() => void leave()}>Salir de la banda</button>}
         {isOwner && members.length > 1 && <p className="li-sub wrap">Eres el líder. Para salir, primero traspasa el liderazgo desde el perfil de otro integrante.</p>}
         {isOwner && <button className="btn danger" onClick={() => void destroy()}>Borrar la banda</button>}
-      </div>
+      </div>}
 
       {editing && <BandForm band={band} onSave={(d) => save.mutateAsync(d)} onClose={() => setEditing(false)} />}
       {addingPh && <AddPlaceholderSheet bandId={band.id} onClose={() => setAddingPh(false)} />}

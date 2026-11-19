@@ -39,14 +39,16 @@ export default function BandOpenings({ bandId, bandName, city, isPublic }: { ban
       {items.length > 0 && (
         <div className="list">
           {items.map((o) => (
-            <div key={o.id} className="li" style={{ opacity: o.status === 'closed' ? 0.6 : 1 }}>
+            <div key={o.id} className="li opening-row" style={{ opacity: o.status === 'closed' ? 0.6 : 1 }}>
               <div className="li-main">
                 <div className="li-title">{o.instrument} · {kindText[o.kind]}{o.status === 'closed' ? ' · cerrada' : ''}</div>
                 <div className="li-sub">{[o.neededOn && new Date(`${o.neededOn}T12:00:00-05:00`).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' }), o.details].filter(Boolean).join(' · ') || 'Sin detalles'}</div>
               </div>
+              <div className="opening-actions">
               <button className="btn sm" onClick={() => setViewing(o)}>{o.replies} {o.replies === 1 ? 'respuesta' : 'respuestas'}</button>
               <button className="btn sm" disabled={toggle.isPending} onClick={() => toggle.mutate(o)}>{o.status === 'open' ? 'Cerrar' : 'Reabrir'}</button>
               <button className="btn sm danger" onClick={async () => { if (await ask({ title: '¿Borrar la búsqueda?', body: 'También se borran las respuestas.', confirmLabel: 'Borrar' })) remove.mutate(o) }}>Borrar</button>
+              </div>
             </div>
           ))}
         </div>

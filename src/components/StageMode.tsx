@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, Sun, Timer, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Columns2, Minus, Pause, Play, Plus, RotateCw, Scan, SlidersHorizontal, Sun, Timer, X } from 'lucide-react'
 import { startClick, stopClick, useClickFor } from '../lib/clickEngine'
 import { countLabel, meterSpec } from '../lib/meter'
 import { readStageClick, saveStageClick, type StageClickSettings } from '../lib/stageClick'
@@ -234,6 +234,8 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   // Metrónomo: pre-conteo antes de la canción (y, si se quiere, clic durante toda la canción). Al cambiar de canción puede dar el pre-conteo solo.
   const [click, setClick] = useState<StageClickSettings>(readStageClick)
   const [clickOpen, setClickOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const phone = vw < 700 // en el celular los controles de lectura van en un panel «Ajustes»: la letra manda
   const metro = useClickFor('stage')
   const setClickOpt = (p: Partial<StageClickSettings>) => setClick((c) => { const n = { ...c, ...p }; saveStageClick(n); return n })
   const countNow = () => { const bpm = songs[i]?.bpm; if (bpm) startClick('stage', bpm, { bars: click.bars, keep: click.keep, meter: songs[i]?.meter }) }
@@ -376,7 +378,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           {others.map(([k, v]) => <li key={k}><b>{k}</b> {v}</li>)}
         </ul>
       )}
-      {chart.length > 0 && hasChords && (
+      {!phone && chart.length > 0 && hasChords && (
         <div className="stage-tools" role="group" aria-label="Tono de los acordes">
           <button className="btn" onClick={() => setShift((v) => Math.max(-11, v - 1))} aria-label="Bajar un semitono"><Minus size={18} aria-hidden /></button>
           <span aria-live="polite" aria-label={`Tono ${transposeLabel(shift)}`}>Tono {transposeLabel(shift)}</span>
@@ -387,7 +389,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   )
 
   // Barra fina siempre a la vista junto a la letra: lo esencial de la canción y los controles de lectura.
-  const miniBar = (
+  const miniBar = phone ? (
+    <div className={`stage-mini phone-mini ${compact ? '' : 'sticky'}`}>
+      <span className="mini-title"><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm}{cur.meter && cur.meter !== '4/4' ? ` · ${cur.meter}` : ''}</span>
+      <button type="button" className={`btn sm ${playing ? 'on' : ''}`} aria-pressed={playing} onClick={togglePlay} aria-label={playing ? 'Pausar el desplazamiento automático' : 'Desplazar la letra sola'}>
+        {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />} <span>Auto</span>
+      </button>
+    </div>
+  ) : (
     <div className={`stage-mini ${compact ? '' : 'sticky'}`}>
       <span className="mini-title"><b>{cur.title}</b>{cur.key ? ` · ${cur.key}` : ''} · {cur.bpm} bpm</span>
       <span className="mini-actions">
@@ -415,14 +424,61 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       <div className="stage-top">
         <span>{i + 1} / {songs.length}{awake !== 'off' && <Sun size={13} aria-label="Pantalla encendida" style={{ marginLeft: 8, verticalAlign: -1, color: 'var(--amber)' }} />}</span>
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn" onClick={() => setPicking((v) => !v)} aria-expanded={picking} aria-label={view ? `Vista de ${view}. Cambiar de instrumento` : 'Elegir mi instrumento'}>
-            {view ?? 'Mi vista'}
-          </button>
-          <button className={`btn ${metro.phase !== 'idle' ? 'primary' : ''}`} style={{ position: 'relative' }} onClick={() => setClickOpen((v) => !v)} aria-expanded={clickOpen} aria-label={metro.phase === 'click' ? `Metrónomo sonando a ${metro.bpm} bpm` : 'Metrónomo y pre-conteo'}><Timer size={20} aria-hidden />{metro.phase === 'click' && <span className={`tempo-dot b${metro.beat}`} style={{ background: 'var(--amber-ink)' }} aria-hidden />}</button>
-          {canRotate && <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>}
+          {!phone && (
+            <button className="btn" onClick={() => setPicking((v) => !v)} aria-expanded={picking} aria-label={view ? `Vista de ${view}. Cambiar de instrumento` : 'Elegir mi instrumento'}>
+              {view ?? 'Mi vista'}
+            </button>
+          )}
+          <button className={`btn ${metro.phase !== 'idle' ? 'primary' : ''}`} style={{ position: 'relative' }} onClick={() => { setClickOpen((v) => !v); setSettingsOpen(false) }} aria-expanded={clickOpen} aria-label={metro.phase === 'click' ? `Metrónomo sonando a ${metro.bpm} bpm` : 'Metrónomo y pre-conteo'}><Timer size={20} aria-hidden />{metro.phase === 'click' && <span className={`tempo-dot b${metro.beat}`} style={{ background: 'var(--amber-ink)' }} aria-hidden />}</button>
+          {phone && <button className={`btn ${settingsOpen ? 'primary' : ''}`} onClick={() => { setSettingsOpen((v) => !v); setClickOpen(false) }} aria-expanded={settingsOpen} aria-label="Ajustes del escenario"><SlidersHorizontal size={20} aria-hidden /></button>}
+          {canRotate && !phone && <button className="btn" onClick={() => void rotate()} aria-label="Girar la pantalla" aria-pressed={locked || forced}><RotateCw size={20} aria-hidden /></button>}
           <button className="btn" onClick={onClose} aria-label="Salir del modo escenario"><X size={20} aria-hidden /></button>
         </div>
       </div>
+      {phone && settingsOpen && (
+        <div className="stage-panel" role="group" aria-label="Ajustes del escenario">
+          <div className="stage-panel-row">
+            <span>Mi vista</span>
+            <button type="button" className="btn sm" onClick={() => { setPicking((v) => !v); setSettingsOpen(false) }}>{view ?? 'Todo'} · cambiar</button>
+          </div>
+          {chart.length > 0 && (
+            <div className="stage-panel-row">
+              <span>Letra</span>
+              <span className="ctl">
+                <button type="button" className="btn sm" onClick={() => resize(-3)} aria-label="Letra más pequeña"><Minus size={16} aria-hidden /></button>
+                <b aria-label={`Tamaño de letra ${Math.round(chartSize)}`}>{fit ? 'Aa' : Math.round(chartSize)}</b>
+                <button type="button" className="btn sm" onClick={() => resize(3)} aria-label="Letra más grande"><Plus size={16} aria-hidden /></button>
+                <button type="button" className={`btn sm ${fit ? 'on' : ''}`} aria-pressed={fit} onClick={toggleFit}><Scan size={16} aria-hidden /> Ajustar</button>
+              </span>
+            </div>
+          )}
+          {chart.length > 0 && hasChords && (
+            <div className="stage-panel-row">
+              <span>Tono</span>
+              <span className="ctl">
+                <button type="button" className="btn sm" onClick={() => setShift((v) => Math.max(-11, v - 1))} aria-label="Bajar un semitono"><Minus size={16} aria-hidden /></button>
+                <b aria-live="polite">{transposeLabel(shift)}</b>
+                <button type="button" className="btn sm" onClick={() => setShift((v) => Math.min(11, v + 1))} aria-label="Subir un semitono"><Plus size={16} aria-hidden /></button>
+              </span>
+            </div>
+          )}
+          {chart.length > 0 && (
+            <div className="stage-panel-row">
+              <span>Desplazar sola</span>
+              <span className="ctl">
+                {playing && <button type="button" className="btn sm" onClick={() => setSpeed((v) => Math.max(0.5, Math.round((v - 0.25) * 100) / 100))} aria-label="Más lento"><Minus size={16} aria-hidden /></button>}
+                {playing && <b aria-live="polite">{speed}×</b>}
+                {playing && <button type="button" className="btn sm" onClick={() => setSpeed((v) => Math.min(2, Math.round((v + 0.25) * 100) / 100))} aria-label="Más rápido"><Plus size={16} aria-hidden /></button>}
+                <button type="button" className={`btn sm ${playing ? 'on' : ''}`} aria-pressed={playing} onClick={togglePlay}>{playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />} {playing ? 'Pausar' : 'Auto'}</button>
+              </span>
+            </div>
+          )}
+          <div className="stage-panel-actions">
+            {chart.length > 0 && <button type="button" className="btn sm" onClick={() => { showInfo(); setSettingsOpen(false) }}>Ver info de la canción</button>}
+            {canRotate && <button type="button" className="btn sm" aria-pressed={locked || forced} onClick={() => void rotate()}><RotateCw size={16} aria-hidden /> Girar pantalla</button>}
+          </div>
+        </div>
+      )}
       {clickOpen && (
         <div className="stage-click" role="group" aria-label="Metrónomo">
           <button type="button" className={`btn ${metro.phase !== 'idle' ? '' : 'primary'}`} disabled={metro.phase === 'idle' && !cur.bpm} onClick={() => (metro.phase !== 'idle' ? stopClick() : countNow())}>
@@ -430,12 +486,9 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </button>
           <label className="check-row"><input type="checkbox" checked={click.auto} onChange={(e) => setClickOpt({ auto: e.target.checked })} /><span>Pre-conteo automático al cambiar de canción</span></label>
           <label className="check-row"><input type="checkbox" checked={click.keep} onChange={(e) => setClickOpt({ keep: e.target.checked })} /><span>Seguir con el metrónomo durante la canción</span></label>
-          <label className="field">Pre-conteo
-            <select value={click.bars} onChange={(e) => setClickOpt({ bars: e.target.value === '2' ? 2 : 1 })}>
-              <option value="1">{countLabel(1, cur.meter)}</option>
-              <option value="2">{countLabel(2, cur.meter)}</option>
-            </select>
-          </label>
+          <div className="stage-bars" role="group" aria-label="Largo del pre-conteo">
+            {([1, 2] as const).map((n) => <button key={n} type="button" className={`btn ${click.bars === n ? 'primary' : ''}`} aria-pressed={click.bars === n} onClick={() => setClickOpt({ bars: n })}>{countLabel(n, cur.meter)}</button>)}
+          </div>
         </div>
       )}
       {metro.phase === 'count' && (

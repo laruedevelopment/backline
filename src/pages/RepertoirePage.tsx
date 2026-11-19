@@ -91,6 +91,7 @@ export default function RepertoirePage() {
           onDelete={editing === 'new' ? undefined : async () => { await remove(editing.id); setEditing(null) }}
         />
       )}
+      {canEdit && songs.length > 0 && <button type="button" className="fab-round" onClick={() => setEditing('new')} aria-label="Agregar canción"><Plus size={26} aria-hidden /></button>}
     </>
   )
 }

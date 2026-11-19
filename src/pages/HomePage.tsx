@@ -139,10 +139,10 @@ export default function HomePage() {
       )}
 
       {!myVenue && (
-        <>
+        <div className="home-promo">
           <div className="section-title">¿Tienes una sala de ensayos?</div>
           <p className="notice">Publica tus salas, horarios y precios y recibe reservas. <Link to="/mi-negocio" style={{ color: 'var(--amber)', fontWeight: 600 }}>Ir a mi negocio</Link></p>
-        </>
+        </div>
       )}
       </div>
       <div className="home-col">

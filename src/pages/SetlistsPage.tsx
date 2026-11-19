@@ -68,7 +68,7 @@ export default function SetlistsPage() {
                 <h2><Link to={`/setlists/${l.id}`} className="setlist-link">{l.name}</Link></h2>
                 <ChevronRight size={22} color="var(--muted)" aria-hidden />
               </div>
-              <div className="setlist-meta">{items.length} canciones · {items.reduce((t, s) => t + s.minutes, 0)} min{changes > 0 ? ` · ${changes} cambio${changes === 1 ? '' : 's'} de afinación` : ''}</div>
+              <div className="setlist-meta">{items.length} canciones · {items.reduce((t, s) => t + s.minutes, 0)} min{changes > 0 && <span className="tag change">{changes} {changes === 1 ? 'cambio' : 'cambios'} de afinación</span>}</div>
               {items.length > 0 && (
                 <ol className="setlist-peek" aria-label="Primeras canciones">
                   {items.slice(0, 3).map((s) => <li key={s.id}>{s.title}</li>)}
@@ -100,6 +100,7 @@ export default function SetlistsPage() {
       {importing && (
         <ImportSetlist songs={songs} saveSong={saveSong} saveSetlist={save} onClose={() => { setImporting(false); if (params.get('importar')) setParams({}, { replace: true }) }} onDone={(id) => nav(`/setlists/${id}`)} />
       )}
+      {canEdit && !adding && <button type="button" className="fab-round" onClick={() => setAdding(true)} aria-label="Nuevo setlist"><Plus size={26} aria-hidden /></button>}
     </>
   )
 }

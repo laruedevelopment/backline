@@ -41,7 +41,7 @@ export default function BookingRow({ b, venue, board, showDay = true }: { b: Boo
         {b.responseNote && <div className="li-sub wrap">Tu respuesta: {b.responseNote}</div>}
       </div>
       {b.status === 'requested' && (
-        <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
+        <div className="row booking-actions">
           <button className="btn" disabled={board.busy} onClick={() => board.reject(b)}>Rechazar</button>
           <button className="btn primary" disabled={board.busy} onClick={() => board.confirm(b)}>Confirmar</button>
         </div>
@@ -56,13 +56,13 @@ export default function BookingRow({ b, venue, board, showDay = true }: { b: Boo
         </div>
       )}
       {b.status === 'confirmed' && b.payStatus === 'proof_sent' && (
-        <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
+        <div className="row booking-actions">
           <button className="btn" disabled={board.busy} onClick={() => board.rejectProof(b)}>Pedir otro comprobante</button>
           <button className="btn primary" disabled={board.busy} onClick={() => board.markPaid(b)}>Aprobar pago</button>
         </div>
       )}
       {b.status === 'confirmed' && b.payStatus === 'awaiting' && (
-        <div className="row" style={{ width: '100%', justifyContent: 'flex-end' }}>
+        <div className="row booking-actions">
           <button className="btn" disabled={board.busy} onClick={() => board.markPaid(b)}>Ya pagó (marcar pagada)</button>
         </div>
       )}

@@ -276,6 +276,7 @@ function Shell() {
               <Route path="/aprender" element={<LearnPage />} />
               <Route path="/aprender/:id" element={<Measure><LessonPage /></Measure>} />
               <Route path="/banda" element={<Measure><BandPage /></Measure>} />
+              <Route path="/banda/ajustes" element={<Measure><BandPage view="settings" /></Measure>} />
               <Route path="/banda/chat" element={<Measure><ChatPage /></Measure>} />
               <Route path="/perfil" element={<Measure><ProfilePage /></Measure>} />
             </Routes>
