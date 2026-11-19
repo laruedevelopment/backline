@@ -1040,7 +1040,6 @@ input, select, textarea { border-radius: var(--r-m); }
 .song .readout.key { min-width: 58px; }
 .song > .li { align-items: flex-start; }
 .song > .li > .dot { margin-top: 8px; }
-.song > .li > .btn.listen { align-self: flex-start; margin-top: 2px; }
 
 /* Horario de atención: cada día en una sola línea también en el celular */
 @media (max-width: 520px) {
@@ -1059,3 +1058,13 @@ input, select, textarea { border-radius: var(--r-m); }
 .modeseg { flex: none; padding: 3px; }
 .modeseg button { min-height: 36px; padding: 0 12px; font-size: 0.85rem; }
 @media (max-width: 520px) { .modeseg button { padding: 0 10px; font-size: 0.8rem; } .bandbtn { padding-left: 0; } }
+
+/* Tarjeta de canción: el título y el artista usan todo el ancho (con tono y bpm a la derecha); los botones de escucha van en su propia fila */
+.song > .li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 8px; align-items: start; }
+.song > .li > .dot { grid-column: 1; grid-row: 1; margin-top: 8px; }
+.song > .li > .li-main { grid-column: 2; grid-row: 1; }
+.song > .li > .readout.key { grid-column: 3; grid-row: 1; }
+.song > .li > .song-listen { grid-column: 2 / -1; grid-row: 2; display: flex; flex-wrap: wrap; gap: 8px; }
+.song .li-title { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.25; }
+.song .li-sub:not(.wrap) { white-space: normal; overflow: visible; text-overflow: clip; }
+.song .btn.listen { min-height: 36px; }
