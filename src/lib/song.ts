@@ -34,7 +34,7 @@ export type LineupSlot = { instrument: string; profileId?: string; guest?: strin
 export const statusLabel: Record<SongStatus, string> = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }
 
 export const shiftText = (n: number) => (n > 0 ? `+${n}` : String(n))
-const tuningText = (t: Tuning) => [t.tuning, t.capo ? `capo ${t.capo}` : '', t.shift ? `pitch ${shiftText(t.shift)}` : ''].filter(Boolean).join(' · ')
+const tuningText = (t: Tuning) => [t.tuning, t.capo ? `capo ${t.capo}` : '', t.shift ? `pitch shifter ${shiftText(t.shift)}` : ''].filter(Boolean).join(' · ')
 
 /** Canciones guardadas antes de tener el campo: «Drop D con Pitch Shifter -1» → afinación «Drop D» y pitch -1. */
 export function splitShift(t: Tuning): Tuning {
@@ -61,40 +61,50 @@ const standardTuning = (t: Tuning) => plainTuning(t.tuning) && !t.capo && !t.shi
 
 export const isStandard = (song: Song) => song.tunings.every(standardTuning)
 
-/** Solo lo que se sale de lo normal: "Guitarra: Drop D" (el bajo en estándar no se menciona). */
-export function tuningSummary(song: Song): string {
-  const odd = song.tunings.filter((t) => !standardTuning(t))
-  if (odd.length === 0) return 'E estándar'
-  const single = song.tunings.length === 1 || /^(todos|todo)$/i.test(odd[0].instrument.trim())
-  return odd.map((t) => (single ? tuningText(t) : `${t.instrument || 'Instrumento'}: ${tuningText(t)}`)).join(' · ')
+/**
+ * La canción ordenada: primero la afinación general y después solo los instrumentos que se salen de ella, cada uno con su capo
+ * o su pitch shifter al lado.
+ */
+function groups(song: Song) {
+  const name = (t: Tuning) => (plainTuning(t.tuning) ? 'E estándar' : t.tuning.trim())
+  const mods = (t: Tuning) => [t.capo ? `capo ${t.capo}` : '', t.shift ? `pitch shifter ${shiftText(t.shift)}` : ''].filter(Boolean)
+  const list = song.tunings
+  const all = list.find((t) => !t.profileId && /^\s*todos?\s*$/i.test(t.instrument)) ?? (list.length === 1 ? list[0] : undefined)
+  // Sin «Todos»: si alguien va en estándar, esa es la general; si nadie, no hay general.
+  const tuning = all ? name(all) : !list.length || list.some((t) => name(t) === 'E estándar') ? 'E estándar' : ''
+  const general = tuning ? { tuning, mods: all ? mods(all) : [] } : undefined
+  const others = list.filter((t) => t !== all && (name(t) !== tuning || mods(t).length > 0))
+    .map((t) => ({ who: t.instrument || 'Instrumento', tuning: name(t) === tuning ? '' : name(t), mods: mods(t) }))
+  return { general, others }
 }
+
+function describe(song: Song, withStandard: boolean): string {
+  const { general, others } = groups(song)
+  const showGeneral = !!general && (withStandard || !others.length || general.tuning !== 'E estándar' || general.mods.length > 0)
+  return [
+    showGeneral ? [general.tuning, ...general.mods].join(', ') : '',
+    ...others.map((o) => `${o.who}: ${[o.tuning, ...o.mods].filter(Boolean).join(', ')}`),
+  ].filter(Boolean).join(' · ')
+}
+
+/** Para las tarjetas: la general se omite si es estándar y hay excepciones («Guitarra: Drop D»). */
+export const tuningSummary = (song: Song) => describe(song, false)
+
+/** Para compartir: siempre empieza por la general. */
+export const fullTuning = (song: Song) => describe(song, true)
 
 /** Lo que hay que tener puesto para tocar la canción, separado: afinación del instrumento, capo y pedal de pitch shifter. */
 export type Setup = { tuning: string; capo: string; shift: string }
-/** Quién va en qué afinación. Si todos van igual, una sola entrada sin nombre; «Todos» junto a otras significa «los demás». */
-function tuningParts(song: Song): { who: string; to: string }[] {
-  const all = song.tunings.map((t) => ({ who: /^\s*todos?\s*$/i.test(t.instrument) ? 'los demás' : t.instrument || 'instrumento', to: plainTuning(t.tuning) ? 'E estándar' : t.tuning.trim() }))
-  if (all.every((p) => p.to === 'E estándar')) return [{ who: '', to: 'E estándar' }]
-  if (new Set(all.map((p) => p.to.toLowerCase())).size === 1 && (all.length === 1 || all.some((p) => p.who === 'los demás'))) return [{ who: '', to: all[0].to }]
-  if (all.length === 1) return [{ who: '', to: all[0].to }]
-  return [...all.filter((p) => p.who !== 'los demás'), ...all.filter((p) => p.who === 'los demás')]
-}
-
 export function setupOf(song: Song): Setup {
+  const { general, others } = groups(song)
   // Con una sola afinación (o la de «Todos») no hace falta decir de quién es; si no, va entre paréntesis.
   const join = (list: Tuning[], text: (t: Tuning) => string) =>
     [...new Set(list.map((t) => (song.tunings.length === 1 || /^\s*todos?\s*$/i.test(t.instrument) ? text(t) : `${text(t)} (${t.instrument || 'instrumento'})`)))].join(' · ')
   return {
-    tuning: tuningParts(song).map((p) => (p.who ? `${p.who[0].toUpperCase()}${p.who.slice(1)}: ${p.to}` : p.to)).join(' · '),
+    tuning: [general?.tuning ?? '', ...others.filter((o) => o.tuning).map((o) => `${o.who}: ${o.tuning}`)].filter(Boolean).join(' · '),
     capo: join(song.tunings.filter((t) => t.capo), (t) => `traste ${t.capo}`),
     shift: join(song.tunings.filter((t) => t.shift), (t) => shiftText(t.shift!)),
   }
-}
-
-/** La afinación completa de una canción, para compartirla: siempre dice algo, aunque sea estándar. */
-export function fullTuning(song: Song): string {
-  const s = setupOf(song)
-  return [s.tuning, s.capo && `capo ${s.capo}`, s.shift && `pitch shifter ${s.shift}`].filter(Boolean).join(' · ')
 }
 
 /** Lo que hay que hacer para pasar de una canción a la otra, una acción por cada cosa que cambia. */
@@ -103,8 +113,12 @@ export function setupChanges(prev: Song, next: Song): SetupChange[] {
   const a = setupOf(prev), b = setupOf(next)
   const out: SetupChange[] = []
   if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) {
-    const parts = tuningParts(next)
-    const text = parts[0].who ? `reafinar ${parts.map((p) => `${p.who} a ${p.to}`).join(', ')}` : parts[0].to === 'E estándar' ? 'volver a E estándar' : `reafinar a ${parts[0].to}`
+    // Mismo orden: primero la general, después cada instrumento que va distinto.
+    const { general, others } = groups(next)
+    const odd = others.filter((o) => o.tuning).map((o) => `${o.who} a ${o.tuning}`)
+    const text = general && !odd.length
+      ? (general.tuning === 'E estándar' ? 'volver a E estándar' : `reafinar a ${general.tuning}`)
+      : `reafinar ${[general ? `a ${general.tuning}` : '', ...odd].filter(Boolean).join(', ')}`
     out.push({ kind: 'tuning', text })
   }
   if (a.capo !== b.capo) out.push({ kind: 'capo', text: b.capo ? `capo en ${b.capo}` : 'quitar el capo' })

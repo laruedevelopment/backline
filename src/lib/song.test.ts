@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initials } from './identity'
-import { isStandard, safeLink, tuningSignature, tuningSummary, usefulNote, type Song, splitShift, setupChanges } from './song'
+import { isStandard, safeLink, tuningSignature, tuningSummary, usefulNote, type Song, splitShift, setupChanges, fullTuning } from './song'
 
 const song = (tunings: Song['tunings']) => ({ tunings }) as Song
 
@@ -12,7 +12,7 @@ describe('afinación', () => {
   it('el capo cuenta como cambio', () => {
     const s = song([{ instrument: 'Guitarra', tuning: 'E estándar', capo: 2 }])
     expect(isStandard(s)).toBe(false)
-    expect(tuningSummary(s)).toBe('E estándar · capo 2')
+    expect(tuningSummary(s)).toBe('E estándar, capo 2')
   })
   it('el resumen solo menciona lo que se sale de lo normal', () => {
     const s = song([{ instrument: 'Guitarra', tuning: 'Drop D' }, { instrument: 'Bajo', tuning: 'E estándar' }])
@@ -73,7 +73,9 @@ describe('pitch shifter y cambios entre canciones', () => {
   it('nombra a quién le toca reafinar sin enredar la frase', () => {
     const a = song([{ instrument: 'Todos', tuning: 'Drop D' }])
     const b2 = song([{ instrument: 'Guitarra líder', tuning: 'C#' }, { instrument: 'Bajo', tuning: 'E', shift: -3 }, { instrument: 'Todos', tuning: 'E' }])
-    expect(texts(a, b2)).toEqual(['reafinar Guitarra líder a C#, Bajo a E estándar, los demás a E estándar', 'pitch shifter en -3 (Bajo)'])
+    expect(texts(a, b2)).toEqual(['reafinar a E estándar, Guitarra líder a C#', 'pitch shifter en -3 (Bajo)'])
+    expect(fullTuning(b2)).toBe('E estándar · Guitarra líder: C# · Bajo: pitch shifter -3')
+    expect(tuningSummary(b2)).toBe('Guitarra líder: C# · Bajo: pitch shifter -3')
   })
   it('dice solo lo que cambia', () => {
     const a = song([{ instrument: 'Todos', tuning: 'Drop D', shift: -2 }])
