@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initials } from './identity'
-import { isStandard, safeLink, tuningSignature, tuningSummary, usefulNote, type Song } from './song'
+import { isStandard, safeLink, tuningSignature, tuningSummary, usefulNote, type Song, splitShift, setupChanges } from './song'
 
 const song = (tunings: Song['tunings']) => ({ tunings }) as Song
 
@@ -59,5 +59,21 @@ describe('usefulNote', () => {
   it('deja las líneas sueltas y quita las que quedan vacías', () => {
     expect(usefulNote({ ...base, key: 'E', bpm: 110, notes: 'Original: E, 110 BPM.' })).toBe('')
     expect(usefulNote({ ...base, notes: 'Adaptacion hard rock\nOriginal: Am, 94 BPM.' })).toBe('Adaptacion hard rock')
+  })
+})
+
+describe('pitch shifter y cambios entre canciones', () => {
+  const song = (tunings: Song['tunings']) => ({ tunings } as Song)
+  it('separa «con Pitch Shifter -1» del nombre de la afinación', () => {
+    expect(splitShift({ instrument: 'Todos', tuning: 'Drop D con Pitch Shifter -1' })).toEqual({ instrument: 'Todos', tuning: 'Drop D', shift: -1 })
+    expect(splitShift({ instrument: 'Bajo', tuning: 'E con pitch shifter −3' })).toEqual({ instrument: 'Bajo', tuning: 'E', shift: -3 })
+    expect(splitShift({ instrument: 'Todos', tuning: 'Drop D' })).toEqual({ instrument: 'Todos', tuning: 'Drop D' })
+  })
+  it('dice solo lo que cambia', () => {
+    const a = song([{ instrument: 'Todos', tuning: 'Drop D', shift: -2 }])
+    expect(setupChanges(a, song([{ instrument: 'Todos', tuning: 'Drop D', shift: -1 }]))).toEqual(['pitch shifter en -1'])
+    expect(setupChanges(a, song([{ instrument: 'Todos', tuning: 'Drop D' }]))).toEqual(['apagar el pitch shifter'])
+    expect(setupChanges(a, song([{ instrument: 'Todos', tuning: 'E estándar', capo: 2 }]))).toEqual(['volver a E estándar', 'capo en traste 2', 'apagar el pitch shifter'])
+    expect(setupChanges(a, a)).toEqual([])
   })
 })

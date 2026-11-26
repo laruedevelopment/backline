@@ -1200,3 +1200,14 @@ input, select, textarea { border-radius: var(--r-m); }
 .subform .field-pair { grid-template-columns: 1.3fr 1fr; }
 @media (max-width: 480px) { .subform .grid-row { flex-wrap: wrap; } .subform .grid-row > .grow { flex: 1 1 100%; } .subform .grid-row > .btn.icon { margin-left: auto; } }
 .subform .field-pair:has(> .field:only-child) { grid-template-columns: 1fr; }
+.tuning-row .field.grow { min-width: 0; }
+@media (max-width: 480px) { .tuning-row { flex-wrap: wrap; } .tuning-row .field.grow { flex: 1 1 100%; } .tuning-row .btn.icon { margin-left: auto; } }
+
+/* Afinación, capo y pitch shifter en el escenario: legibles de un vistazo, y en color lo que cambia respecto a la canción anterior. */
+.stage-setup { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 8px 0; }
+.stage-setup > div { border: 2px solid var(--line-2); border-radius: var(--r-m); padding: 4px 14px 6px; text-align: center; max-width: 100%; }
+.stage-setup dt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: flex; gap: 8px; justify-content: center; align-items: center; }
+.stage-setup dt em { font-style: normal; font-weight: 800; }
+.stage-setup dd { margin: 0; font-family: var(--mono); font-weight: 700; font-size: clamp(1.3rem, 5vw, 2rem); overflow-wrap: anywhere; }
+.stage-setup > div.changed { background: var(--amber); border-color: var(--amber); color: #1a0f00; }
+.stage-setup > div.changed dt { color: #1a0f00; }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import InfoTip, { HelpRow } from './InfoTip'
 import { METERS, meterSpec, type MeterId } from '../lib/meter'
-import { safeLink, statusLabel, type Song, type SongStatus } from '../lib/song'
+import { safeLink, shiftText, statusLabel, type Song, type SongStatus } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { instrumentOptions } from '../lib/identity'
 import { useQuery } from '@tanstack/react-query'
@@ -15,6 +15,8 @@ import SongComments from './SongComments'
 import Sheet from './Sheet'
 import InstrumentPicker from './InstrumentPicker'
 import LineupEditor from './LineupEditor'
+
+const SHIFTS = Array.from({ length: 25 }, (_, k) => 12 - k)
 
 const empty = (): Song => ({
   id: crypto.randomUUID(),
@@ -74,7 +76,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         artist: s.artist.trim(),
         bpm: Math.min(300, Math.max(30, Number(bpm) || 100)),
         minutes: Math.min(30, Math.max(1, Number(minutes) || 4)),
-        tunings: s.tunings.filter((t) => t.tuning.trim()).map((t) => (t.profileId ? t : { instrument: t.instrument, tuning: t.tuning, ...(t.capo ? { capo: t.capo } : {}) })),
+        tunings: s.tunings.filter((t) => t.tuning.trim()).map((t) => (t.profileId ? t : { instrument: t.instrument, tuning: t.tuning, ...(t.capo ? { capo: t.capo } : {}), ...(t.shift ? { shift: t.shift } : {}) })),
         lineup: lineup.filter((l) => l.instrument.trim() && (l.profileId || l.guest?.trim())).map((l) => ({ ...l, instrument: l.instrument.trim(), guest: l.profileId ? undefined : l.guest?.trim() })),
         keyChanges: s.keyChanges.filter((k) => k.from.trim() && k.to.trim()),
         links: { youtube: yt || undefined, spotify: sp || undefined },
@@ -135,7 +137,7 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
         <summary>Afinación y cambios{s.tunings.length || s.keyChanges.length ? <small>{s.tunings.length} afin.{s.keyChanges.length ? ` · ${s.keyChanges.length} de tono` : ''}</small> : null}</summary>
         <div className="fold-body">
       <h4 className="fold-sub">Afinación por instrumento</h4>
-      <HelpRow text="«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento." />
+      <HelpRow text="«Todos» sirve para toda la banda. Si una guitarra va en Drop D y el bajo en estándar, agrega una afinación por instrumento. «Pitch» es lo que se le pone al pedal de pitch shifter (por ejemplo -2): el instrumento no se reafina." />
       {s.tunings.map((t, i) => (
         <div className="subform" key={i}>
           <InstrumentPicker label="Instrumento" includeAll first={lineup.map((l) => l.instrument)} value={t.instrument} onChange={(v) => setTuning(i, { instrument: v })} />
@@ -147,12 +149,17 @@ export default function SongForm({ song, guestNames = [], onSave, onDelete, onCl
               </select>
             </label>
           )}
-          <div className="grid-row">
+          <div className="grid-row tuning-row">
             <label className="field grow">Afinación
               <input value={t.tuning} placeholder="Drop D" maxLength={30} onChange={(e) => setTuning(i, { tuning: e.target.value })} />
             </label>
             <label className="field" style={{ width: 84 }}>Capo
               <input type="number" inputMode="numeric" min={0} max={12} value={t.capo ?? ''} onChange={(e) => setTuning(i, { capo: Number(e.target.value) || undefined })} />
+            </label>
+            <label className="field" style={{ width: 96 }}>Pitch
+              <select value={t.shift ?? 0} aria-label="Semitonos en el pedal de pitch shifter" onChange={(e) => setTuning(i, { shift: Number(e.target.value) || undefined })}>
+                {SHIFTS.map((n) => <option key={n} value={n}>{n ? shiftText(n) : 'No'}</option>)}
+              </select>
             </label>
             <button type="button" className="btn ghost icon" style={{ alignSelf: 'end' }} aria-label={`Quitar afinación ${i + 1}`} onClick={() => patch({ tunings: s.tunings.filter((_, j) => j !== i) })}>
               <Trash2 size={18} aria-hidden />

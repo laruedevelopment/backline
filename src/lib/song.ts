@@ -1,6 +1,7 @@
 export type SongStatus = 'ready' | 'learning' | 'paused'
 /** `profileId`: si se pone, esa afinación es solo de esa persona (dos guitarristas con afinaciones distintas). */
-export type Tuning = { instrument: string; tuning: string; capo?: number; profileId?: string }
+/** `shift`: semitonos que se le ponen al pedal de pitch shifter (-2, +1…). El instrumento sigue afinado igual. */
+export type Tuning = { instrument: string; tuning: string; capo?: number; shift?: number; profileId?: string }
 export type KeyChange = { section: string; from: string; to: string }
 
 import type { MeterId } from './meter'
@@ -32,7 +33,16 @@ export type LineupSlot = { instrument: string; profileId?: string; guest?: strin
 
 export const statusLabel: Record<SongStatus, string> = { ready: 'Lista', learning: 'Aprendiendo', paused: 'En pausa' }
 
-const tuningText = (t: Tuning) => (t.capo ? `${t.tuning} · capo ${t.capo}` : t.tuning)
+export const shiftText = (n: number) => (n > 0 ? `+${n}` : String(n))
+const tuningText = (t: Tuning) => [t.tuning, t.capo ? `capo ${t.capo}` : '', t.shift ? `pitch ${shiftText(t.shift)}` : ''].filter(Boolean).join(' · ')
+
+/** Canciones guardadas antes de tener el campo: «Drop D con Pitch Shifter -1» → afinación «Drop D» y pitch -1. */
+export function splitShift(t: Tuning): Tuning {
+  if (t.shift) return t
+  const m = t.tuning.match(/^(.*?)[\s,+·]*(?:con\s+)?pitch\s*shifter\s*(?:en\s+)?([+\-−–])\s*(\d{1,2})\s*$/i)
+  if (!m || !Number(m[3]) || Number(m[3]) > 12) return t
+  return { ...t, tuning: m[1].trim() || 'E estándar', shift: (m[2] === '+' ? 1 : -1) * Number(m[3]) }
+}
 
 /** Texto corto para chips: "Drop D" o "Guitarra: Drop D · Bajo: E estándar". */
 export function tuningLabel(song: Song): string {
@@ -45,7 +55,7 @@ export function tuningLabel(song: Song): string {
 /** Firma para detectar cambios de afinación entre canciones de un setlist. */
 export const tuningSignature = (song: Song) => tuningLabel(song).toLowerCase()
 
-const standardTuning = (t: Tuning) => (!t.tuning.trim() || /est[aá]ndar/i.test(t.tuning)) && !t.capo
+const standardTuning = (t: Tuning) => (!t.tuning.trim() || /est[aá]ndar/i.test(t.tuning)) && !t.capo && !t.shift
 
 export const isStandard = (song: Song) => song.tunings.every(standardTuning)
 
@@ -55,6 +65,31 @@ export function tuningSummary(song: Song): string {
   if (odd.length === 0) return 'E estándar'
   const single = song.tunings.length === 1 || /^(todos|todo)$/i.test(odd[0].instrument.trim())
   return odd.map((t) => (single ? tuningText(t) : `${t.instrument || 'Instrumento'}: ${tuningText(t)}`)).join(' · ')
+}
+
+/** Lo que hay que tener puesto para tocar la canción, separado: afinación del instrumento, capo y pedal de pitch shifter. */
+export type Setup = { tuning: string; capo: string; shift: string }
+export function setupOf(song: Song): Setup {
+  const join = (list: Tuning[], text: (t: Tuning) => string) => {
+    const solo = song.tunings.length === 1
+    return [...new Set(list.map((t) => (solo || /^todos?$/i.test(t.instrument.trim()) ? text(t) : `${t.instrument || 'Instrumento'}: ${text(t)}`)))].join(' · ')
+  }
+  const retuned = song.tunings.filter((t) => t.tuning.trim() && !/est[aá]ndar/i.test(t.tuning))
+  return {
+    tuning: join(retuned, (t) => t.tuning) || 'E estándar',
+    capo: join(song.tunings.filter((t) => t.capo), (t) => `traste ${t.capo}`),
+    shift: join(song.tunings.filter((t) => t.shift), (t) => shiftText(t.shift!)),
+  }
+}
+
+/** Lo que hay que hacer para pasar de una canción a la otra, una acción por cada cosa que cambia. */
+export function setupChanges(prev: Song, next: Song): string[] {
+  const a = setupOf(prev), b = setupOf(next)
+  const out: string[] = []
+  if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) out.push(b.tuning === 'E estándar' ? 'volver a E estándar' : `reafinar a ${b.tuning}`)
+  if (a.capo !== b.capo) out.push(b.capo ? `capo en ${b.capo}` : 'quitar el capo')
+  if (a.shift !== b.shift) out.push(b.shift ? `pitch shifter en ${b.shift}` : 'apagar el pitch shifter')
+  return out
 }
 
 export const keyChangeLabel = (k: KeyChange) => `${k.from} → ${k.to}${k.section ? ` en ${k.section.toLowerCase()}` : ''}`

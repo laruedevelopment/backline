@@ -9,7 +9,7 @@ import { parseChart, transposeChordLine, wrapAligned, transposeLabel, type Chart
 import { instrumentOptions } from '../lib/identity'
 import { instrumentKind, noteFor, otherNotes, tuningsFor } from '../lib/instrument'
 import type { StageSong } from '../lib/setlistItems'
-import { isStandard, keyChangeLabel, tuningSignature, tuningSummary, usefulNote, type Song } from '../lib/song'
+import { keyChangeLabel, setupChanges, setupOf, usefulNote, type Song } from '../lib/song'
 
 const SIZE_KEY = 'backline-stage-size-v2'
 const INSTR_KEY = 'backline-stage-instrument'
@@ -94,6 +94,14 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   }, [cur.lyrics, kind])
   const forView = (s: Song): Song => (view ? { ...s, tunings: tuningsFor(s, view, me) } : s)
   const myNote = view ? noteFor(cur, view) : ''
+  // Afinación, capo y pitch shifter de quien está mirando. «Cambia» = distinto a la canción anterior.
+  const setup = setupOf(forView(cur))
+  const before = i > 0 ? setupOf(forView(songs[i - 1])) : null
+  const setupRows = [
+    { name: 'Afinación', value: setup.tuning, changed: !!before && before.tuning.toLowerCase() !== setup.tuning.toLowerCase() },
+    { name: 'Capo', value: setup.capo || 'Quitar', changed: !!before && before.capo !== setup.capo },
+    { name: 'Pitch shifter', value: setup.shift || 'Apagar', changed: !!before && before.shift !== setup.shift },
+  ].filter((r, k) => k === 0 || r.changed || (k === 1 ? setup.capo : setup.shift))
   // En «mi vista» solo lo mío; las notas de los demás instrumentos se ven en «Todo».
   const others = view ? [] : otherNotes(cur, null)
   const hasChords = chart.some((l) => l.kind === 'chords')
@@ -364,8 +372,15 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       <div className="stage-chips">
         {cur.key && <span className="stage-chip key">{cur.key}</span>}
         <span className="stage-chip">{cur.bpm} bpm{cur.meter && cur.meter !== '4/4' ? ` · ${cur.meter}` : ''}</span>
-        <span className="stage-chip">{tuningSummary(forView(cur))}</span>
       </div>
+      <dl className="stage-setup" aria-label={view ? `Lo que debes tener puesto (${view})` : 'Lo que hay que tener puesto'}>
+        {setupRows.map((r) => (
+          <div key={r.name} className={r.changed ? 'changed' : ''}>
+            <dt>{r.name}{r.changed && <em>Cambia</em>}</dt>
+            <dd>{r.value}</dd>
+          </div>
+        ))}
+      </dl>
       {cur.keyChanges.map((k, n) => <div key={n} className="stage-warn">Cambio de tono: {keyChangeLabel(k)}</div>)}
       {cur.guest && <div className="stage-artist">{cur.guest}</div>}
       {kind === 'rhythm' && sections.length > 0 && <p className="stage-structure"><b>Estructura</b>{sections.join(' · ')}</p>}
@@ -416,7 +431,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
     </div>
   )
 
-  const retune = next && tuningSignature(forView(next)) !== tuningSignature(forView(cur))
+  const nextChanges = next ? setupChanges(forView(cur), forView(next)) : []
 
   return (
     <div className={`stage ${forced ? 'rotated' : ''}`} role="dialog" aria-modal="true" aria-label="Modo escenario"
@@ -530,9 +545,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </div>
         )}
       </div>
-      {retune && next && (
-        <div className="stage-banner" role="alert">{isStandard(forView(next)) ? 'Después: vuelve a E estándar' : `Después: cambia a ${tuningSummary(forView(next))}`}</div>
-      )}
+      {nextChanges.length > 0 && <div className="stage-banner" role="alert">Después: {nextChanges.join(' · ')}</div>}
       <div className="stage-next">
         {next ? (
           <>

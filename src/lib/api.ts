@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 import { notifySocial } from './push'
 import type { SetlistItem } from './setlistItems'
-import type { LineupSlot, Song } from './song'
+import { splitShift, type LineupSlot, type Song } from './song'
 import { isMeter } from './meter'
 
 export type BandLinks = Partial<Record<'instagram' | 'facebook' | 'youtube' | 'spotify' | 'tiktok' | 'web', string>>
@@ -28,7 +28,7 @@ type SongRow = {
 
 const fromRow = (r: SongRow): Song => ({
   id: r.id, title: r.title, artist: r.artist, key: r.key, bpm: r.bpm, minutes: r.minutes, status: r.status, meter: isMeter(r.meter) ? r.meter : undefined,
-  tunings: r.tunings, keyChanges: r.key_changes, guest: r.guest ?? undefined, links: r.links, notes: r.notes ?? undefined, lyrics: r.lyrics ?? undefined,
+  tunings: r.tunings.map(splitShift), keyChanges: r.key_changes, guest: r.guest ?? undefined, links: r.links, notes: r.notes ?? undefined, lyrics: r.lyrics ?? undefined,
   instrumentNotes: r.instrument_notes && Object.keys(r.instrument_notes).length ? r.instrument_notes : undefined,
   lineup: r.lineup?.length ? r.lineup.map((l) => ({ instrument: l.instrument, profileId: l.profile_id, guest: l.guest })) : undefined,
 })
