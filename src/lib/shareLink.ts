@@ -1,3 +1,4 @@
+import type { Tuning } from './song'
 // Link de solo lectura de un setlist: se ve sin cuenta y solo trae lo básico (nunca letras ni notas).
 import { supabase } from './supabase'
 
@@ -6,7 +7,7 @@ const db = () => {
   return supabase
 }
 
-export type SharedRow = { kind: 'label'; text: string } | { kind: 'song'; title: string; artist: string; key: string; bpm: number; minutes: number; tags: string[] }
+export type SharedRow = { kind: 'label'; text: string } | { kind: 'song'; title: string; artist: string; key: string; bpm: number; minutes: number; tags: string[]; tunings?: Tuning[] }
 export type SharedSetlist = { name: string; band: string; rows: SharedRow[] }
 
 export const shareUrl = (token: string) => `${window.location.origin}${import.meta.env.BASE_URL}s/${token}`

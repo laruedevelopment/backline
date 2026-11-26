@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import ListSkeleton from '../components/Skeleton'
 import { getSharedSetlist, type SharedSetlist } from '../lib/shareLink'
+import { fullTuning, splitShift, type Song } from '../lib/song'
 
 /** Setlist compartido por link (solo lectura, sin cuenta). */
 export default function SharedSetlistPage() {
@@ -33,6 +34,7 @@ export default function SharedSetlistPage() {
                   <div className="li-main">
                     <div className="li-title">{r.title}</div>
                     <div className="li-sub">{[r.artist, r.key && `Tono ${r.key}`, `${r.bpm} bpm`, `${r.minutes} min`, Array.isArray(r.tags) && r.tags.length ? r.tags.map(String).join(', ') : ''].filter(Boolean).join(' · ')}</div>
+                    {r.tunings && <div className="li-sub wrap">Afinación: {fullTuning({ tunings: r.tunings.map(splitShift) } as Song)}</div>}
                   </div>
                 </div>
               ))}

@@ -2,7 +2,7 @@
 // donde «Guardar como PDF» o la impresora. Sin librerías ni servidor: todo pasa en el dispositivo.
 import { parseChart } from './chart'
 import type { SetlistItem } from './setlistItems'
-import { tuningSummary, type Song } from './song'
+import { fullTuning, type Song } from './song'
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -43,7 +43,7 @@ export function setlistHtml(name: string, entries: SetlistItem[], songs: Map<str
     if (!s) return ''
     n += 1
     const tags = e.tags?.length ? ` · ${esc(e.tags.join(', '))}` : ''
-    return `<li><b>${esc(s.title)}</b> <small>${esc([s.artist, s.key, `${s.bpm} bpm`, tuningSummary(s)].filter(Boolean).join(' · '))}${tags}</small></li>`
+    return `<li><b>${esc(s.title)}</b> <small>${esc([s.artist, s.key, `${s.bpm} bpm`, fullTuning(s)].filter(Boolean).join(' · '))}${tags}</small></li>`
   }).join('')
   const pages = !withLyrics ? '' : entries.map((e) => {
     if (e.t !== 's') return ''
@@ -51,7 +51,7 @@ export function setlistHtml(name: string, entries: SetlistItem[], songs: Map<str
     const text = s && (s.lyrics ?? lyrics.get(s.id))
     if (!s || !text) return ''
     const note = s.notes ? `<div class="note">${esc(s.notes)}</div>` : ''
-    return `<section class="song"><h2>${esc(s.title)}</h2><div class="sub">${esc([s.artist, s.key && `Tono ${s.key}`, `${s.bpm} bpm`, tuningSummary(s)].filter(Boolean).join(' · '))}</div>${note}<pre>${chartHtml(text)}</pre></section>`
+    return `<section class="song"><h2>${esc(s.title)}</h2><div class="sub">${esc([s.artist, s.key && `Tono ${s.key}`, `${s.bpm} bpm`, fullTuning(s)].filter(Boolean).join(' · '))}</div>${note}<pre>${chartHtml(text)}</pre></section>`
   }).join('')
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(name)}</title><style>${CSS}</style></head><body>
 <h1>${esc(name)}</h1><div class="meta">${picked.length} canciones · ${minutes} min</div><ol>${rows}</ol>${pages}</body></html>`

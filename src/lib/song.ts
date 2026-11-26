@@ -91,6 +91,12 @@ export function setupOf(song: Song): Setup {
   }
 }
 
+/** La afinación completa de una canción, para compartirla: siempre dice algo, aunque sea estándar. */
+export function fullTuning(song: Song): string {
+  const s = setupOf(song)
+  return [s.tuning, s.capo && `capo ${s.capo}`, s.shift && `pitch shifter ${s.shift}`].filter(Boolean).join(' · ')
+}
+
 /** Lo que hay que hacer para pasar de una canción a la otra, una acción por cada cosa que cambia. */
 export type SetupChange = { kind: 'tuning' | 'capo' | 'shift'; text: string }
 export function setupChanges(prev: Song, next: Song): SetupChange[] {

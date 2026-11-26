@@ -659,7 +659,7 @@ await ok('al borrar el evento se borra su lista de equipo', async () => {
 console.log('Link del setlist y resumen del toque')
 await ok('el admin comparte un setlist; quien tiene el link ve solo lo básico, y al apagarlo deja de verse', async () => {
   await pg.query(`insert into public.band_members (band_id, profile_id, role) values ($1,$2,'member') on conflict do nothing`, [band, U.member])
-  const [sg] = await as('leader', `insert into public.songs (band_id, title, artist, key, lyrics, notes) values ($1,'Compartida','Artista','Am','LETRA SECRETA','nota interna') returning id`, [band])
+  const [sg] = await as('leader', `insert into public.songs (band_id, title, artist, key, lyrics, notes, tunings) values ($1,'Compartida','Artista','Am','LETRA SECRETA','nota interna',$2::jsonb) returning id`, [band, JSON.stringify([{ instrument: 'Todos', tuning: 'Drop D', shift: -1, profileId: U.leader }])])
   const [sl] = await as('leader', `insert into public.setlists (band_id, name, song_ids) values ($1,'Para compartir', $2::uuid[]) returning id`, [band, `{${sg.id}}`])
   eq((await as('member', `select public.setlist_share_token($1) as t`, [sl.id]))[0].t, null, 'un integrante normal ve el token')
   await rejects_inline(() => as('member', `select public.set_setlist_share($1, true)`, [sl.id]), 'un integrante normal compartió')
@@ -667,6 +667,7 @@ await ok('el admin comparte un setlist; quien tiene el link ve solo lo básico, 
   eq(typeof tok, 'string', 'sin token'); eq(tok.length >= 24, true, 'token corto')
   const seen = (await pg.query(`select public.shared_setlist($1) as d`, [tok])).rows[0].d
   eq(seen.name, 'Para compartir', 'nombre'); eq(seen.rows.length, 1, 'filas'); eq(seen.rows[0].title, 'Compartida', 'título')
+  eq(seen.rows[0].tunings[0].tuning, 'Drop D', 'afinación'); eq(seen.rows[0].tunings[0].shift, -1, 'pitch'); eq(JSON.stringify(seen).includes(U.leader), false, 'se filtró de quién es')
   eq(JSON.stringify(seen).includes('LETRA SECRETA') || JSON.stringify(seen).includes('nota interna'), false, 'se filtró letra o notas')
   eq((await pg.query(`select public.shared_setlist('token-incorrecto-que-no-existe-1234') as d`)).rows[0].d, null, 'token falso')
   await as('leader', `select public.set_setlist_share($1, false)`, [sl.id])

@@ -74,7 +74,7 @@ export default function ShareSetlistSheet({ name, setlistId, canShareLink, entri
       {canShareLink && supabase && (
         <div className="card stack" style={{ marginTop: 12 }}>
           <span className="title-row"><b>Link de solo lectura</b>
-          <InfoTip text="Quien tenga el link ve el orden y los datos básicos (título, artista, tono, BPM y duración), sin cuenta. Nunca letras ni notas. Lo puedes apagar cuando quieras." label="Qué ve quien abre el link" /></span>
+          <InfoTip text="Quien tenga el link ve el orden y los datos básicos (título, artista, tono, BPM, duración y afinación), sin cuenta. Nunca letras ni notas. Lo puedes apagar cuando quieras." label="Qué ve quien abre el link" /></span>
           {token ? (
             <>
               <input readOnly value={shareUrl(token)} aria-label="Link del setlist" onFocus={(e) => e.currentTarget.select()} />

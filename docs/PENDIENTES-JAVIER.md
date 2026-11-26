@@ -125,3 +125,6 @@ Qué cambió: la sala que cobra debe poner nombre legal, documento y política d
 ## Formación de la banda («Quién toca» por defecto) — migración 0047
 1. Supabase › SQL Editor › pega `supabase/pendiente.sql` (tabla `band_defaults`) › Run.
 2. Banda › Ajustes › «Quién toca»: arma la formación y guarda. Luego «Aplicar a las canciones sin formación» o «Aplicar a todo el repertorio», o desde cada setlist el botón «Formación de la banda».
+
+## Afinación en el link del setlist — migración 0048
+Supabase › SQL Editor › pega `supabase/pendiente.sql` › Run.

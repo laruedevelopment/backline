@@ -1,6 +1,6 @@
 // Compartir un setlist como texto (para WhatsApp) o como imagen, eligiendo qué información incluir.
 import type { SetlistItem } from './setlistItems'
-import { tuningSummary, type Song } from './song'
+import { fullTuning, type Song } from './song'
 
 export type ShareFields = { number: boolean; artist: boolean; minutes: boolean; key: boolean; bpm: boolean; tuning: boolean; tags: boolean; total: boolean }
 export const defaultFields: ShareFields = { number: true, artist: true, minutes: false, key: false, bpm: false, tuning: false, tags: true, total: true }
@@ -36,7 +36,7 @@ export function buildShare(name: string, entries: SetlistItem[], songs: Map<stri
       f.key && s.key && `Tono ${s.key}`,
       f.bpm && `${s.bpm} bpm`,
       f.minutes && `${s.minutes} min`,
-      f.tuning && tuningSummary(s),
+      f.tuning && fullTuning(s),
       f.tags && e.tags?.length ? e.tags.join(', ') : '',
     ].filter(Boolean).join(' · ')
     rows.push({ kind: 'song', n, title: s.title, detail })
