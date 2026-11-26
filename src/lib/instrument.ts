@@ -22,8 +22,12 @@ export function instrumentKind(instrument: string): Kind {
 
 /** Afinaciones que le tocan a este instrumento (las de «Todos» también). */
 /** Una afinación asignada a una persona solo le toca a ella; las demás, a quien toca ese instrumento. */
-export const tuningsFor = (song: Song, instrument: string, profileId?: string): Tuning[] =>
-  song.tunings.filter((t) => (t.profileId ? t.profileId === profileId : sameInstrument(t.instrument, instrument)))
+/** Si hay una propia (de su instrumento o de la persona), manda sobre la de «Todos». */
+export const tuningsFor = (song: Song, instrument: string, profileId?: string): Tuning[] => {
+  const mine = song.tunings.filter((t) => (t.profileId ? t.profileId === profileId : sameInstrument(t.instrument, instrument)))
+  const own = mine.filter((t) => t.profileId || !/^todos?$/.test(norm(t.instrument)))
+  return own.length ? own : mine
+}
 
 /** Nota escrita para este instrumento, si hay. */
 export function noteFor(song: Song, instrument: string): string {

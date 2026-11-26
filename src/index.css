@@ -1223,3 +1223,19 @@ input, select, textarea { border-radius: var(--r-m); }
 .retunes > .retune.tuning, .retunes > .retune.shift, .retunes > .retune.capo { background: var(--chg); border-color: var(--chg); color: #14090a; }
 .paper-row.with-retune > .retunes { grid-row: 1; grid-column: 1 / -1; }
 .paper-row.with-retune > :not(.retunes) { grid-row: 2; }
+
+/* Pantallas anchas: la ficha de la canción va en dos franjas horizontales para dejarle el alto a la letra. */
+.stage-break { display: none; }
+@media (min-width: 900px) and (min-height: 521px) {
+  .stage-info, .stage-info.in-scroll { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 16px; width: 100%; padding: 0 0 8px; text-align: center; }
+  .stage-info > * { margin: 0; }
+  .stage-info .stage-break { display: block; flex: 0 0 100%; height: 0; margin-top: -8px; }
+  .stage-info > .stage-label, .stage-info > .stage-warn, .stage-info > .stage-structure, .stage-info > .stage-others, .stage-info > .stage-tags { flex-basis: 100%; }
+  .stage-info .stage-title { font-size: 1.9rem; }
+  .stage-info .stage-chips, .stage-info .stage-setup { margin: 0; flex-wrap: wrap; }
+  .stage-info .stage-setup > div { display: flex; align-items: baseline; gap: 8px; padding: 4px 12px; }
+  .stage-info .stage-setup dd { font-size: 1.25rem; }
+  .stage-info .stage-mynote { display: flex; align-items: baseline; gap: 10px; padding: 6px 12px; font-size: 1.1rem; }
+  .stage-info .stage-notes { font-size: 0.95rem; max-width: 60ch; }
+}
+@media (min-width: 900px) { .stage-banners { align-items: center; } .stage-after { flex: 0 0 auto; } .stage-banners > .stage-banner { flex: 0 1 auto; font-size: 1.15rem; padding: 8px 18px; } }

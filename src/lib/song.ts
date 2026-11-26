@@ -55,7 +55,9 @@ export function tuningLabel(song: Song): string {
 /** Firma para detectar cambios de afinación entre canciones de un setlist. */
 export const tuningSignature = (song: Song) => tuningLabel(song).toLowerCase()
 
-const standardTuning = (t: Tuning) => (!t.tuning.trim() || /est[aá]ndar/i.test(t.tuning)) && !t.capo && !t.shift
+/** «E», «E estándar», «estándar» o vacío: el instrumento no se reafina. */
+const plainTuning = (v: string) => !v.trim() || /^\s*e\s*$/i.test(v) || /est[aá]ndar/i.test(v)
+const standardTuning = (t: Tuning) => plainTuning(t.tuning) && !t.capo && !t.shift
 
 export const isStandard = (song: Song) => song.tunings.every(standardTuning)
 
@@ -69,14 +71,21 @@ export function tuningSummary(song: Song): string {
 
 /** Lo que hay que tener puesto para tocar la canción, separado: afinación del instrumento, capo y pedal de pitch shifter. */
 export type Setup = { tuning: string; capo: string; shift: string }
+/** Quién va en qué afinación. Si todos van igual, una sola entrada sin nombre; «Todos» junto a otras significa «los demás». */
+function tuningParts(song: Song): { who: string; to: string }[] {
+  const all = song.tunings.map((t) => ({ who: /^\s*todos?\s*$/i.test(t.instrument) ? 'los demás' : t.instrument || 'instrumento', to: plainTuning(t.tuning) ? 'E estándar' : t.tuning.trim() }))
+  if (all.every((p) => p.to === 'E estándar')) return [{ who: '', to: 'E estándar' }]
+  if (new Set(all.map((p) => p.to.toLowerCase())).size === 1 && (all.length === 1 || all.some((p) => p.who === 'los demás'))) return [{ who: '', to: all[0].to }]
+  if (all.length === 1) return [{ who: '', to: all[0].to }]
+  return [...all.filter((p) => p.who !== 'los demás'), ...all.filter((p) => p.who === 'los demás')]
+}
+
 export function setupOf(song: Song): Setup {
-  const join = (list: Tuning[], text: (t: Tuning) => string) => {
-    const solo = song.tunings.length === 1
-    return [...new Set(list.map((t) => (solo || /^todos?$/i.test(t.instrument.trim()) ? text(t) : `${t.instrument || 'Instrumento'}: ${text(t)}`)))].join(' · ')
-  }
-  const retuned = song.tunings.filter((t) => t.tuning.trim() && !/est[aá]ndar/i.test(t.tuning))
+  // Con una sola afinación (o la de «Todos») no hace falta decir de quién es; si no, va entre paréntesis.
+  const join = (list: Tuning[], text: (t: Tuning) => string) =>
+    [...new Set(list.map((t) => (song.tunings.length === 1 || /^\s*todos?\s*$/i.test(t.instrument) ? text(t) : `${text(t)} (${t.instrument || 'instrumento'})`)))].join(' · ')
   return {
-    tuning: join(retuned, (t) => t.tuning) || 'E estándar',
+    tuning: tuningParts(song).map((p) => (p.who ? `${p.who[0].toUpperCase()}${p.who.slice(1)}: ${p.to}` : p.to)).join(' · '),
     capo: join(song.tunings.filter((t) => t.capo), (t) => `traste ${t.capo}`),
     shift: join(song.tunings.filter((t) => t.shift), (t) => shiftText(t.shift!)),
   }
@@ -87,7 +96,11 @@ export type SetupChange = { kind: 'tuning' | 'capo' | 'shift'; text: string }
 export function setupChanges(prev: Song, next: Song): SetupChange[] {
   const a = setupOf(prev), b = setupOf(next)
   const out: SetupChange[] = []
-  if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) out.push({ kind: 'tuning', text: b.tuning === 'E estándar' ? 'volver a E estándar' : `reafinar a ${b.tuning}` })
+  if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) {
+    const parts = tuningParts(next)
+    const text = parts[0].who ? `reafinar ${parts.map((p) => `${p.who} a ${p.to}`).join(', ')}` : parts[0].to === 'E estándar' ? 'volver a E estándar' : `reafinar a ${parts[0].to}`
+    out.push({ kind: 'tuning', text })
+  }
   if (a.capo !== b.capo) out.push({ kind: 'capo', text: b.capo ? `capo en ${b.capo}` : 'quitar el capo' })
   if (a.shift !== b.shift) out.push({ kind: 'shift', text: b.shift ? `pitch shifter en ${b.shift}` : 'apagar el pitch shifter' })
   return out

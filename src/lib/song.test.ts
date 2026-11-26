@@ -70,6 +70,11 @@ describe('pitch shifter y cambios entre canciones', () => {
     expect(splitShift({ instrument: 'Todos', tuning: 'Drop D' })).toEqual({ instrument: 'Todos', tuning: 'Drop D' })
   })
   const texts = (a: Song, b: Song) => setupChanges(a, b).map((c) => c.text)
+  it('nombra a quién le toca reafinar sin enredar la frase', () => {
+    const a = song([{ instrument: 'Todos', tuning: 'Drop D' }])
+    const b2 = song([{ instrument: 'Guitarra líder', tuning: 'C#' }, { instrument: 'Bajo', tuning: 'E', shift: -3 }, { instrument: 'Todos', tuning: 'E' }])
+    expect(texts(a, b2)).toEqual(['reafinar Guitarra líder a C#, Bajo a E estándar, los demás a E estándar', 'pitch shifter en -3 (Bajo)'])
+  })
   it('dice solo lo que cambia', () => {
     const a = song([{ instrument: 'Todos', tuning: 'Drop D', shift: -2 }])
     expect(texts(a, song([{ instrument: 'Todos', tuning: 'Drop D', shift: -1 }]))).toEqual(['pitch shifter en -1'])

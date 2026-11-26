@@ -368,6 +368,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       {cur.before?.map((t) => <div key={t} className="stage-label" role="note"><b>Antes</b>{t}</div>)}
       <h1 className={`stage-title ${chart.length ? 'compact' : ''}`}>{cur.title}</h1>
       <div className="stage-artist">{cur.artist}</div>
+      <span className="stage-break" aria-hidden />
       {cur.tags && cur.tags.length > 0 && <div className="stage-tags">{cur.tags.map((t) => <span key={t}>{t}</span>)}</div>}
       <div className="stage-chips">
         {cur.key && <span className="stage-chip key">{cur.key}</span>}
