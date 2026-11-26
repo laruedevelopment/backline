@@ -83,12 +83,13 @@ export function setupOf(song: Song): Setup {
 }
 
 /** Lo que hay que hacer para pasar de una canción a la otra, una acción por cada cosa que cambia. */
-export function setupChanges(prev: Song, next: Song): string[] {
+export type SetupChange = { kind: 'tuning' | 'capo' | 'shift'; text: string }
+export function setupChanges(prev: Song, next: Song): SetupChange[] {
   const a = setupOf(prev), b = setupOf(next)
-  const out: string[] = []
-  if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) out.push(b.tuning === 'E estándar' ? 'volver a E estándar' : `reafinar a ${b.tuning}`)
-  if (a.capo !== b.capo) out.push(b.capo ? `capo en ${b.capo}` : 'quitar el capo')
-  if (a.shift !== b.shift) out.push(b.shift ? `pitch shifter en ${b.shift}` : 'apagar el pitch shifter')
+  const out: SetupChange[] = []
+  if (a.tuning.toLowerCase() !== b.tuning.toLowerCase()) out.push({ kind: 'tuning', text: b.tuning === 'E estándar' ? 'volver a E estándar' : `reafinar a ${b.tuning}` })
+  if (a.capo !== b.capo) out.push({ kind: 'capo', text: b.capo ? `capo en ${b.capo}` : 'quitar el capo' })
+  if (a.shift !== b.shift) out.push({ kind: 'shift', text: b.shift ? `pitch shifter en ${b.shift}` : 'apagar el pitch shifter' })
   return out
 }
 

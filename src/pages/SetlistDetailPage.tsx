@@ -12,7 +12,7 @@ import { loadOfflineLyrics, saveOfflineLyrics } from '../lib/offlineLyrics'
 import { useAuth } from '../store/useAuth'
 import { useSongs } from '../lib/useSongs'
 import { useSetlists } from '../lib/useSetlists'
-import { isStandard, safeLink, setupChanges, tuningSignature, tuningSummary, type Song } from '../lib/song'
+import { isStandard, safeLink, setupChanges, tuningSignature, tuningSummary, type SetupChange, type Song } from '../lib/song'
 import { ask } from '../lib/confirm'
 import { applyBandLineup } from '../lib/bandLineup'
 import { editLabel, insertLabel, itemsOf, setTags, stageMarks, withItems, type SetlistItem } from '../lib/setlistItems'
@@ -25,7 +25,13 @@ import ShareSetlistSheet from '../components/ShareSetlistSheet'
 import InfoTip from '../components/InfoTip'
 import ListSkeleton from '../components/Skeleton'
 
-type Row = { e: SetlistItem; song: Song | null; n: number; retune: string }
+type Row = { e: SetlistItem; song: Song | null; n: number; retune: SetupChange[] }
+
+/** Acciones entre dos canciones; si algo difiere pero ninguna lo explica, se muestra la afinación que sigue. */
+const changesOf = (prev: Song, next: Song): SetupChange[] => {
+  const out = setupChanges(prev, next)
+  return out.length ? out : [{ kind: 'tuning', text: `cambiar a ${tuningSummary(next)}` }]
+}
 
 /** Número de cada canción y aviso automático de afinación (no se repite si ya hay una etiqueta puesta justo antes). */
 function buildRows(entries: SetlistItem[], songById: Map<string, Song>): Row[] {
@@ -34,11 +40,11 @@ function buildRows(entries: SetlistItem[], songById: Map<string, Song>): Row[] {
   let prev: Song | null = null
   let prevWasLabel = false
   for (const e of entries) {
-    if (e.t === 'l') { out.push({ e, song: null, n: 0, retune: '' }); prevWasLabel = true; continue }
+    if (e.t === 'l') { out.push({ e, song: null, n: 0, retune: [] }); prevWasLabel = true; continue }
     const song = songById.get(e.id)
     if (!song) continue
     n += 1
-    out.push({ e, song, n, retune: prev && !prevWasLabel && tuningSignature(song) !== tuningSignature(prev) ? setupChanges(prev, song).join(' · ') || `cambiar a ${tuningSummary(song)}` : '' })
+    out.push({ e, song, n, retune: prev && !prevWasLabel && tuningSignature(song) !== tuningSignature(prev) ? changesOf(prev, song) : [] })
     prev = song
     prevWasLabel = false
   }
@@ -199,8 +205,8 @@ export default function SetlistDetailPage() {
               const tags = e.tags ?? []
               return (
                 <SortableRow key={e.id} id={e.id} title={s.title} handle={grip}
-                  className={`paper-row ${grip ? 'has-grip' : ''} ${editing ? 'editing' : ''} ${retune ? 'with-retune' : ''}`}>
-                  {retune && <div className="retune">{retune.toUpperCase()}</div>}
+                  className={`paper-row ${grip ? 'has-grip' : ''} ${editing ? 'editing' : ''} ${retune.length ? 'with-retune' : ''}`}>
+                  {retune.length > 0 && <div className="retunes">{retune.map((c) => <div key={c.kind} className={`retune ${c.kind}`}>{c.text.toUpperCase()}</div>)}</div>}
                   <span className="n">{n}</span>
                   {canEdit && !editing ? (
                     <button type="button" className="paper-main" onClick={() => setEditingSong(s)} aria-label={`Editar detalles de ${s.title}`}>

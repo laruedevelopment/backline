@@ -98,9 +98,9 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
   const setup = setupOf(forView(cur))
   const before = i > 0 ? setupOf(forView(songs[i - 1])) : null
   const setupRows = [
-    { name: 'Afinación', value: setup.tuning, changed: !!before && before.tuning.toLowerCase() !== setup.tuning.toLowerCase() },
-    { name: 'Capo', value: setup.capo || 'Quitar', changed: !!before && before.capo !== setup.capo },
-    { name: 'Pitch shifter', value: setup.shift || 'Apagar', changed: !!before && before.shift !== setup.shift },
+    { kind: 'tuning', name: 'Afinación', value: setup.tuning, changed: !!before && before.tuning.toLowerCase() !== setup.tuning.toLowerCase() },
+    { kind: 'capo', name: 'Capo', value: setup.capo || 'Quitar', changed: !!before && before.capo !== setup.capo },
+    { kind: 'shift', name: 'Pitch shifter', value: setup.shift || 'Apagar', changed: !!before && before.shift !== setup.shift },
   ].filter((r, k) => k === 0 || r.changed || (k === 1 ? setup.capo : setup.shift))
   // En «mi vista» solo lo mío; las notas de los demás instrumentos se ven en «Todo».
   const others = view ? [] : otherNotes(cur, null)
@@ -375,7 +375,7 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
       </div>
       <dl className="stage-setup" aria-label={view ? `Lo que debes tener puesto (${view})` : 'Lo que hay que tener puesto'}>
         {setupRows.map((r) => (
-          <div key={r.name} className={r.changed ? 'changed' : ''}>
+          <div key={r.name} className={`${r.kind} ${r.changed ? 'changed' : ''}`}>
             <dt>{r.name}{r.changed && <em>Cambia</em>}</dt>
             <dd>{r.value}</dd>
           </div>
@@ -545,7 +545,12 @@ export default function StageMode({ songs, instrument, onClose }: { songs: Stage
           </div>
         )}
       </div>
-      {nextChanges.length > 0 && <div className="stage-banner" role="alert">Después: {nextChanges.join(' · ')}</div>}
+      {nextChanges.length > 0 && (
+        <div className="stage-banners" role="alert">
+          <span className="stage-after">Después</span>
+          {nextChanges.map((c) => <div key={c.kind} className={`stage-banner ${c.kind}`}>{c.text}</div>)}
+        </div>
+      )}
       <div className="stage-next">
         {next ? (
           <>

@@ -573,8 +573,6 @@ input::placeholder, textarea::placeholder { color: #8a8377; }
 @media (max-height: 520px) { .stage { padding-top: max(8px, env(safe-area-inset-top)); padding-bottom: max(8px, env(safe-area-inset-bottom)); } }
 
 /* Fila con aviso de cambio de afinación: el aviso ocupa su propia fila y el resto se alinea debajo, con el asa en su columna. */
-.paper-row.with-retune > .retune { grid-row: 1; grid-column: 1 / -1; }
-.paper-row.with-retune > :not(.retune) { grid-row: 2; }
 .paper-row.with-retune.editing > .tools { grid-row: 3; }
 
 /* Etiquetas en el setlist */
@@ -1211,3 +1209,17 @@ input, select, textarea { border-radius: var(--r-m); }
 .stage-setup dd { margin: 0; font-family: var(--mono); font-weight: 700; font-size: clamp(1.3rem, 5vw, 2rem); overflow-wrap: anywhere; }
 .stage-setup > div.changed { background: var(--amber); border-color: var(--amber); color: #1a0f00; }
 .stage-setup > div.changed dt { color: #1a0f00; }
+
+/* Un color por tipo de cambio, igual en el escenario y en el setlist: reafinar (rojo), pitch shifter (violeta), capo (verde). */
+:root { --chg-tuning: #f2706a; --chg-shift: #b9a1ff; --chg-capo: #6fd3a6; }
+.tuning { --chg: var(--chg-tuning); } .shift { --chg: var(--chg-shift); } .capo { --chg: var(--chg-capo); }
+.stage-setup > div.changed { background: var(--chg); border-color: var(--chg); color: #14090a; }
+.stage-setup > div.changed dt { color: #14090a; }
+.stage-banners { flex: none; display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; justify-content: center; }
+.stage-after { flex: 1 1 100%; text-align: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.stage-banners > .stage-banner { flex: 1 1 40%; background: var(--chg); font-size: clamp(1.1rem, 4.2vw, 1.6rem); padding: 8px 12px; }
+.stage-banners > .stage-banner::first-letter { text-transform: uppercase; }
+.retunes { display: flex; flex-wrap: wrap; gap: 6px; }
+.retunes > .retune.tuning, .retunes > .retune.shift, .retunes > .retune.capo { background: var(--chg); border-color: var(--chg); color: #14090a; }
+.paper-row.with-retune > .retunes { grid-row: 1; grid-column: 1 / -1; }
+.paper-row.with-retune > :not(.retunes) { grid-row: 2; }
